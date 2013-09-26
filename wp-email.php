@@ -1031,7 +1031,7 @@ function process_email_form() {
 			foreach($friends as $friend) {
 				$mail->AddAddress($friend['email'], $friend['name']);
 			}
-			$mail->CharSet = get_bloginfo('charset');
+			$mail->CharSet = strtolower(get_bloginfo('charset'));
 			$mail->Username = $email_smtp['username'];
 			$mail->Password = $email_smtp['password'];
 			$mail->Host     = $email_smtp['server'];
