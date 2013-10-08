@@ -46,7 +46,7 @@ Once installed take the following steps to set it up:
 If you DO NOT want the email link to appear in every post/page, DO NOT use the code above. Just use the shortcode by typing [email_link] into the selected post/page content and it will embed the email link into that post/page only.
 
 
-## Screenshots ## 
+## Screenshots ##
 
 1. Admin E-Mail logs
 2. Options/settings page
