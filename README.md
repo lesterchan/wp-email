@@ -5,6 +5,7 @@ Tags: email, e-mail, wp-email, mail, send, recommend, ajax, friend
 Requires at least: 2.8  
 Tested up to: 3.6  
 Stable tag: trunk  
+License: GPLv2 or later  
 
 Allows people to recommend/send your WordPress blog's post/page to a friend.
 
@@ -35,6 +36,9 @@ Once installed take the following steps to set it up:
 1. Under E-Mail Settings, modify the setting Method Used To Send E-Mail accordingly. If the method is wrong, no email will get sent.
 1. You Need To Re-Generate The Permalink (WP-Admin -> Settings -> Permalinks -> Save Changes)
 1. Refer To Usage For Further Instructions
+
+## Upgrade Notice ##
+N/A
 
 ### Usage ###
 
