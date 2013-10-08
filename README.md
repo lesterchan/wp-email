@@ -55,6 +55,9 @@ If you DO NOT want the email link to appear in every post/page, DO NOT use the c
 
 ## Frequently Asked Questions
 
+### Does it support SMTP authentication with servers utilizing SSL encryption?
+1. Yes. Go to `WP-Admin -> E-Mail -> Email Options`, under `SMTP Server`, use `ssl://smtp.gmail.com:465` if you are using Gmail SMTP.
+
 ### How do I add this to my theme?
 
 1. Open `wp-content/themes/<YOUR THEME NAME>/index.php`
