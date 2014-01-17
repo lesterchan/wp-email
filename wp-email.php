@@ -41,7 +41,7 @@ define('EMAIL_SHOW_REMARKS', true);
 ### Create Text Domain For Translations
 add_action('init', 'email_textdomain');
 function email_textdomain() {
-	load_plugin_textdomain('wp-email', false, 'wp-email');
+	load_plugin_textdomain( 'wp-email', false, dirname( plugin_basename( __FILE__ ) ) );
 }
 
 
