@@ -35,20 +35,14 @@ Once installed take the following steps to set it up:
 
 1. Under E-Mail Settings, modify the setting Method Used To Send E-Mail accordingly. If the method is wrong, no email will get sent.
 1. You Need To Re-Generate The Permalink (WP-Admin -> Settings -> Permalinks -> Save Changes)
-1. Refer To Usage For Further Instructions
-
-## Upgrade Notice ##
-N/A
-
-### Usage ###
-
-1. Open `wp-content/themes/<YOUR THEME NAME>/index.php`
-      You may place it in single.php, post.php, page.php, etc also.
-1. Find: `<?php while (have_posts()) : the_post(); ?>`
-1. Add Anywhere Below It: `<?php if(function_exists('wp_email')) { email_link(); } ?>`
+1. Open `wp-content/themes/<YOUR THEME NAME>/index.php` (You may place it in single.php, post.php, page.php, etc also)
+ * Find: `<?php while (have_posts()) : the_post(); ?>`
+ * Simply add this code inside the loop where you want the email link to display: <code>if(function_exists('email_link')) { email_link(); }</code>
 
 If you DO NOT want the email link to appear in every post/page, DO NOT use the code above. Just use the shortcode by typing [email_link] into the selected post/page content and it will embed the email link into that post/page only.
 
+## Upgrade Notice ##
+N/A
 
 ## Screenshots ##
 
@@ -65,17 +59,9 @@ If you DO NOT want the email link to appear in every post/page, DO NOT use the c
 
 ### How do I add this to my theme? ###
 
-1. Open `wp-content/themes/<YOUR THEME NAME>/index.php`
-      You may place it in single.php, post.php, page.php, etc also.
+1. Open `wp-content/themes/<YOUR THEME NAME>/index.php` (You may place it in single.php, post.php, page.php, etc also)
 1. Find: `<?php while (have_posts()) : the_post(); ?>`
-1. Add Anywhere Below It: `<?php if(function_exists('wp_email')) { email_link(); } ?>`
-
-Simply add this code <strong>inside the loop</strong> where you want the email link to display:
-<code>
-if(function_exists('email_link')) {
-	email_link();
-}
-</code>
+1. Simply add this code <strong>inside the loop</strong> where you want the email link to display: <code>if(function_exists('email_link')) { email_link(); }</code>
 
 ### How can I customize my E-Mail link? ###
 
