@@ -158,7 +158,6 @@ $email_smtp = get_option('email_smtp');
 <?php if(!empty($text)) { echo '<!-- Last Action --><div id="message" class="updated fade"><p>'.$text.'</p></div>'; } ?>
 <form method="post" action="<?php echo admin_url('admin.php?page='.plugin_basename(__FILE__)); ?>">
 <div class="wrap">
-	<div id="icon-wp-email" class="icon32"><br /></div>
 	<h2><?php _e('E-Mail Options', 'wp-email'); ?></h2>
 	<h3><?php _e('SMTP Settings', 'wp-email'); ?></h3>
 	<table class="form-table">

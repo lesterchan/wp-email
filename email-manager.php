@@ -159,7 +159,6 @@ $email_logs = $wpdb->get_results("SELECT * FROM $wpdb->email ORDER BY $email_sor
 <?php if(!empty($text)) { echo '<!-- Last Action --><div id="message" class="updated fade"><p>'.$text.'</p></div>'; } ?>
 <!-- Manage E-Mail -->
 <div class="wrap">
-	<div id="icon-wp-email" class="icon32"><br /></div>
 	<h2><?php _e('Manage E-Mail', 'wp-email'); ?></h2>
 	<h3><?php _e('E-Mail Logs', 'wp-email'); ?></h3>
 	<p><?php printf(__('Displaying <strong>%s</strong> To <strong>%s</strong> Of <strong>%s</strong> E-Mail Logs', 'wp-email'), number_format_i18n($display_on_page), number_format_i18n($max_on_page), number_format_i18n($total_email)); ?></p>

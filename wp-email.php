@@ -39,7 +39,7 @@ define('EMAIL_SHOW_REMARKS', true);
 
 
 ### Create Text Domain For Translations
-add_action('init', 'email_textdomain');
+add_action( 'plugins_loaded', 'email_textdomain' );
 function email_textdomain() {
 	load_plugin_textdomain( 'wp-email', false, dirname( plugin_basename( __FILE__ ) ) );
 }
@@ -54,7 +54,7 @@ $wpdb->email = $wpdb->prefix.'email';
 add_action('admin_menu', 'email_menu');
 function email_menu() {
 	if (function_exists('add_menu_page')) {
-		add_menu_page(__('E-Mail', 'wp-email'), __('E-Mail', 'wp-email'), 'manage_email', 'wp-email/email-manager.php', '', plugins_url('wp-email/images/email_famfamfam.png'));
+		add_menu_page(__('E-Mail', 'wp-email'), __('E-Mail', 'wp-email'), 'manage_email', 'wp-email/email-manager.php', '', 'dashicons-email-alt');
 	}
 	if (function_exists('add_submenu_page')) {
 		add_submenu_page('wp-email/email-manager.php', __('Manage E-Mail', 'wp-email'), __('Manage E-Mail', 'wp-email'), 'manage_email', 'wp-email/email-manager.php');
@@ -184,16 +184,6 @@ function email_scripts() {
 		'text_friends_tally' => __('- Friend Name(s) count does not tally with Friend Email(s) count', 'wp-email'),
 		'text_image_verify_empty' => __('- Image Verification is empty', 'wp-email')
 	));
-}
-
-
-### Function: Enqueue E-Mail Stylesheet In WP-Admin
-add_action('admin_enqueue_scripts', 'email_stylesheets_admin');
-function email_stylesheets_admin($hook_suffix) {
-	$email_admin_pages = array('wp-email/email-manager.php', 'wp-email/email-options.php', 'wp-email/email-uninstall.php');
-	if(in_array($hook_suffix, $email_admin_pages)) {
-		wp_enqueue_style('wp-email-admin', plugins_url('wp-email/email-admin-css.css'), false, '2.60', 'all');
-	}
 }
 
 

@@ -1,30 +1,32 @@
-# WP-EMail #
+# WP-EMail
 Contributors: GamerZ  
 Donate link: http://lesterchan.net/site/donation/  
 Tags: email, e-mail, wp-email, mail, send, recommend, ajax, friend  
-Requires at least: 2.8  
-Tested up to: 3.8  
-Stable tag: 2.61  
+Requires at least: 3.9  
+Tested up to: 3.9  
+Stable tag: 2.62  
 License: GPLv2 or later  
 
 Allows people to recommend/send your WordPress blog's post/page to a friend.
 
-## Description ##
+## Description
 
-Allows people to recommend/send your WordPress blog's post/page to a friend.
+### Development
+* [https://github.com/lesterchan/wp-email](https://github.com/lesterchan/wp-email "https://github.com/lesterchan/wp-email")
 
-[Demo](http://lesterchan.net/wordpress/2006/07/05/donations/email/ "Demo") | [Translations](http://dev.wp-plugins.org/browser/wp-email/i18n/ "Translations") | [Support Forums](http://forums.lesterchan.net/index.php?board=13.0 "WP-EMail Support Forums")
+### Translations
+* [http://dev.wp-plugins.org/browser/wp-email/i18n/](http://dev.wp-plugins.org/browser/wp-email/i18n/ "http://dev.wp-plugins.org/browser/wp-email/i18n/")
 
-### Credits ###
+
+### Credits
 * Icons courtesy of [FamFamFam](http://www.famfamfam.com/).
 * __ngetext() by [Anna Ozeritskaya](http://hweia.ru/).
 * Right-to-left language support by [Kambiz R. Khojasteh](http://persian-programming.com/)
-* Maintenance by [AaronCampbell](http://xavisys.com)
 
-### Donations ###
+### Donations
 I spent most of my free time creating, updating, maintaining and supporting these plugins, if you really love my plugins and could spare me a couple of bucks as my school allowance, I will really appericiate it. If not feel free to use it without any obligations. Thank You. My Paypal account is lesterchan@gmail.com.
 
-## Installation ##
+## Installation
 
 You can either install it automatically from the WordPress admin, or do it manually:
 
@@ -41,29 +43,29 @@ Once installed take the following steps to set it up:
 
 If you DO NOT want the email link to appear in every post/page, DO NOT use the code above. Just use the shortcode by typing [email_link] into the selected post/page content and it will embed the email link into that post/page only.
 
-## Upgrade Notice ##
+## Upgrade Notice
 N/A
 
-## Screenshots ##
+## Screenshots
 
 1. Admin E-Mail logs
 2. Options/settings page
 3. Sample E-Mail Post link
 4. Sample E-Mail Post screen
 
-## Frequently Asked Questions ##
+## Frequently Asked Questions
 
-### Does it support SMTP authentication with servers utilizing SSL encryption? ###
+### Does it support SMTP authentication with servers utilizing SSL encryption?
 
 1. Yes. Go to `WP-Admin -> E-Mail -> Email Options`, under `SMTP Server`, use `ssl://smtp.gmail.com:465` if you are using Gmail SMTP.
 
-### How do I add this to my theme? ###
+### How do I add this to my theme?
 
 1. Open `wp-content/themes/<YOUR THEME NAME>/index.php` (You may place it in single.php, post.php, page.php, etc also)
 1. Find: `<?php while (have_posts()) : the_post(); ?>`
 1. Simply add this code <strong>inside the loop</strong> where you want the email link to display: <code>if(function_exists('email_link')) { email_link(); }</code>
 
-### How can I customize my E-Mail link? ###
+### How can I customize my E-Mail link?
 
 Many customizations can be made from the options page (WP Admin->E-Mail->E-Mail Options).
 
@@ -76,21 +78,21 @@ if(function_exists('email_link'))
 You can also force `email_link()` to return the link rather than echo it by setting the third parameter to false:
 <code>
 if(function_exists('email_link')) {
-	$email_link ### email_link( 'E-Mail Text Link for Post', 'E-Mail Text Link for Page', false);
+	$email_link email_link( 'E-Mail Text Link for Post', 'E-Mail Text Link for Page', false);
 } else {
-	$email_link ### '';
+	$email_link '';
 }
 
 echo $email_link;
 </code>
 
-### How can I show my E-Mail stats? ###
+### How can I show my E-Mail stats?
 
 There are two options for this:
 1. You can use the included widget by going to Wp-Admin -> Appearance -> Widgets" and using the widget named "Email"
 1. You can use a number of included theme functions for displaying various stats.  Please continue to read these FAQs for more information.
 
-### How can I display the Most E-Mailed Posts? ###
+### How can I display the Most E-Mailed Posts?
 
 Simply insert this code into your theme:
 <code>
@@ -101,7 +103,7 @@ if (function_exists('get_mostemailed'))
 The first parameter is what you want to get, 'post', 'page', or 'both' and defaults to 'both'.
 The second parameter is the maximum number of posts/pages you want to get.
 
-### How can I display the Total E-Mails Sent? ###
+### How can I display the Total E-Mails Sent?
 
 Simply insert this code into your theme:
 <code>
@@ -109,7 +111,7 @@ if (function_exists('get_emails'))
 	get_emails();
 </code>
 
-### How can I display the Total E-Mails Sent Successfully? ###
+### How can I display the Total E-Mails Sent Successfully?
 
 Simply insert this code into your theme:
 <code>
@@ -117,7 +119,7 @@ if (function_exists('get_emails_success'))
 	get_emails_success();
 </code>
 
-### How can I display the Total E-Mails Sent Unsuccessfully? ###
+### How can I display the Total E-Mails Sent Unsuccessfully?
 
 Simply insert this code into your theme:
 <code>
@@ -125,13 +127,13 @@ if (function_exists('get_emails_failed'))
 	get_emails_failed();
 </code>
 
-### How do I hide remarks when viewing E-Mail logs in WP-Admin? ###
+### How do I hide remarks when viewing E-Mail logs in WP-Admin?
 
 1. Open `wp-email.php`
 1. Find `define('EMAIL_SHOW_REMARKS', true);`
 1. Replace with `define('EMAIL_SHOW_REMARKS', false);`
 
-### How can I keep some post text from being sent in the E-Mail? ###
+### How can I keep some post text from being sent in the E-Mail?
 
 If you do not want to email a portion of your post's content, do the following:
 
@@ -141,34 +143,37 @@ The text within [donotemail][/donotemail] will not be displayed when you are ema
 However, it will still be displayed as normal on a normal post or page view.
 Do note that if you are using WP-Print, any text within [donotemail][/donotemail] will not be printed as well.
 
-### I made changes to the CSS, how can I keep them from being overridden on the next upgrade? ###
+### I made changes to the CSS, how can I keep them from being overridden on the next upgrade?
 
 WP-Email will load `email-css.css` from your theme's directory if it exists.  If it doesn't exist then it will load the default `email-css.css` that comes with WP-Email.  Just move your custom CSS to the appropriate file in your theme directory and it will be "upgrade-proof"
 
-### How can I make the E-Mail title different from the post title? ###
+### How can I make the E-Mail title different from the post title?
 
 If you add a custom field with the key "wp-email-title" it will be used as the E-Mail title.
 
-### How can I set a default or suggested remark for the user? ###
+### How can I set a default or suggested remark for the user?
 
 If you add a custom field with the key "wp-email-remark" it will be placed in the remarks field in the E-Mail form.
 
-## Changelog ##
+## Changelog
 
-### 2.61 ###
+### 2.62
+* NEW: WordPress 3.9 Dashicons
+
+### 2.61
 * FIXED: Unable to load WP-Email on Password Protected posts
 
-### 2.60 ###
+### 2.60
 * Move AJAX Request to wp-admin/admin-ajax.php
 * Added nonce To Email Form
 
-### 2.52 ###
+### 2.52
 * Added support for the wp-email-title and wp-email-remark custom fields
 
-### 2.51 ###
+### 2.51
 * FIXED: Warnings of non-existant array indices
 
-### 2.50 ###
+### 2.50
 * NEW: Works For WordPress 2.8 Only
 * NEW: Javascript Now Placed At The Footer
 * NEW: Uses jQuery Instead Of tw-sack
@@ -186,7 +191,7 @@ If you add a custom field with the key "wp-email-remark" it will be placed in th
 * FIXED: Nested ShortCode Issues
 * FIXED: Double Slashes In SMTP Username
 
-### 2.40 ###
+### 2.40
 * NEW: Works For WordPress 2.7 Only
 * NEW: Load Admin JS And CSS Only In WP-Email Admin Pages
 * NEW: Added email-admin-css.css For WP-Email Admin CSS Styles
@@ -202,11 +207,11 @@ If you add a custom field with the key "wp-email-remark" it will be placed in th
 * FIXED: remove_filter('the_content', 'email_form', ''); By TripleM
 * FIXED: Missing Display Of Friend's Invalid Email Address In Javascript Alert Box
 
-### 2.31 ###
+### 2.31
 * NEW: Works For WordPress 2.6
 * FIXED: MYSQL Charset Issue Should Be Solved
 
-### 2.30 ###
+### 2.30
 * NEW: Works For WordPress 2.5 Only
 * NEW: WP-Email Will Load 'email.php' Inside Your Theme Directory If It Exists. This Will Allow Some Flexibility Instead Of Using 'page.php' As The Default Template.
 * NEW: WP-Email Will Load 'email-css.css' Inside Your Theme Directory If It Exists. If Not, It Will Just Load The Default 'email-css.css' By WP-Email
@@ -221,7 +226,7 @@ If you add a custom field with the key "wp-email-remark" it will be placed in th
 * NEW: Use number_format_i18n() Instead
 * NEW: Show 'Remarks' In 'WP-Admin -> E-Mail -> E-Mail Logs' Page By Default. See Usage Tab On How To Hide It.
 
-### 2.20 ###
+### 2.20
 * NEW: Works For WordPress 2.3 Only
 * NEW: Removed PHPMailer Files From The Zip As It Is Included In WordPress
 * NEW: Ability To Embed [email_link] Into Excerpt
@@ -234,7 +239,7 @@ If you add a custom field with the key "wp-email-remark" it will be placed in th
 * FIXED: If There Is No Trailing Slash In Your Permalink, WP-Email Will Add It For You
 * FIXED: Use @session_start() Instead To Compress Session Already Started Error
 
-### 2.11 ###
+### 2.11
 * NEW: Added Template For Page Title And Page Subtitle In 'WP-Admin -> E-Mail -> E-Mail Options'
 * NEW: Putting [email_link] In Your Post/Page Content Will Display A Link To The E-Mail Post/Page
 * FIXED: Suppress gethostbyaddr() Error
@@ -245,7 +250,7 @@ If you add a custom field with the key "wp-email-remark" it will be placed in th
 * FIXED: Fixed A Minor Grammer Mistake For Remark (Singular)
 * FIXED: Some Text Not Translated
 
-### 2.10 ###
+### 2.10
 * NEW: Works For WordPress 2.1 Only
 * NEW: Added Fam Fam Fam's E-Mail Icon
 * NEW: Localize WP-EMail
@@ -258,7 +263,7 @@ If you add a custom field with the key "wp-email-remark" it will be placed in th
 * FIXED: Extra ; When Displaying Error Message
 * FIXED: Removed 1 0 I O From The Image Verify To Avoid Confusion
 
-### 2.07 ###
+### 2.07
 * NEW: WP-EMail-Popup Now Have Nice Permalinks /emailpopup/ Or /emailpopuppage/
 * NEW: Added rel="nofollow" To All Links Generated By WP-EMail
 * NEW: Added noindex, nofollow To Robots Meta Tag In wp-email-popup.php
@@ -269,10 +274,10 @@ If you add a custom field with the key "wp-email-remark" it will be placed in th
 * FIXED: Form Input Data Will No Longer Be Lost After Encountering An Error
 * FIXED: WP-EMail-Popup Not Working With Other Nice Permalinks
 
-### 2.06 ###
+### 2.06
 * FIXED: Modified Get Most Emailed Post Function
 
-### 2.05 ###
+### 2.05
 * NEW: Spam Prevention - Image Verification
 * NEW: EMail Administration Panel And The Code That WP-EMail Generated Is XHTML 1.0 Transitional
 * NEW: Added <label> Tag For Form Fields
@@ -280,16 +285,16 @@ If you add a custom field with the key "wp-email-remark" it will be placed in th
 * FIXED: Duplicate Subject/Name When Sent Using PHP
 * FIXED: Quotes Not Displaying When Sending In Plain Text
 
-### 2.04a ###
+### 2.04a
 * FIXED: PHP Mail Not Working Properly (Thanks To Pablo)
 
-### 2.04 ###
+### 2.04
 * NEW: Ability To Sent To Multiple EMails (Config Via Admin Panel)l
 * NEW: Added wp-email-popup.php For Using WP-EMail In A Pop Up Windowl
 * NEW: Combined functions-wp-email.php With email.phpl
 * NEW: Moved wp-email.php/wp-email-popup.php To Plugin Folderl
 
-### 2.03 ###
+### 2.03
 * NEW: Improved On 'manage_email' Capabilities
 * NEW: Neater Structure
 * NEW: No More Install/Upgrade File, It Will Install/Upgrade When You Activate The Plugin
@@ -302,11 +307,11 @@ If you add a custom field with the key "wp-email-remark" it will be placed in th
 * FIXED: Charset Is Now UTF-8
 * FIXED: Quotes Not Displaying
 
-### 2.02 ###
+### 2.02
 * NEW: Added 'manage_email' Capabilities To Administrator Roles
 * FIXED: Able To View Password Protected Blog
 
-### 2.01 ###
+### 2.01
 * NEW: Compatible With WordPress 2.0 Only
 * NEW: EMail A Snippet Of The Post Rather Than The Whole Post. Able To Specify The No. Of Words Before Cutting Off
 * NEW: Spam Prevention - Better Checking Of Names, EMail Addresses And Remarks
@@ -318,13 +323,13 @@ If you add a custom field with the key "wp-email-remark" it will be placed in th
 * FIXED: Friend's Name Is Displayed Instead Of Friend's EMail On The Results Page
 * UPDATE: Moved All The WP-EMail Functions To wp-includes/functions-wp-email.php
 
-### 2.00b ###
+### 2.00b
 * FIXED: Error In Sending E-Mail With Pages
 
-### 2.00a ###
+### 2.00a
 * FIXED: exit(); Missing in wp-email.php
 
-### 2.00 ###
+### 2.00
 * FIXED: Did Not Strip Slashes In Remarks Field
 * FIXED: All Of WordPress Permlink Styles Should Work Now
 * FIXED: Better Localization Support (80% Done, Will Leave It In The Mean Time)
