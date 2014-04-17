@@ -3,7 +3,7 @@
  Plugin Name: WP-EMail
  Plugin URI: http://lesterchan.net/portfolio/programming/php/
  Description: Allows people to recommand/send your WordPress blog's post/page to a friend.
- Version: 2.61
+ Version: 2.62
  Author: Lester 'GaMerZ' Chan
  Author URI: http://lesterchan.net
  Text Domain: wp-email
@@ -53,14 +53,10 @@ $wpdb->email = $wpdb->prefix.'email';
 ### Function: E-Mail Administration Menu
 add_action('admin_menu', 'email_menu');
 function email_menu() {
-	if (function_exists('add_menu_page')) {
-		add_menu_page(__('E-Mail', 'wp-email'), __('E-Mail', 'wp-email'), 'manage_email', 'wp-email/email-manager.php', '', 'dashicons-email-alt');
-	}
-	if (function_exists('add_submenu_page')) {
-		add_submenu_page('wp-email/email-manager.php', __('Manage E-Mail', 'wp-email'), __('Manage E-Mail', 'wp-email'), 'manage_email', 'wp-email/email-manager.php');
-		add_submenu_page('wp-email/email-manager.php', __('E-Mail Options', 'wp-email'), __('E-Mail Options', 'wp-email'),  'manage_email', 'wp-email/email-options.php');
-		add_submenu_page('wp-email/email-manager.php', __('Uninstall WP-EMail', 'wp-email'), __('Uninstall WP-EMail', 'wp-email'),  'manage_email', 'wp-email/email-uninstall.php');
-	}
+	add_menu_page(__('E-Mail', 'wp-email'), __('E-Mail', 'wp-email'), 'manage_email', 'wp-email/email-manager.php', '', 'dashicons-email-alt');
+	add_submenu_page('wp-email/email-manager.php', __('Manage E-Mail', 'wp-email'), __('Manage E-Mail', 'wp-email'), 'manage_email', 'wp-email/email-manager.php');
+	add_submenu_page('wp-email/email-manager.php', __('E-Mail Options', 'wp-email'), __('E-Mail Options', 'wp-email'),  'manage_email', 'wp-email/email-options.php');
+	add_submenu_page('wp-email/email-manager.php', __('Uninstall WP-EMail', 'wp-email'), __('Uninstall WP-EMail', 'wp-email'),  'manage_email', 'wp-email/email-uninstall.php');
 }
 
 
