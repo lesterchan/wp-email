@@ -1,22 +1,9 @@
 <?php
-/**
- * WordPress Plugin: WP-EMail
- * Copyright (c) 2012 Lester "GaMerZ" Chan
- *
- * File Written By:
- * - Lester "GaMerZ" Chan
- * - http://lesterchan.net
- *
- * File Information:
- * - E-Mail Post/Page To A Friend
- * - wp-content/plugins/wp-email/email-standalone.php
- */
-
-
 ### Session Start
 @session_start();
 
 ### Filters
+add_action('wp_head', 'email_meta_nofollow');
 add_filter('wp_title', 'email_pagetitle');
 add_action('loop_start', 'email_addfilters');
 

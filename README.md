@@ -4,7 +4,7 @@ Donate link: http://lesterchan.net/site/donation/
 Tags: email, e-mail, wp-email, mail, send, recommend, ajax, friend  
 Requires at least: 3.9  
 Tested up to: 3.9  
-Stable tag: 2.62  
+Stable tag: 2.63  
 License: GPLv2 or later  
 
 Allows people to recommend/send your WordPress blog's post/page to a friend.
@@ -156,6 +156,11 @@ If you add a custom field with the key "wp-email-title" it will be used as the E
 If you add a custom field with the key "wp-email-remark" it will be placed in the remarks field in the E-Mail form.
 
 ## Changelog
+
+### 2.63
+* NEW: Allow Multisite Network Activate
+* NEW: Uses WordPress uninstall.php file to uninstall the plugin
+* NEW: Added noindex, nofollow to meta tag to email-standalone.php
 
 ### 2.62
 * NEW: WordPress 3.9 Dashicons
