@@ -161,6 +161,7 @@ If you add a custom field with the key "wp-email-remark" it will be placed in th
 * NEW: Allow Multisite Network Activate
 * NEW: Uses WordPress uninstall.php file to uninstall the plugin
 * NEW: Added noindex, nofollow to meta tag to email-standalone.php
+* FIXED: Use get_the_author() instead of the_author('', false)
 
 ### 2.62
 * NEW: WordPress 3.9 Dashicons

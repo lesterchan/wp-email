@@ -413,7 +413,7 @@ function email_get_title() {
 function email_title($page_title) {
 	if(in_the_loop()) {
 		$post_title = email_get_title();
-		$post_author = the_author('', false);
+		$post_author = get_the_author();
 		$post_date = get_the_time(get_option('date_format').' ('.get_option('time_format').')', '', '', false);
 		$post_category = email_category(__(',', 'wp-email').' ');
 		$post_category_alt = strip_tags($post_category);
@@ -1101,7 +1101,7 @@ function email_form($content, $echo = true, $subtitle = true, $div = true, $erro
 	// Variables
 	$multipage = false;
 	$post_title = email_get_title();
-	$post_author = the_author('', false);
+	$post_author = get_the_author();
 	$post_date = get_the_time(get_option('date_format').' ('.get_option('time_format').')', '', '', false);
 	$post_category = email_category(__(',', 'wp-email').' ');
 	$post_category_alt = strip_tags($post_category);
