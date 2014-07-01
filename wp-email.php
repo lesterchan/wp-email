@@ -53,73 +53,11 @@ function email_menu() {
 }
 
 
-### Function: E-Mail htaccess ReWrite Rules
-add_filter('generate_rewrite_rules', 'email_rewrite');
-function email_rewrite($wp_rewrite) {
-	$email_link = get_permalink();
-	$page_uris = $wp_rewrite->page_uri_index();
-	$uris = $page_uris[0];
-	if(substr($email_link, -1, 1) != '/' && substr($wp_rewrite->permalink_structure, -1, 1) != '/') {
-		$email_link_text = '/email';
-		$email_popup_text = '/emailpopup';
-	} else {
-		$email_link_text = 'email';
-		$email_popup_text = 'emailpopup';
-	}
-	// WP-EMail Standalone Post Rules
-	$rewrite_rules = $wp_rewrite->generate_rewrite_rule($wp_rewrite->permalink_structure.$email_link_text, EP_PERMALINK);
-	$rewrite_rules = array_slice($rewrite_rules, 5, 1);
-	$r_rule = array_keys($rewrite_rules);
-	$r_rule = array_shift($r_rule);
-	$r_rule = str_replace('/trackback', '', $r_rule);
-	$r_link = array_values($rewrite_rules);
-	$r_link = array_shift($r_link);
-	$r_link = str_replace('tb=1', 'email=1', $r_link);
-	$wp_rewrite->rules = array_merge(array($r_rule => $r_link), $wp_rewrite->rules);
-	// WP-Email Standalone Page Rules
-	if(is_array($uris)) {
-		$email_page_rules = array();
-		foreach ($uris as $uri => $pagename) {
-			$wp_rewrite->add_rewrite_tag('%pagename%', "($uri)", 'pagename=');
-			$rewrite_rules = $wp_rewrite->generate_rewrite_rules($wp_rewrite->get_page_permastruct().'/emailpage', EP_PAGES);
-			$rewrite_rules = array_slice($rewrite_rules, 5, 1);
-			$r_rule = array_keys($rewrite_rules);
-			$r_rule = array_shift($r_rule);
-			$r_rule = str_replace('/trackback', '', $r_rule);
-			$r_link = array_values($rewrite_rules);
-			$r_link = array_shift($r_link);
-			$r_link = str_replace('tb=1', 'email=1', $r_link);
-			$email_page_rules = array_merge($email_page_rules, array($r_rule => $r_link));
-		}
-		$wp_rewrite->rules = array_merge($email_page_rules, $wp_rewrite->rules);
-	}
-
-	// WP-EMail Popup Post Rules
-	$rewrite_rules = $wp_rewrite->generate_rewrite_rule($wp_rewrite->permalink_structure.$email_popup_text, EP_PERMALINK);
-	$rewrite_rules = array_slice($rewrite_rules, 5, 1);
-	$r_rule = array_keys($rewrite_rules);
-	$r_rule = array_shift($r_rule);
-	$r_rule = str_replace('/trackback', '', $r_rule);
-	$r_link = array_values($rewrite_rules);
-	$r_link = array_shift($r_link);
-	$r_link = str_replace('tb=1', 'emailpopup=1', $r_link);
-	$wp_rewrite->rules = array_merge(array($r_rule => $r_link), $wp_rewrite->rules);
-	if(is_array($uris)) {
-		$email_page_rules = array();
-		foreach ($uris as $uri => $pagename) {
-			$wp_rewrite->add_rewrite_tag('%pagename%', "($uri)", 'pagename=');
-			$rewrite_rules = $wp_rewrite->generate_rewrite_rules($wp_rewrite->get_page_permastruct().'/emailpopuppage', EP_PAGES);
-			$rewrite_rules = array_slice($rewrite_rules, 5, 1);
-			$r_rule = array_keys($rewrite_rules);
-			$r_rule = array_shift($r_rule);
-			$r_rule = str_replace('/trackback', '', $r_rule);
-			$r_link = array_values($rewrite_rules);
-			$r_link = array_shift($r_link);
-			$r_link = str_replace('tb=1', 'emailpopup=1', $r_link);
-			$email_page_rules = array_merge($email_page_rules, array($r_rule => $r_link));
-		}
-		$wp_rewrite->rules = array_merge($email_page_rules, $wp_rewrite->rules);
-	}
+### Function: Add htaccess Rewrite Endpoint - this handles all the rules
+add_action( 'init', 'wp_email_endpoint' );
+function wp_email_endpoint() {
+	add_rewrite_endpoint( 'email', EP_PERMALINK | EP_PAGES );
+	add_rewrite_endpoint( 'emailpopup', EP_PERMALINK | EP_PAGES );
 }
 
 
@@ -212,10 +150,8 @@ function email_link($email_post_text = '', $email_page_text = '', $echo = true) 
 					} else {
 						$email_text = $email_page_text;
 					}
-					$email_link = $email_link.'emailpage/';
-				} else {
-					$email_link = $email_link.'email/';
 				}
+				$email_link = $email_link.'email/';
 			} else {
 				if(is_page()) {
 					if(empty($email_page_text)) {
@@ -239,10 +175,8 @@ function email_link($email_post_text = '', $email_page_text = '', $echo = true) 
 					} else {
 						$email_text = $email_page_text;
 					}
-					$email_link = $email_link.'emailpopuppage/';
-				} else {
-					$email_link = $email_link.'emailpopup/';
 				}
+				$email_link = $email_link.'emailpopup/';
 			} else {
 				if(is_page()) {
 					if(empty($email_page_text)) {
@@ -793,10 +727,11 @@ if(!function_exists('get_mostemailed')) {
 ### Function: Load WP-EMail
 add_action('template_redirect', 'wp_email', 5);
 function wp_email() {
-	if(intval(get_query_var('email')) == 1) {
+	global $wp_query;
+	if( array_key_exists( 'email' , $wp_query->query_vars ) ) {
 		include(WP_PLUGIN_DIR.'/wp-email/email-standalone.php');
 		exit();
-	} elseif(intval(get_query_var('emailpopup')) == 1) {
+	} elseif( array_key_exists( 'emailpopup' , $wp_query->query_vars ) ) {
 		include(WP_PLUGIN_DIR.'/wp-email/email-popup.php');
 		exit();
 	}

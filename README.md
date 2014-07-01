@@ -17,12 +17,6 @@ Allows people to recommend/send your WordPress blog's post/page to a friend.
 ### Translations
 * [http://dev.wp-plugins.org/browser/wp-email/i18n/](http://dev.wp-plugins.org/browser/wp-email/i18n/ "http://dev.wp-plugins.org/browser/wp-email/i18n/")
 
-
-### Credits
-* Icons courtesy of [FamFamFam](http://www.famfamfam.com/).
-* __ngetext() by [Anna Ozeritskaya](http://hweia.ru/).
-* Right-to-left language support by [Kambiz R. Khojasteh](http://persian-programming.com/)
-
 ### Donations
 I spent most of my free time creating, updating, maintaining and supporting these plugins, if you really love my plugins and could spare me a couple of bucks as my school allowance, I will really appericiate it. If not feel free to use it without any obligations. Thank You. My Paypal account is lesterchan@gmail.com.
 
@@ -158,6 +152,7 @@ If you add a custom field with the key "wp-email-remark" it will be placed in th
 ## Changelog
 
 ### 2.63
+* NEW: Finally there is custom post type support. Props [nimmolo](http://andrewnimmo.org/ "nimmolo").
 * NEW: Allow Multisite Network Activate
 * NEW: Uses WordPress uninstall.php file to uninstall the plugin
 * NEW: Added noindex, nofollow to meta tag to email-standalone.php
