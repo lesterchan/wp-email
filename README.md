@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.org/lesterchan/wp-email.svg?branch=master)](https://travis-ci.org/lesterchan/wp-email)
 # WP-EMail
 Contributors: GamerZ  
 Donate link: http://lesterchan.net/site/donation/  
