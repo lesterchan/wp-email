@@ -1,4 +1,3 @@
-[![Build Status](https://travis-ci.org/lesterchan/wp-email.svg?branch=master)](https://travis-ci.org/lesterchan/wp-email)
 # WP-EMail
 Contributors: GamerZ  
 Donate link: http://lesterchan.net/site/donation/  
@@ -11,6 +10,9 @@ License: GPLv2 or later
 Allows people to recommend/send your WordPress blog's post/page to a friend.
 
 ## Description
+
+### Build Status
+[![Build Status](https://travis-ci.org/lesterchan/wp-email.svg?branch=master)](https://travis-ci.org/lesterchan/wp-email)
 
 ### Development
 * [https://github.com/lesterchan/wp-email](https://github.com/lesterchan/wp-email "https://github.com/lesterchan/wp-email")
