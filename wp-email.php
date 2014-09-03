@@ -94,7 +94,7 @@ function email_scripts() {
 		}
 	}
 	$email_max = intval(get_option('email_multiple'));
-	wp_enqueue_script('wp-email', plugins_url('wp-email/email-js.js'), array('jquery'), '2.60', true);
+	wp_enqueue_script('wp-email', plugins_url('wp-email/email-js.js'), array('jquery'), '2.63', true);
 	wp_localize_script('wp-email', 'emailL10n', array(
 		'ajax_url' => admin_url('admin-ajax.php'),
 		'max_allowed' => $email_max,

@@ -209,6 +209,6 @@ function email_form() {
 			email_ajax_data += '&page_id=' + email_pageid;
 		}
 		email_ajax_data += '&wp-email_nonce=' + jQuery('#wp-email_nonce').val();
-		jQuery.ajax({type: 'POST', url: emailL10n.ajax_url, data: email_ajax_data, cache: false, success: function (data) { jQuery('#wp-email-content').html(data);}});
+		jQuery.ajax({type: 'POST', xhrFields: {withCredentials: true}, url: emailL10n.ajax_url, data: email_ajax_data, cache: false, success: function (data) { jQuery('#wp-email-content').html(data);}});
 	}
 }
