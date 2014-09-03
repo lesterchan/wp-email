@@ -3,7 +3,7 @@ Contributors: GamerZ
 Donate link: http://lesterchan.net/site/donation/  
 Tags: email, e-mail, wp-email, mail, send, recommend, ajax, friend  
 Requires at least: 3.9  
-Tested up to: 3.9  
+Tested up to: 4.0
 Stable tag: 2.63  
 License: GPLv2 or later  
 
@@ -19,6 +19,10 @@ Allows people to recommend/send your WordPress blog's post/page to a friend.
 
 ### Translations
 * [http://dev.wp-plugins.org/browser/wp-email/i18n/](http://dev.wp-plugins.org/browser/wp-email/i18n/ "http://dev.wp-plugins.org/browser/wp-email/i18n/")
+
+### Credits
+* Plugin icon by [Yannick](http://yanlu.de) from [Flaticon](http://www.flaticon.com)
+* Icons courtesy of [FamFamFam](http://www.famfamfam.com/).
 
 ### Donations
 I spent most of my free time creating, updating, maintaining and supporting these plugins, if you really love my plugins and could spare me a couple of bucks as my school allowance, I will really appericiate it. If not feel free to use it without any obligations. Thank You. My Paypal account is lesterchan@gmail.com.
