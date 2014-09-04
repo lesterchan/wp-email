@@ -49,10 +49,11 @@ N/A
 
 ## Screenshots
 
-1. Admin E-Mail logs
-2. Options/settings page
-3. Sample E-Mail Post link
-4. Sample E-Mail Post screen
+1. Admin - E-Mail Logs
+2. Admin - Options Page
+3. Admin - Templates Page
+4. Sample E-Mail Post link
+5. Sample E-Mail Post screen
 
 ## Frequently Asked Questions
 
