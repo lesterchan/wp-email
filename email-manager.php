@@ -110,9 +110,9 @@ if(!empty($_POST['delete_logs'])) {
 	if(trim($_POST['delete_logs_yes']) == 'yes') {
 		$delete_logs = $wpdb->query("DELETE FROM $wpdb->email");
 		if($delete_logs) {
-			$text = '<font color="green">'.__('All E-Mail Logs Have Been Deleted.', 'wp-email').'</font>';
+			$text = '<p style="color: green;">'.__('All E-Mail Logs Have Been Deleted.', 'wp-email').'</p>';
 		} else {
-			$text = '<font color="red">'.__('An Error Has Occured While Deleting All E-Mail Logs.', 'wp-email').'</font>';
+			$text = '<p style="color: red;">'.__('An Error Has Occured While Deleting All E-Mail Logs.', 'wp-email').'</p>';
 		}
 	}
 }

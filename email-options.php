@@ -97,12 +97,12 @@ if( !empty($_POST['Submit']) ) {
 	$text = '';
 	foreach($update_email_queries as $update_email_query) {
 		if($update_email_query) {
-			$text .= '<font color="green">'.$update_email_text[$i].' '.__('Updated', 'wp-email').'</font><br />';
+			$text .= '<p style="color: green;">'.$update_email_text[$i].' '.__('Updated', 'wp-email').'</p>';
 		}
 		$i++;
 	}
 	if(empty($text)) {
-		$text = '<font color="red">'.__('No E-Mail Option Updated', 'wp-email').'</font>';
+		$text = '<p style="color: red;">'.__('No E-Mail Option Updated', 'wp-email').'</p>';
 	}
 }
 $email_options = get_option('email_options');
