@@ -3,7 +3,7 @@
  Plugin Name: WP-EMail
  Plugin URI: http://lesterchan.net/portfolio/programming/php/
  Description: Allows people to recommand/send your WordPress blog's post/page to a friend.
- Version: 2.63
+ Version: 2.64
  Author: Lester 'GaMerZ' Chan
  Author URI: http://lesterchan.net
  Text Domain: wp-email
@@ -728,12 +728,17 @@ if(!function_exists('get_mostemailed')) {
 add_action('template_redirect', 'wp_email', 5);
 function wp_email() {
 	global $wp_query;
-	if( array_key_exists( 'email' , $wp_query->query_vars ) ) {
-		include(WP_PLUGIN_DIR.'/wp-email/email-standalone.php');
-		exit();
-	} elseif( array_key_exists( 'emailpopup' , $wp_query->query_vars ) ) {
-		include(WP_PLUGIN_DIR.'/wp-email/email-popup.php');
-		exit();
+
+	$template_redirect = apply_filters( 'wp_email_template_redirect', true );
+
+	if( $template_redirect ) {
+		if (array_key_exists('email', $wp_query->query_vars)) {
+			include(WP_PLUGIN_DIR . '/wp-email/email-standalone.php');
+			exit();
+		} elseif (array_key_exists('emailpopup', $wp_query->query_vars)) {
+			include(WP_PLUGIN_DIR . '/wp-email/email-popup.php');
+			exit();
+		}
 	}
 }
 
