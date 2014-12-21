@@ -3,14 +3,14 @@
  Plugin Name: WP-EMail
  Plugin URI: http://lesterchan.net/portfolio/programming/php/
  Description: Allows people to recommand/send your WordPress blog's post/page to a friend.
- Version: 2.64
+ Version: 2.65
  Author: Lester 'GaMerZ' Chan
  Author URI: http://lesterchan.net
  Text Domain: wp-email
  */
 
 /*
-	Copyright 2014  Lester Chan  (email : lesterchan@gmail.com)
+	Copyright 2015  Lester Chan  (email : lesterchan@gmail.com)
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -1176,14 +1176,12 @@ if($_GET['sortby'] == 'email') {
 
 
 ### Function: Plug Into WP-Stats
-add_action('wp','email_wp_stats');
+add_action( 'plugins_loaded','email_wp_stats' );
 function email_wp_stats() {
-	if(function_exists('stats_page')) {
-		add_filter('wp_stats_page_admin_plugins', 'email_page_admin_general_stats');
-		add_filter('wp_stats_page_admin_most', 'email_page_admin_most_stats');
-		add_filter('wp_stats_page_plugins', 'email_page_general_stats');
-		add_filter('wp_stats_page_most', 'email_page_most_stats');
-	}
+	add_filter( 'wp_stats_page_admin_plugins', 'email_page_admin_general_stats' );
+	add_filter( 'wp_stats_page_admin_most', 'email_page_admin_most_stats' );
+	add_filter( 'wp_stats_page_plugins', 'email_page_general_stats' );
+	add_filter( 'wp_stats_page_most', 'email_page_most_stats' );
 }
 
 
