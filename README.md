@@ -3,7 +3,7 @@ Contributors: GamerZ
 Donate link: http://lesterchan.net/site/donation/  
 Tags: email, e-mail, wp-email, mail, send, recommend, ajax, friend  
 Requires at least: 3.9  
-Tested up to: 4.2  
+Tested up to: 4.1  
 Stable tag: 2.65  
 License: GPLv2 or later  
 
@@ -160,6 +160,7 @@ If you add a custom field with the key "wp-email-remark" it will be placed in th
 ## Changelog
 ### 2.65
 * FIXED: Integration with WP-Stats
+* FIXED: Added in wp_nonce_field to email-options page
 
 ### 2.64
 * NEW: Added in `wp_email_template_redirect` filter to allow other plugins disable template redirect when query var contains 'email'

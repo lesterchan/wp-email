@@ -25,38 +25,39 @@ $base_page = 'admin.php?page='.$base_name;
 
 
 ### If Form Is Submitted
-if( !empty($_POST['Submit']) ) {
-	$email_smtp_name = strip_tags(trim($_POST['email_smtp_name']));
-	$email_smtp_password = strip_tags(trim($_POST['email_smtp_password']));
-	$email_smtp_server = strip_tags(trim($_POST['email_smtp_server']));
+if( !empty( $_POST['Submit'] ) ) {
+	check_admin_referer( 'wp-email_options' );
+	$email_smtp_name =      ! empty( $_POST['email_smtp_name'] )        ? strip_tags( trim( $_POST['email_smtp_name'] ) ) : '';
+	$email_smtp_password =  ! empty( $_POST['email_smtp_password'] )    ? strip_tags( trim( $_POST['email_smtp_password'] ) ) : '';
+	$email_smtp_server =    ! empty( $_POST['email_smtp_server'] )      ? strip_tags( trim( $_POST['email_smtp_server'] ) ) : '';
 	$email_smtp = array('username' => $email_smtp_name, 'password' => $email_smtp_password, 'server' => $email_smtp_server);
 	$email_options = array();
-	$email_options['post_text'] = addslashes(trim(wp_filter_post_kses($_POST['email_post_text'])));
-	$email_options['page_text'] = addslashes(trim(wp_filter_post_kses($_POST['email_page_text'])));
-	$email_options['email_icon'] = trim($_POST['email_icon']);
-	$email_options['email_type'] = intval($_POST['email_type']);
-	$email_options['email_style'] = intval($_POST['email_style']);
-	$email_options['email_html'] = trim($_POST['email_html']);
+	$email_options['post_text'] =   ! empty( $_POST['email_post_text'] )    ? addslashes( trim( wp_filter_post_kses( $_POST['email_post_text'] ) ) ) : '';
+	$email_options['page_text'] =   ! empty( $_POST['email_page_text'] )    ? addslashes( trim( wp_filter_post_kses( $_POST['email_page_text']) ) ) : '';
+	$email_options['email_icon'] =  ! empty( $_POST['email_icon'] )         ? trim( $_POST['email_icon'] ) : '';
+	$email_options['email_type'] =  ! empty( $_POST['email_type'] )         ? intval( $_POST['email_type'] ) : 0;
+	$email_options['email_style'] = ! empty( $_POST['email_style'] )        ? intval( $_POST['email_style'] ) : 0;
+	$email_options['email_html'] =  ! empty( $_POST['email_html'] )         ? trim( $_POST['email_html'] ) : '';
 	$email_fields = array();
-	$email_fields['yourname'] = intval($_POST['email_field_yourname']);
-	$email_fields['youremail'] = intval($_POST['email_field_youremail']);
-	$email_fields['yourremarks'] = intval($_POST['email_field_yourremarks']);
-	$email_fields['friendname'] = intval($_POST['email_field_friendname']);
-	$email_fields['friendemail'] = intval($_POST['email_field_friendemail']);
-	$email_contenttype = strip_tags(trim($_POST['email_contenttype']));
-	$email_mailer = strip_tags(trim($_POST['email_mailer']));
-	$email_snippet = intval(trim($_POST['email_snippet']));
-	$email_interval = intval(trim($_POST['email_interval']));
-	$email_multiple = intval(trim($_POST['email_multiple']));
-	$email_imageverify = intval(trim($_POST['email_imageverify']));
-	$email_template_title = trim(wp_filter_post_kses($_POST['email_template_title']));
-	$email_template_subtitle = trim(wp_filter_post_kses($_POST['email_template_subtitle']));
-	$email_template_subject = strip_tags(trim($_POST['email_template_subject']));
-	$email_template_body = trim(wp_filter_post_kses($_POST['email_template_body']));
-	$email_template_bodyalt = trim(wp_filter_post_kses($_POST['email_template_bodyalt']));
-	$email_template_sentsuccess = trim(wp_filter_post_kses($_POST['email_template_sentsuccess']));
-	$email_template_sentfailed = trim(wp_filter_post_kses($_POST['email_template_sentfailed']));
-	$email_template_error = trim(wp_filter_post_kses($_POST['email_template_error']));
+	$email_fields['yourname'] =     ! empty( $_POST['email_field_yourname'] )       ? intval( $_POST['email_field_yourname'] ) : 0;
+	$email_fields['youremail'] =    ! empty( $_POST['email_field_youremail'] )      ? intval( $_POST['email_field_youremail'] ) : 0;
+	$email_fields['yourremarks'] =  ! empty( $_POST['email_field_yourremarks'] )    ? intval( $_POST['email_field_yourremarks'] ) : 0;
+	$email_fields['friendname'] =   ! empty( $_POST['email_field_friendname'] )     ? intval( $_POST['email_field_friendname'] ) : 0;
+	$email_fields['friendemail'] =  ! empty( $_POST['email_field_friendemail'] )    ? intval( $_POST['email_field_friendemail'] ) : 0;
+	$email_contenttype =            ! empty( $_POST['email_contenttype'] )          ? strip_tags( trim( $_POST['email_contenttype'] ) ) : '';
+	$email_mailer =                 ! empty( $_POST['email_mailer'] )               ? strip_tags( trim( $_POST['email_mailer'] ) ) : '';
+	$email_snippet =                ! empty( $_POST['email_snippet'] )              ? intval( trim( $_POST['email_snippet'] ) ) : 0;
+	$email_interval =               ! empty( $_POST['email_interval'] )             ? intval( trim( $_POST['email_interval'] ) ) : 0;
+	$email_multiple =               ! empty( $_POST['email_multiple'] )             ? intval( trim( $_POST['email_multiple'] ) ) : 0;
+	$email_imageverify =            ! empty( $_POST['email_imageverify'] )          ? intval( trim( $_POST['email_imageverify'] ) ) : 0;
+	$email_template_title =         ! empty( $_POST['email_template_title'] )       ? trim( wp_filter_post_kses( $_POST['email_template_title'] ) ) : '';
+	$email_template_subtitle =      ! empty( $_POST['email_template_subtitle'] )    ? trim( wp_filter_post_kses( $_POST['email_template_subtitle'] ) ) : '';
+	$email_template_subject =       ! empty( $_POST['email_template_subject'] )     ? strip_tags( trim( $_POST['email_template_subject'] ) ) : '';
+	$email_template_body =          ! empty( $_POST['email_template_body'] )        ? trim( wp_filter_post_kses( $_POST['email_template_body'] ) ) : '';
+	$email_template_bodyalt =       ! empty( $_POST['email_template_bodyalt'] )     ? trim( wp_filter_post_kses( $_POST['email_template_bodyalt'] ) ) : '';
+	$email_template_sentsuccess =   ! empty( $_POST['email_template_sentsuccess'] ) ? trim( wp_filter_post_kses( $_POST['email_template_sentsuccess'] ) ) : '';
+	$email_template_sentfailed =    ! empty( $_POST['email_template_sentfailed'] )  ? trim( wp_filter_post_kses( $_POST['email_template_sentfailed'] ) ) : '';
+	$email_template_error =         ! empty( $_POST['email_template_error'] )       ? trim( wp_filter_post_kses( $_POST['email_template_error'] ) ) : '';
 	$update_email_queries = array();
 	$update_email_text = array();
 	$update_email_queries[] = update_option('email_smtp', $email_smtp);
@@ -157,21 +158,22 @@ $email_smtp = get_option('email_smtp');
 </script>
 <?php if(!empty($text)) { echo '<!-- Last Action --><div id="message" class="updated fade"><p>'.$text.'</p></div>'; } ?>
 <form method="post" action="<?php echo admin_url('admin.php?page='.plugin_basename(__FILE__)); ?>">
+<?php wp_nonce_field( 'wp-email_options' ); ?>
 <div class="wrap">
 	<h2><?php _e('E-Mail Options', 'wp-email'); ?></h2>
 	<h3><?php _e('SMTP Settings', 'wp-email'); ?></h3>
 	<table class="form-table">
 		 <tr>
 			<th width="20%"><?php _e('SMTP Username:', 'wp-email'); ?></th>
-			<td><input type="text" name="email_smtp_name" value="<?php echo stripslashes($email_smtp['username']); ?>" size="30" dir="ltr" /></td>
+			<td><input type="text" name="email_smtp_name" value="<?php echo ! empty( $email_smtp['username'] ) ? stripslashes( $email_smtp['username'] ) : ''; ?>" size="30" dir="ltr" /></td>
 		</tr>
 		<tr>
 			<th width="20%"><?php _e('SMTP Password:', 'wp-email'); ?></th>
-			<td><input type="password" name="email_smtp_password" value="<?php echo stripslashes($email_smtp['password']); ?>" size="30" dir="ltr" /></td>
+			<td><input type="password" name="email_smtp_password" value="<?php echo ! empty( $email_smtp['password'] ) ? stripslashes( $email_smtp['password'] ) : ''; ?>" size="30" dir="ltr" /></td>
 		</tr>
 		<tr>
 			<th width="20%"><?php _e('SMTP Server:', 'wp-email'); ?></th>
-			<td><input type="text" name="email_smtp_server" value="<?php echo stripslashes($email_smtp['server']); ?>" size="30" dir="ltr" /><br /><?php _e('You may leave the above fields blank if you do not use a SMTP server.', 'wp-email'); ?></td>
+			<td><input type="text" name="email_smtp_server" value="<?php echo ! empty( $email_smtp['server'] ) ? stripslashes( $email_smtp['server'] ) : ''; ?>" size="30" dir="ltr" /><br /><?php _e('You may leave the above fields blank if you do not use a SMTP server.', 'wp-email'); ?></td>
 		</tr>
 	</table>
 	<h3><?php _e('E-Mail Styles', 'wp-email'); ?></h3>
