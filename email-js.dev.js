@@ -121,20 +121,20 @@ function isEmpty(value){
 
 // Check Name
 function is_valid_name(name) {
-	filter  = /[(\*\(\)\[\]\+\,\/\?\:\;\'\"\`\~\\#\$\%\^\&\<\>)+]/;
+	var filter  = /[(\*\(\)\[\]\+\,\/\?\:\;\'\"\`\~\\#\$\%\^\&\<\>)+]/;
 	return !filter.test(jQuery.trim(name));
 }
 
 // Check Email
 function is_valid_email(email) {
-	filter  = /^([a-zA-Z0-9_\.\-])+\@(([a-zA-Z0-9\-])+\.)+([a-zA-Z0-9]{2,4})+$/;
+	var filter  = /^([a-zA-Z0-9_\.\-])+\@(([a-zA-Z0-9\-])+\.)+([a-zA-Z0-9]{2,4})+$/;
 	return filter.test(jQuery.trim(email));
 }
 
 // Check Remarks
 function is_valid_remarks(remarks) {
 	remarks = jQuery.trim(remarks);
-	injection_strings = new Array('apparently-to', 'cc', 'bcc', 'boundary', 'charset', 'content-disposition', 'content-type', 'content-transfer-encoding', 'errors-to', 'in-reply-to', 'message-id', 'mime-version', 'multipart/mixed', 'multipart/alternative', 'multipart/related', 'reply-to', 'x-mailer', 'x-sender', 'x-uidl');
+	var injection_strings = new Array('apparently-to', 'content-disposition', 'content-type', 'content-transfer-encoding', 'errors-to', 'in-reply-to', 'message-id', 'mime-version', 'multipart/mixed', 'multipart/alternative', 'multipart/related', 'reply-to', 'x-mailer', 'x-sender', 'x-uidl');
 	for(i = 0; i < injection_strings.length; i++) {
 		if(remarks.indexOf(injection_strings[i]) != -1) {
 			return false;
