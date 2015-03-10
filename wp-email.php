@@ -81,13 +81,13 @@ function email_javascripts_header() {
 add_action('wp_enqueue_scripts', 'email_scripts');
 function email_scripts() {
 	global $text_direction;
-	if(@file_exists(TEMPLATEPATH.'/email-css.css')) {
+	if(@file_exists(get_stylesheet_directory().'/email-css.css')) {
 		wp_enqueue_style('wp-email', get_stylesheet_directory_uri().'/email-css.css', false, '2.60', 'all');
 	} else {
 		wp_enqueue_style('wp-email', plugins_url('wp-email/email-css.css'), false, '2.60', 'all');
 	}
 	if('rtl' == $text_direction) {
-		if(@file_exists(TEMPLATEPATH.'/email-css-rtl.css')) {
+		if(@file_exists(get_stylesheet_directory().'/email-css-rtl.css')) {
 			wp_enqueue_style('wp-email-rtl', get_stylesheet_directory_uri().'/email-css-rtl.css', false, '2.60', 'all');
 		} else {
 			wp_enqueue_style('wp-email-rtl', plugins_url('wp-email/email-css-rtl.css'), false, '2.60', 'all');
