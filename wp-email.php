@@ -276,8 +276,8 @@ if(!function_exists('snippet_text')) {
 
 
 ### Function: Add E-Mail Filters
-function email_addfilters() {
-	if( is_main_query() ) {
+function email_addfilters( $wp_query ) {
+	if ( $wp_query->is_main_query() ) {
 		add_filter( 'the_title', 'email_title' );
 		add_filter( 'the_content', 'email_form', 10, 5 );
 	}
@@ -286,6 +286,7 @@ function email_addfilters() {
 
 ### Function: Remove E-Mail Filters
 function email_removefilters() {
+	remove_action( 'loop_start', 'email_addfilters' );
 	remove_filter( 'the_title', 'email_title' );
 	remove_filter( 'the_content', 'email_form', 10, 5 );
 }
