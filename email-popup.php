@@ -27,6 +27,8 @@ add_filter('the_title', 'email_title');
 	<meta name="robots" content="noindex, nofollow" />
 	<title><?php bloginfo('name'); ?> <?php if ( is_single() ) { ?> &raquo; <?php _e('Blog Archive', 'wp-email'); ?> <?php } ?> <?php wp_title(); ?></title>
 	<link rel="stylesheet" href="<?php bloginfo('stylesheet_url'); ?>" type="text/css" media="screen" />
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	
 	<script type="text/javascript">
 	/* <![CDATA[*/
 		function repositionPopup() {
@@ -40,6 +42,7 @@ add_filter('the_title', 'email_title');
 		}
 	/* ]]> */
 	</script>
+
 	<?php wp_head(); ?>
 </head>
 <body onload="repositionPopup();">
