@@ -3,7 +3,7 @@
  Plugin Name: WP-EMail
  Plugin URI: http://lesterchan.net/portfolio/programming/php/
  Description: Allows people to recommand/send your WordPress blog's post/page to a friend.
- Version: 2.65
+ Version: 2.67
  Author: Lester 'GaMerZ' Chan
  Author URI: http://lesterchan.net
  Text Domain: wp-email
@@ -382,7 +382,6 @@ function email_content() {
 function email_content_alt() {
 	remove_filter('the_content', 'wptexturize');
 	$content = get_email_content();
-	$content = clean_pre($content);
 	$content = strip_tags($content);
 	$email_snippet = intval(get_option('email_snippet'));
 	if($email_snippet > 0) {
@@ -395,7 +394,8 @@ function email_content_alt() {
 
 ### Function: E-Mail Get The Content
 function get_email_content() {
-	global $pages, $multipage, $numpages, $post;
+	global $pages, $multipage, $numpages;
+	$content = '';
 	if(post_password_required()) {
 		return __('Password Protected Post', 'wp-email');
 	}

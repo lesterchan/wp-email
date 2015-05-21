@@ -1,17 +1,3 @@
-/**
- * WordPress Plugin: WP-EMail
- * Copyright (c) 2012 Lester "GaMerZ" Chan
- *
- * File Written By:
- * - Lester "GaMerZ" Chan
- * - http://lesterchan.net
- *
- * File Information:
- * - E-Mail Javascript File
- * - wp-content/plugins/wp-email/email-js.js
- */
-
-
 // Variables
 var email_p = 0;
 var email_pageid = 0;
