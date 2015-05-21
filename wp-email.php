@@ -798,8 +798,8 @@ function process_email_form() {
 		$friends = array();
 		$friendname_count = 0;
 		$friendemail_count = 0;
-		$multiple_names = explode(',', $friendname);
-		$multiple_emails = explode(',', $friendemail);
+		$multiple_names = preg_split('/,|;/', $friendname);
+		$multiple_emails = preg_split('/,|;/', $friendemail);
 		$multiple_max = intval(get_option('email_multiple'));
 		if($multiple_max == 0) { $multiple_max = 1; }
 		// Checking Your Name Field For Errors

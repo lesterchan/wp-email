@@ -150,7 +150,7 @@ function email_form() {
 		email_friendnames = email_friendname.split(",");
 	}
 	email_friendemail = jQuery('#friendemail').val();
-	email_friendemails = email_friendemail.split(",");
+	email_friendemails = email_friendemail.split(/[,;]+/);
 	if(jQuery('#imageverify').length) {
 		email_imageverify = jQuery('#imageverify').val();
 	}
