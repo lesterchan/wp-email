@@ -1257,9 +1257,9 @@ function email_page_most_stats($content) {
 ### Class: WP-EMail Widget
  class WP_Widget_Email extends WP_Widget {
 	// Constructor
-	function WP_Widget_Email() {
+	function __construct() {
 		$widget_ops = array('description' => __('WP-EMail emails statistics', 'wp-email'));
-		$this->WP_Widget('email', __('Email', 'wp-email'), $widget_ops);
+		parent::__construct('email', __('Email', 'wp-email'), $widget_ops);
 	}
 
 	// Display Widget
