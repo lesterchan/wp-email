@@ -3,7 +3,7 @@ Contributors: GamerZ
 Donate link: http://lesterchan.net/site/donation/  
 Tags: email, e-mail, wp-email, mail, send, recommend, ajax, friend  
 Requires at least: 3.9  
-Tested up to: 4.2
+Tested up to: 4.3  
 Stable tag: 2.67  
 License: GPLv2 or later  
 
@@ -159,6 +159,7 @@ If you add a custom field with the key "wp-email-remark" it will be placed in th
 
 ## Changelog
 ### 2.67
+* FIXED: Notices in Widget Constructor for WordPress 4.3
 * FIXED: Remove clean_pre() because it is deprecated.
 
 ### 2.66
