@@ -27,6 +27,7 @@
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
+define( 'WP_EMAIL_VERSION', '2.67' );
 
 ### Define: Show Email Remarks In Logs?
 define('EMAIL_SHOW_REMARKS', true);
@@ -82,19 +83,19 @@ add_action('wp_enqueue_scripts', 'email_scripts');
 function email_scripts() {
 	global $text_direction;
 	if(@file_exists(get_stylesheet_directory().'/email-css.css')) {
-		wp_enqueue_style('wp-email', get_stylesheet_directory_uri().'/email-css.css', false, '2.60', 'all');
+		wp_enqueue_style('wp-email', get_stylesheet_directory_uri().'/email-css.css', false, WP_EMAIL_VERSION, 'all');
 	} else {
-		wp_enqueue_style('wp-email', plugins_url('wp-email/email-css.css'), false, '2.60', 'all');
+		wp_enqueue_style('wp-email', plugins_url('wp-email/email-css.css'), false, WP_EMAIL_VERSION, 'all');
 	}
 	if('rtl' == $text_direction) {
 		if(@file_exists(get_stylesheet_directory().'/email-css-rtl.css')) {
-			wp_enqueue_style('wp-email-rtl', get_stylesheet_directory_uri().'/email-css-rtl.css', false, '2.60', 'all');
+			wp_enqueue_style('wp-email-rtl', get_stylesheet_directory_uri().'/email-css-rtl.css', false, WP_EMAIL_VERSION, 'all');
 		} else {
-			wp_enqueue_style('wp-email-rtl', plugins_url('wp-email/email-css-rtl.css'), false, '2.60', 'all');
+			wp_enqueue_style('wp-email-rtl', plugins_url('wp-email/email-css-rtl.css'), false, WP_EMAIL_VERSION, 'all');
 		}
 	}
 	$email_max = intval(get_option('email_multiple'));
-	wp_enqueue_script('wp-email', plugins_url('wp-email/email-js.js'), array('jquery'), '2.63', true);
+	wp_enqueue_script('wp-email', plugins_url('wp-email/email-js.js'), array('jquery'), WP_EMAIL_VERSION, true);
 	wp_localize_script('wp-email', 'emailL10n', array(
 		'ajax_url' => admin_url('admin-ajax.php'),
 		'max_allowed' => $email_max,
