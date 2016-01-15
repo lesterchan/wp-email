@@ -58,8 +58,18 @@ if( !empty( $_POST['Submit'] ) ) {
 	$email_template_sentsuccess =   ! empty( $_POST['email_template_sentsuccess'] ) ? trim( wp_filter_post_kses( $_POST['email_template_sentsuccess'] ) ) : '';
 	$email_template_sentfailed =    ! empty( $_POST['email_template_sentfailed'] )  ? trim( wp_filter_post_kses( $_POST['email_template_sentfailed'] ) ) : '';
 	$email_template_error =         ! empty( $_POST['email_template_error'] )       ? trim( wp_filter_post_kses( $_POST['email_template_error'] ) ) : '';
+
+	$mailchimp_api_key =      ! empty( $_POST['mailchimp_api_key'] )        ? strip_tags( trim( $_POST['mailchimp_api_key'] ) ) : '';
+	$mailchimp_sender_listid =  ! empty( $_POST['mailchimp_sender_listid'] )    ? strip_tags( trim( $_POST['mailchimp_sender_listid'] ) ) : '';
+	$mailchimp_receivers_listid =    ! empty( $_POST['mailchimp_receivers_listid'] )      ? strip_tags( trim( $_POST['mailchimp_receivers_listid'] ) ) : '';	
+
 	$update_email_queries = array();
 	$update_email_text = array();
+
+	$update_email_queries[] = update_option('mailchimp_api_key', $mailchimp_api_key);
+	$update_email_queries[] = update_option('mailchimp_sender_listid', $mailchimp_sender_listid);
+	$update_email_queries[] = update_option('mailchimp_receivers_listid', $mailchimp_receivers_listid);
+
 	$update_email_queries[] = update_option('email_smtp', $email_smtp);
 	$update_email_queries[] = update_option('email_options', $email_options);
 	$update_email_queries[] = update_option('email_fields', $email_fields);
@@ -109,6 +119,12 @@ if( !empty( $_POST['Submit'] ) ) {
 $email_options = get_option('email_options');
 $email_fields = get_option('email_fields');
 $email_smtp = get_option('email_smtp');
+
+$mailchimp_api_key = get_option('mailchimp_api_key');
+$mailchimp_sender_listid = get_option('mailchimp_sender_listid');
+$mailchimp_receivers_listid = get_option('mailchimp_receivers_listid');
+
+
 ?>
 <script type="text/javascript">
 /* <![CDATA[*/
@@ -305,6 +321,27 @@ $email_smtp = get_option('email_smtp');
 			</td>
 		</tr>
 	</table>
+
+
+	<h3><?php _e('MailChimp Configuration', 'wp-email'); ?></h3>
+	<table class="form-table">
+		 <tr>
+			<th width="20%"><?php _e('MailChimp Api Key:', 'wp-email'); ?></th>
+			<td><input type="text" name="mailchimp_api_key" value="<?php echo ! empty( $mailchimp_api_key ) ? stripslashes( $mailchimp_api_key ) : ''; ?>" size="30" dir="ltr" /></td>
+		</tr>
+		<tr>
+			<th width="20%"><?php _e('MailChimp Senders list ID:', 'wp-email'); ?></th>
+			<td><input type="text" name="mailchimp_sender_listid" value="<?php echo ! empty( $mailchimp_sender_listid ) ? stripslashes( $mailchimp_sender_listid ) : ''; ?>" size="30" dir="ltr" /></td>
+		</tr>
+		<tr>
+			<th width="20%"><?php _e('MailChimp Receivers List ID:', 'wp-email'); ?></th>
+			<td><input type="text" name="mailchimp_receivers_listid" value="<?php echo ! empty( $mailchimp_receivers_listid ) ? stripslashes( $mailchimp_receivers_listid ) : ''; ?>" size="30" dir="ltr" /><br />
+
+			<?php _e('Both List IDs can be the same.', 'wp-email'); ?></td>
+		</tr>
+	</table>
+
+
 
 	<h3><?php _e('Template Variables', 'wp-email'); ?></h3>
 	<table class="widefat">

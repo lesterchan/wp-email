@@ -24,6 +24,9 @@ $option_names = array(
 	, 'email_template_title'
 	, 'email_template_subtitle'
 	, 'widget_email_most_emailed'
+	, 'mailchimp_api_key'
+	, 'mailchimp_sender_listid'
+	, 'mailchimp_receivers_listid'
 );
 
 if ( is_multisite() ) {
