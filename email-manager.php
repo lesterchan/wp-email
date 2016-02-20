@@ -233,7 +233,7 @@ $email_logs = $wpdb->get_results("SELECT * FROM $wpdb->email ORDER BY $email_sor
 		<br />
 		<table class="widefat">
 			<tr>
-				<td align="<?php echo ('rtl' == $text_direction) ? 'right' : 'left'; ?>" width="50%">
+				<td align="<?php echo ( is_rtl() ) ? 'right' : 'left'; ?>" width="50%">
 					<?php
 						if($email_page > 1 && ((($email_page*$email_log_perpage)-($email_log_perpage-1)) <= $total_email)) {
 							echo '<strong>&laquo;</strong> <a href="'.$base_page.'&amp;emailpage='.($email_page-1).$email_sort_url.'" title="&laquo; '.__('Previous Page', 'wp-email').'">'.__('Previous Page', 'wp-email').'</a>';
@@ -242,7 +242,7 @@ $email_logs = $wpdb->get_results("SELECT * FROM $wpdb->email ORDER BY $email_sor
 						}
 					?>
 				</td>
-				<td align="<?php echo ('rtl' == $text_direction) ? 'left' : 'right'; ?>" width="50%">
+				<td align="<?php echo ( is_rtl() ) ? 'left' : 'right'; ?>" width="50%">
 					<?php
 						if($email_page >= 1 && ((($email_page*$email_log_perpage)+1) <=  $total_email)) {
 							echo '<a href="'.$base_page.'&amp;emailpage='.($email_page+1).$email_sort_url.'" title="'.__('Next Page', 'wp-email').' &raquo;">'.__('Next Page', 'wp-email').'</a> <strong>&raquo;</strong>';

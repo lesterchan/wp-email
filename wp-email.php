@@ -81,13 +81,12 @@ function email_javascripts_header() {
 ### Function: Enqueue E-Mail Javascripts/CSS
 add_action('wp_enqueue_scripts', 'email_scripts');
 function email_scripts() {
-	global $text_direction;
 	if(@file_exists(get_stylesheet_directory().'/email-css.css')) {
 		wp_enqueue_style('wp-email', get_stylesheet_directory_uri().'/email-css.css', false, WP_EMAIL_VERSION, 'all');
 	} else {
 		wp_enqueue_style('wp-email', plugins_url('wp-email/email-css.css'), false, WP_EMAIL_VERSION, 'all');
 	}
-	if('rtl' == $text_direction) {
+	if( is_rtl() ) {
 		if(@file_exists(get_stylesheet_directory().'/email-css-rtl.css')) {
 			wp_enqueue_style('wp-email-rtl', get_stylesheet_directory_uri().'/email-css-rtl.css', false, WP_EMAIL_VERSION, 'all');
 		} else {
@@ -742,7 +741,7 @@ function wp_email() {
 add_action('wp_ajax_email', 'process_email_form');
 add_action('wp_ajax_nopriv_email', 'process_email_form');
 function process_email_form() {
-	global $wpdb, $post, $text_direction;
+	global $wpdb, $post;
 	// If User Click On Mail
 	if(isset($_POST['action']) && $_POST['action'] == 'email') {
 
@@ -922,7 +921,7 @@ function process_email_form() {
 			$template_email_body = str_replace("%EMAIL_BLOG_NAME%", get_bloginfo('name'), $template_email_body);
 			$template_email_body = str_replace("%EMAIL_BLOG_URL%", get_bloginfo('url'), $template_email_body);
 			$template_email_body = str_replace("%EMAIL_PERMALINK%", get_permalink(), $template_email_body);
-			if('rtl' == $text_direction) {
+			if( is_rtl() ) {
 				$template_email_body = "<div style=\"direction: rtl;\">$template_email_body</div>";
 			}
 			// Template For E-Mail Alternate Body
