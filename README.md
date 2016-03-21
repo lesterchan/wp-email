@@ -4,7 +4,7 @@ Donate link: http://lesterchan.net/site/donation/
 Tags: email, e-mail, wp-email, mail, send, recommend, ajax, friend  
 Requires at least: 3.9  
 Tested up to: 4.4  
-Stable tag: 2.67  
+Stable tag: 2.67.1  
 License: GPLv2 or later  
 
 Allows people to recommend/send your WordPress blog's post/page to a friend.
@@ -72,13 +72,13 @@ N/A
 Many customizations can be made from the options page (WP Admin->E-Mail->E-Mail Options).
 
 Additionally, you can override the "E-Mail Text Link for Post" and "E-Mail Text Link for Page" options with the first two parameters of the email_link function like this:
-<code>
+```
 if(function_exists('email_link'))
 	email_link( 'E-Mail Text Link for Post', 'E-Mail Text Link for Page');
-</code>
+```
 
 You can also force `email_link()` to return the link rather than echo it by setting the third parameter to false:
-<code>
+```
 if(function_exists('email_link')) {
 	$email_link email_link( 'E-Mail Text Link for Post', 'E-Mail Text Link for Page', false);
 } else {
@@ -86,7 +86,7 @@ if(function_exists('email_link')) {
 }
 
 echo $email_link;
-</code>
+```
 
 ### How can I show my E-Mail stats?
 
@@ -97,10 +97,10 @@ There are two options for this:
 ### How can I display the Most E-Mailed Posts?
 
 Simply insert this code into your theme:
-<code>
+```
 if (function_exists('get_mostemailed'))
 	get_mostemailed('both', 10);
-</code>
+```
 
 The first parameter is what you want to get, 'post', 'page', or 'both' and defaults to 'both'.
 The second parameter is the maximum number of posts/pages you want to get.
@@ -108,26 +108,26 @@ The second parameter is the maximum number of posts/pages you want to get.
 ### How can I display the Total E-Mails Sent?
 
 Simply insert this code into your theme:
-<code>
+```
 if (function_exists('get_emails'))
 	get_emails();
-</code>
+```
 
 ### How can I display the Total E-Mails Sent Successfully?
 
 Simply insert this code into your theme:
-<code>
+```
 if (function_exists('get_emails_success'))
 	get_emails_success();
-</code>
+```
 
 ### How can I display the Total E-Mails Sent Unsuccessfully?
 
 Simply insert this code into your theme:
-<code>
+```
 if (function_exists('get_emails_failed'))
 	get_emails_failed();
-</code>
+```
 
 ### How do I hide remarks when viewing E-Mail logs in WP-Admin?
 
@@ -158,6 +158,9 @@ If you add a custom field with the key "wp-email-title" it will be used as the E
 If you add a custom field with the key "wp-email-remark" it will be placed in the remarks field in the E-Mail form.
 
 ## Changelog
+### 2.67.1
+* FIXED: Fixed vulnerability in `get_email_ipaddress()`
+
 ### 2.67
 * FIXED: Notices in Widget Constructor for WordPress 4.3
 * FIXED: Remove clean_pre() because it is deprecated.

@@ -3,14 +3,14 @@
  Plugin Name: WP-EMail
  Plugin URI: http://lesterchan.net/portfolio/programming/php/
  Description: Allows people to recommand/send your WordPress blog's post/page to a friend.
- Version: 2.67
+ Version: 2.67.1
  Author: Lester 'GaMerZ' Chan
  Author URI: http://lesterchan.net
  Text Domain: wp-email
  */
 
 /*
-	Copyright 2015  Lester Chan  (email : lesterchan@gmail.com)
+	Copyright 2016  Lester Chan  (email : lesterchan@gmail.com)
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -27,7 +27,7 @@
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-define( 'WP_EMAIL_VERSION', '2.67' );
+define( 'WP_EMAIL_VERSION', '2.67.1' );
 
 ### Define: Show Email Remarks In Logs?
 define('EMAIL_SHOW_REMARKS', true);
@@ -422,17 +422,19 @@ function get_email_content() {
 
 
 ### Function: Get IP Address
-function get_email_ipaddress() {
-	if (empty($_SERVER["HTTP_X_FORWARDED_FOR"])) {
-		$ip_address = $_SERVER["REMOTE_ADDR"];
-	} else {
-		$ip_address = $_SERVER["HTTP_X_FORWARDED_FOR"];
+if(!function_exists('get_ipaddress')) {
+	function get_ipaddress() {
+		foreach ( array( 'HTTP_CLIENT_IP', 'HTTP_X_FORWARDED_FOR', 'HTTP_X_FORWARDED', 'HTTP_X_CLUSTER_CLIENT_IP', 'HTTP_FORWARDED_FOR', 'HTTP_FORWARDED', 'REMOTE_ADDR' ) as $key ) {
+			if ( array_key_exists( $key, $_SERVER ) === true ) {
+				foreach ( explode( ',', $_SERVER[$key] ) as $ip ) {
+					$ip = trim( $ip );
+					if ( filter_var( $ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) !== false ) {
+						return esc_attr( $ip );
+					}
+				}
+			}
+		}
 	}
-	if(strpos($ip_address, ',') !== false) {
-		$ip_address = explode(',', $ip_address);
-		$ip_address = $ip_address[0];
-	}
-	return esc_attr($ip_address);
 }
 
 ### Function: There Are Still Many PHP 4.x Users
@@ -484,7 +486,7 @@ if(!function_exists('is_valid_remarks')) {
 function not_spamming() {
 	global $wpdb;
 	$current_time = current_time('timestamp');
-	$email_ip = get_email_ipaddress();
+	$email_ip = get_ipaddress();
 	$email_host = esc_attr(@gethostbyaddr($email_ip));
 	$email_status = __('Success', 'wp-email');
 	$last_emailed = $wpdb->get_var("SELECT email_timestamp FROM $wpdb->email WHERE email_ip = '$email_ip' AND email_host = '$email_host' AND email_status = '$email_status' ORDER BY email_timestamp DESC LIMIT 1");
@@ -998,7 +1000,7 @@ function process_email_form() {
 			$email_postid = intval(get_the_id());
 			$email_posttitle = addslashes($post_title);
 			$email_timestamp = current_time('timestamp');
-			$email_ip = get_email_ipaddress();
+			$email_ip = get_ipaddress();
 			$email_host = esc_attr(@gethostbyaddr($email_ip));
 			foreach($friends as $friend) {
 				$email_friendname = addslashes($friend['name']);
