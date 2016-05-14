@@ -485,17 +485,17 @@ if(!function_exists('is_valid_remarks')) {
 ### Function: Check For E-Mail Spamming
 function not_spamming() {
 	global $wpdb;
-	$current_time = current_time('timestamp');
-	$email_ip = get_ipaddress();
-	$email_host = esc_attr(@gethostbyaddr($email_ip));
-	$email_status = __('Success', 'wp-email');
-	$last_emailed = $wpdb->get_var("SELECT email_timestamp FROM $wpdb->email WHERE email_ip = '$email_ip' AND email_host = '$email_host' AND email_status = '$email_status' ORDER BY email_timestamp DESC LIMIT 1");
-	$email_allow_interval = intval(get_option('email_interval'))*60;
-	if(($current_time-$last_emailed) < $email_allow_interval) {
+
+	$last_emailed = $wpdb->get_var(
+		$wpdb->prepare( "SELECT email_timestamp FROM $wpdb->email WHERE email_ip = %s AND email_status = %s ORDER BY email_timestamp DESC LIMIT 1", get_ipaddress(), __( 'Success', 'wp-email' ) )
+	);
+
+	$email_allow_interval = intval( get_option( 'email_interval' ) ) * 60;
+	if( ( current_time( 'timestamp' ) - $last_emailed) < $email_allow_interval ) {
 		return false;
-	} else {
-		return true;
 	}
+
+	return true;
 }
 
 
@@ -634,47 +634,56 @@ if(!function_exists('get_emails')) {
 
 
 ### Function: Get EMail Total Sent Success
-if(!function_exists('get_emails_success')) {
-	function get_emails_success($echo = true) {
+if( ! function_exists( 'get_emails_success' ) ) {
+	function get_emails_success( $echo = true ) {
 		global $wpdb;
-		$totalemails_success = $wpdb->get_var("SELECT COUNT(email_id) FROM $wpdb->email WHERE email_status = '".__('Success', 'wp-email')."'");
-		if($echo) {
-			echo number_format_i18n($totalemails_success);
+		$totalemails_success = $wpdb->get_var(
+			$wpdb->prepare( "SELECT COUNT(email_id) FROM $wpdb->email WHERE email_status = %s", __('Success', 'wp-email') )
+		);
+
+		if( $echo ) {
+			echo number_format_i18n( $totalemails_success );
 		} else {
-			return number_format_i18n($totalemails_success);
+			return number_format_i18n( $totalemails_success );
 		}
 	}
 }
 
 
 ### Function: Get EMail Total Sent Failed
-if(!function_exists('get_emails_failed')) {
-	function get_emails_failed($echo = true) {
+if( ! function_exists( 'get_emails_failed' ) ) {
+	function get_emails_failed( $echo = true ) {
 		global $wpdb;
-		$totalemails_failed = $wpdb->get_var("SELECT COUNT(email_id) FROM $wpdb->email WHERE email_status = '".__('Failed', 'wp-email')."'");
-		if($echo) {
-			echo number_format_i18n($totalemails_failed);
+		$totalemails_failed = $wpdb->get_var(
+			$wpdb->prepare( "SELECT COUNT(email_id) FROM $wpdb->email WHERE email_status = %s", __('Failed', 'wp-email') )
+		);
+
+		if( $echo ) {
+			echo number_format_i18n( $totalemails_failed );
 		} else {
-			return number_format_i18n($totalemails_failed);
+			return number_format_i18n( $totalemails_failed );
 		}
 	}
 }
 
 
 ### Function: Get EMail Sent For Post
-if(!function_exists('get_email_count')) {
-	function get_email_count($post_id = 0, $echo = true) {
+if( ! function_exists( 'get_email_count' ) ) {
+	function get_email_count( $post_id = 0, $echo = true ) {
 		global $wpdb;
-		if($post_id == 0) {
+
+		if( $post_id === 0 ) {
 			 global $post;
 			$post_id = $post->ID;
 		}
-		$post_id = intval($post_id);
-		$totalemails = $wpdb->get_var("SELECT COUNT(email_id) FROM $wpdb->email WHERE email_postid = $post_id");
-		if($echo) {
-			echo number_format_i18n($totalemails);
+
+		$totalemails = $wpdb->get_var(
+			$wpdb->prepare( "SELECT COUNT(email_id) FROM $wpdb->email WHERE email_postid = %d", intval( $post_id ) )
+		);
+		if( $echo ) {
+			echo number_format_i18n( $totalemails );
 		} else {
-			return number_format_i18n($totalemails);
+			return number_format_i18n( $totalemails );
 		}
 	}
 }
@@ -758,14 +767,14 @@ function process_email_form() {
 		email_textdomain();
 		header('Content-Type: text/html; charset='.get_option('blog_charset').'');
 		// POST Variables
-		$yourname		= (!empty($_POST['yourname'])	? strip_tags(stripslashes(trim($_POST['yourname']))) : '');
-		$youremail		= (!empty($_POST['youremail'])	? strip_tags(stripslashes(trim($_POST['youremail']))) : '');
-		$yourremarks	= (!empty($_POST['yourremarks'])? strip_tags(stripslashes(trim($_POST['yourremarks']))) : '');
-		$friendname		= (!empty($_POST['friendname'])	? strip_tags(stripslashes(trim($_POST['friendname']))) : '');
-		$friendemail	= (!empty($_POST['friendemail'])? strip_tags(stripslashes(trim($_POST['friendemail']))) : '');
+		$yourname		= (!empty($_POST['yourname'])	? sanitize_text_field( $_POST['yourname'] ) : '');
+		$youremail		= (!empty($_POST['youremail'])	? sanitize_text_field( $_POST['youremail'] ) : '');
+		$yourremarks	= (!empty($_POST['yourremarks'])? sanitize_text_field( $_POST['yourremarks'] ) : '');
+		$friendname		= (!empty($_POST['friendname'])	? sanitize_text_field( $_POST['friendname'] ) : '');
+		$friendemail	= (!empty($_POST['friendemail'])? sanitize_text_field( $_POST['friendemail'] ) : '');
 		$imageverify	= (!empty($_POST['imageverify'])? $_POST['imageverify'] : '');
-		$p 				= (!empty($_POST['p'])			? intval($_POST['p']) : 0);
-		$page_id 		= (!empty($_POST['page_id'])	? intval($_POST['page_id']) : 0);
+		$p 				= (!empty($_POST['p'])			? intval( $_POST['p'] ) : 0);
+		$page_id 		= (!empty($_POST['page_id'])	? intval( $_POST['page_id'] ) : 0);
 		// Get Post Information
 		if($p > 0) {
 			$post_type = get_post_type($p);
@@ -1005,8 +1014,37 @@ function process_email_form() {
 			foreach($friends as $friend) {
 				$email_friendname = addslashes($friend['name']);
 				$email_friendemail = addslashes($friend['email']);
-				$wpdb->query("INSERT INTO $wpdb->email VALUES (0, '$email_yourname', '$email_youremail', '$email_yourremarks', '$email_friendname', '$email_friendemail', $email_postid, '$email_posttitle', '$email_timestamp', '$email_ip', '$email_host', '$email_status')");
+				$wpdb->insert(
+					$wpdb->email,
+					array(
+						'email_yourname'    => $email_yourname,
+						'email_youremail'   => $email_youremail,
+						'email_yourremarks' => $email_yourremarks,
+						'email_friendname'  => $email_friendname,
+						'email_friendemail' => $email_friendemail,
+						'email_postid'      => $email_postid,
+						'email_posttitle'   => $email_posttitle,
+						'email_timestamp'   => $email_timestamp,
+						'email_ip'          => $email_ip,
+						'email_host'        => $email_host,
+						'email_status'      => $email_status
+					),
+					array(
+						'%s',
+						'%s',
+						'%s',
+						'%s',
+						'%s',
+						'%d',
+						'%s',
+						'%s',
+						'%s',
+						'%s',
+						'%s'
+					)
+				);
 			}
+
 			if($email_status == __('Success', 'wp-email')) {
 				$output = $template_email_sentsuccess;
 			} else {
