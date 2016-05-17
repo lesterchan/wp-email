@@ -159,7 +159,7 @@ If you add a custom field with the key "wp-email-remark" it will be placed in th
 
 ## Changelog
 ### 2.67.2
-* FIXED: Fixed SQL Injection in inserting email logs
+* FIXED: Fixed SQL Injection in inserting email logs. Props [Jxs.nl](http://jxs.nl).
 ### 2.67.1
 * FIXED: Fixed vulnerability in `get_email_ipaddress()`
 
