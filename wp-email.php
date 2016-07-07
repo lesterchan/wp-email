@@ -3,14 +3,14 @@
  Plugin Name: WP-EMail
  Plugin URI: http://lesterchan.net/portfolio/programming/php/
  Description: Allows people to recommand/send your WordPress blog's post/page to a friend.
- Version: 2.67.2
+ Version: 2.67.3
  Author: Lester 'GaMerZ' Chan
  Author URI: http://lesterchan.net
  Text Domain: wp-email
  */
 
 /*
-	Copyright 2016  Lester Chan  (email : lesterchan@gmail.com)
+    Copyright 2016  Lester Chan  (email : lesterchan@gmail.com)
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -27,7 +27,7 @@
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-define( 'WP_EMAIL_VERSION', '2.67.2' );
+define( 'WP_EMAIL_VERSION', '2.67.3' );
 
 ### Define: Show Email Remarks In Logs?
 define('EMAIL_SHOW_REMARKS', true);
@@ -194,11 +194,11 @@ function email_link($email_post_text = '', $email_page_text = '', $echo = true) 
 	switch($email_style) {
 		// Icon + Text Link
 		case 1:
-			$output = '<a href="'.$email_link.'"'.$onclick.' title="'.$email_text.'" rel="nofollow"><img class="WP-EmailIcon" src="'.$email_icon.'" alt="'.$email_text.'" title="'.$email_text.'" style="border: 0px;" /></a>&nbsp;<a href="'.$email_link.'"'.$onclick.' title="'.$email_text.'" rel="nofollow">'.$email_text.'</a>';
+			$output = '<a href="'.$email_link.'"'.$onclick.' title="'.$email_text.'" rel="nofollow"><img class="WP-EmailIcon" src="' . esc_attr( $email_icon ) .'" alt="' . esc_attr( $email_text ) . '" title="' . esc_attr( $email_text ) . '" style="border: 0px;" /></a>&nbsp;<a href="' . esc_attr( $email_link ) .'"' . $onclick . ' title="' . esc_attr( $email_text ) . '" rel="nofollow">' . $email_text . '</a>';
 			break;
 		// Icon Only
 		case 2:
-			$output = '<a href="'.$email_link.'"'.$onclick.' title="'.$email_text.'" rel="nofollow"><img class="WP-EmailIcon" src="'.$email_icon.'" alt="'.$email_text.'" title="'.$email_text.'" style="border: 0px;" /></a>';
+			$output = '<a href="'.$email_link.'"'.$onclick.' title="'.$email_text.'" rel="nofollow"><img class="WP-EmailIcon" src="' . esc_attr( $email_icon ) .'" alt="' . esc_attr( $email_text ) . '" title="' . esc_attr( $email_text ) .'" style="border: 0px;" /></a>';
 			break;
 		// Text Link Only
 		case 3:
@@ -1112,13 +1112,13 @@ function email_form($content, $echo = true, $subtitle = true, $div = true, $erro
 			if(intval($email_fields['yourname']) == 1) {
 				$output .= '<p>'."\n";
 				$output .= '<label for="yourname">'.__('Your Name: *', 'wp-email').'</label><br />'."\n";
-				$output .= '<input type="text" size="50" id="yourname" name="yourname" class="TextField" value="'.(!empty($error_field['yourname']) ? $error_field['yourname'] : '').'" />'."\n";
+				$output .= '<input type="text" size="50" id="yourname" name="yourname" class="TextField" value="' . ( ! empty( $error_field['yourname'] ) ? esc_attr( $error_field['yourname'] ) : '' ) . '" />'."\n";
 				$output .= '</p>'."\n";
 			}
 			if(intval($email_fields['youremail']) == 1) {
 				$output .= '<p>'."\n";
 				$output .= '<label for="youremail">'.__('Your E-Mail: *', 'wp-email').'</label><br />'."\n";
-				$output .= '<input type="text" size="50" id="youremail" name="youremail" class="TextField" value="'.(!empty($error_field['youremail']) ? $error_field['youremail'] : '').'" dir="ltr" />'."\n";
+				$output .= '<input type="text" size="50" id="youremail" name="youremail" class="TextField" value="' . ( ! empty( $error_field['youremail'] ) ? esc_attr( $error_field['youremail'] ) : '' ) . '" dir="ltr" />'."\n";
 				$output .= '</p>'."\n";
 			}
 			if(intval($email_fields['yourremarks']) == 1) {
@@ -1138,12 +1138,12 @@ function email_form($content, $echo = true, $subtitle = true, $div = true, $erro
 			if(intval($email_fields['friendname']) == 1) {
 				$output .= '<p>'."\n";
 				$output .= '<label for="friendname">'.__('Friend\'s Name: *', 'wp-email').'</label><br />'."\n";
-				$output .= '<input type="text" size="50" id="friendname" name="friendname" class="TextField" value="'.(!empty($error_field['friendname']) ? $error_field['friendname'] : '').'" />'.email_multiple(false)."\n";
+				$output .= '<input type="text" size="50" id="friendname" name="friendname" class="TextField" value="' . ( ! empty( $error_field['friendname'] ) ? esc_attr( $error_field['friendname'] ) : '' ) . '" />' . email_multiple( false ) . "\n";
 				$output .= '</p>'."\n";
 			}
 			$output .= '<p>'."\n";
 			$output .= '<label for="friendemail">'.__('Friend\'s E-Mail: *', 'wp-email').'</label><br />'."\n";
-			$output .= '<input type="text" size="50" id="friendemail" name="friendemail" class="TextField" value="'.(!empty($error_field['friendemail']) ? $error_field['friendemail'] : '').'" dir="ltr" />'.email_multiple(false)."\n";
+			$output .= '<input type="text" size="50" id="friendemail" name="friendemail" class="TextField" value="' . ( ! empty( $error_field['friendemail'] ) ? esc_attr( $error_field['friendemail'] ) : '' ) . '" dir="ltr" />' . email_multiple( false ) . "\n";
 			$output .= '</p>'."\n";
 			if($email_image_verify) {
 				$output .= '<p>'."\n";

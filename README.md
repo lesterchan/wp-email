@@ -1,10 +1,10 @@
 # WP-EMail
 Contributors: GamerZ  
-Donate link: http://lesterchan.net/site/donation/  
+Donate link: https://lesterchan.net/site/donation/  
 Tags: email, e-mail, wp-email, mail, send, recommend, ajax, friend  
-Requires at least: 3.9  
+Requires at least: 4.0  
 Tested up to: 4.5  
-Stable tag: 2.67.2  
+Stable tag: 2.67.3  
 License: GPLv2 or later  
 
 Allows people to recommend/send your WordPress blog's post/page to a friend.
@@ -158,8 +158,12 @@ If you add a custom field with the key "wp-email-title" it will be used as the E
 If you add a custom field with the key "wp-email-remark" it will be placed in the remarks field in the E-Mail form.
 
 ## Changelog
+### 2.67.3
+* FIXED: esc_attr() on form fields to prevent XSS. Props
+
 ### 2.67.2
 * FIXED: Fixed SQL Injection in inserting email logs. Props [Jxs.nl](http://jxs.nl).
+
 ### 2.67.1
 * FIXED: Fixed vulnerability in `get_email_ipaddress()`
 
