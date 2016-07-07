@@ -159,7 +159,7 @@ If you add a custom field with the key "wp-email-remark" it will be placed in th
 
 ## Changelog
 ### 2.67.3
-* FIXED: esc_attr() on form fields to prevent XSS. Props
+* FIXED: esc_attr() on form fields to prevent XSS. Props Edward Woodfall.
 
 ### 2.67.2
 * FIXED: Fixed SQL Injection in inserting email logs. Props [Jxs.nl](http://jxs.nl).
