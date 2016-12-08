@@ -3,7 +3,7 @@ Contributors: GamerZ
 Donate link: https://lesterchan.net/site/donation/  
 Tags: email, e-mail, wp-email, mail, send, recommend, ajax, friend  
 Requires at least: 4.0  
-Tested up to: 4.5  
+Tested up to: 4.7  
 Stable tag: 2.67.3  
 License: GPLv2 or later  
 
