@@ -57,7 +57,7 @@ function email_menu() {
 ### Function: Add htaccess Rewrite Endpoint - this handles all the rules
 add_action( 'init', 'wp_email_endpoint' );
 function wp_email_endpoint() {
-	add_rewrite_endpoint( 'email', EP_PERMALINK | EP_PAGES );
+	add_rewrite_endpoint( 'email', EP_PERMALINK | EP_PAGES, 'wp_email_form' );
 	add_rewrite_endpoint( 'emailpopup', EP_PERMALINK | EP_PAGES );
 }
 
@@ -65,7 +65,7 @@ function wp_email_endpoint() {
 ### Function: E-Mail Public Variables
 add_filter('query_vars', 'email_variables');
 function email_variables($public_query_vars) {
-	$public_query_vars[] = 'email';
+	$public_query_vars[] = 'wp_email_form';
 	$public_query_vars[] = 'emailpopup';
 	return $public_query_vars;
 }
@@ -737,7 +737,7 @@ function wp_email() {
 	$template_redirect = apply_filters( 'wp_email_template_redirect', true );
 
 	if( $template_redirect ) {
-		if (array_key_exists('email', $wp_query->query_vars)) {
+		if (array_key_exists('wp_email_form', $wp_query->query_vars)) {
 			include(WP_PLUGIN_DIR . '/wp-email/email-standalone.php');
 			exit();
 		} elseif (array_key_exists('emailpopup', $wp_query->query_vars)) {
