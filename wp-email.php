@@ -1,16 +1,16 @@
 <?php
 /*
  Plugin Name: WP-EMail
- Plugin URI: http://lesterchan.net/portfolio/programming/php/
+ Plugin URI: https://lesterchan.net/portfolio/programming/php/
  Description: Allows people to recommand/send your WordPress blog's post/page to a friend.
- Version: 2.67.3
+ Version: 2.67.4
  Author: Lester 'GaMerZ' Chan
- Author URI: http://lesterchan.net
+ Author URI: https://lesterchan.net
  Text Domain: wp-email
  */
 
 /*
-    Copyright 2016  Lester Chan  (email : lesterchan@gmail.com)
+    Copyright 2017  Lester Chan  (email : lesterchan@gmail.com)
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -27,7 +27,7 @@
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-define( 'WP_EMAIL_VERSION', '2.67.3' );
+define( 'WP_EMAIL_VERSION', '2.67.4' );
 
 ### Define: Show Email Remarks In Logs?
 define('EMAIL_SHOW_REMARKS', true);
@@ -57,16 +57,16 @@ function email_menu() {
 ### Function: Add htaccess Rewrite Endpoint - this handles all the rules
 add_action( 'init', 'wp_email_endpoint' );
 function wp_email_endpoint() {
-	add_rewrite_endpoint( 'email', EP_PERMALINK | EP_PAGES, 'wp_email_form' );
-	add_rewrite_endpoint( 'emailpopup', EP_PERMALINK | EP_PAGES );
+	add_rewrite_endpoint( 'email', EP_PERMALINK | EP_PAGES, 'wp_email' );
+	add_rewrite_endpoint( 'emailpopup', EP_PERMALINK | EP_PAGES, 'wp_email_popup' );
 }
 
 
 ### Function: E-Mail Public Variables
 add_filter('query_vars', 'email_variables');
 function email_variables($public_query_vars) {
-	$public_query_vars[] = 'wp_email_form';
-	$public_query_vars[] = 'emailpopup';
+	$public_query_vars[] = 'wp_email';
+	$public_query_vars[] = 'wp_email_popup';
 	return $public_query_vars;
 }
 
@@ -737,10 +737,10 @@ function wp_email() {
 	$template_redirect = apply_filters( 'wp_email_template_redirect', true );
 
 	if( $template_redirect ) {
-		if (array_key_exists('wp_email_form', $wp_query->query_vars)) {
+		if (array_key_exists('wp_email', $wp_query->query_vars)) {
 			include(WP_PLUGIN_DIR . '/wp-email/email-standalone.php');
 			exit();
-		} elseif (array_key_exists('emailpopup', $wp_query->query_vars)) {
+		} elseif (array_key_exists('wp_email_popup', $wp_query->query_vars)) {
 			include(WP_PLUGIN_DIR . '/wp-email/email-popup.php');
 			exit();
 		}
