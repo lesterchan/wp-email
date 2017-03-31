@@ -151,7 +151,7 @@ function email_link($email_post_text = '', $email_page_text = '', $echo = true) 
 						$email_text = $email_page_text;
 					}
 				}
-				$email_link = $email_link.'email/';
+				$email_link .= 'email/';
 			} else {
 				if(is_page()) {
 					if(empty($email_page_text)) {
@@ -160,7 +160,7 @@ function email_link($email_post_text = '', $email_page_text = '', $echo = true) 
 						$email_text = $email_page_text;
 					}
 				}
-				$email_link = $email_link.'&amp;email=1';
+				$email_link .= '&amp;wp_email=1';
 			}
 			break;
 		// E-Mail Popup
@@ -176,7 +176,7 @@ function email_link($email_post_text = '', $email_page_text = '', $echo = true) 
 						$email_text = $email_page_text;
 					}
 				}
-				$email_link = $email_link.'emailpopup/';
+				$email_link .= 'emailpopup/';
 			} else {
 				if(is_page()) {
 					if(empty($email_page_text)) {
@@ -185,7 +185,7 @@ function email_link($email_post_text = '', $email_page_text = '', $echo = true) 
 						$email_text = $email_page_text;
 					}
 				}
-				$email_link = $email_link.'&amp;emailpopup=1';
+				$email_link .= '&amp;wp_email_popup=1';
 			}
 			$onclick = ' onclick="email_popup(this.href); return false;" ';
 			break;
@@ -515,8 +515,8 @@ add_filter('email_form-fieldvalues', 'email_fill_fields');
 function email_fill_fields($email_fields) {
     global $current_user;
     if ($current_user->ID > 0) {
-        $email_fields['yourname'] = trim(esc_attr($current_user->first_name.' '.$current_user->last_name));
-        $email_fields['youremail'] = esc_attr($current_user->user_email);
+        $email_fields['yourname'] = esc_attr( $current_user->display_name );
+        $email_fields['youremail'] = esc_attr( $current_user->user_email );
     }
     return $email_fields;
 }
@@ -547,10 +547,10 @@ function email_form_header($echo = true, $temp_id) {
 		}
 	} else {
 		if(is_page()) {
-			$output .= '<form action="'.$permalink.'&amp;email=1" method="post">'."\n";
+			$output .= '<form action="'.$permalink.'&amp;wp_email=1" method="post">'."\n";
 			$output .= '<p style="display: none;"><input type="hidden" id="page_id" name="page_id" value="'.$id.'" /></p>'."\n";
 		} else {
-			$output .= '<form action="'.$permalink.'&amp;email=1" method="post">'."\n";
+			$output .= '<form action="'.$permalink.'&amp;wp_email=1" method="post">'."\n";
 			$output .= '<p style="display: none;"><input type="hidden" id="p" name="p" value="'.$id.'" /></p>'."\n";
 		}
 	}
@@ -1083,7 +1083,7 @@ function email_form($content, $echo = true, $subtitle = true, $div = true, $erro
 	$email_image_verify = intval(get_option('email_imageverify'));
 	$email_options = get_option('email_options');
 	$email_type = intval($email_options['email_type']);
-	$error_field = apply_filters('email_form-fieldvalues', $error_field);
+	$error_field = apply_filters('email_form-fieldvalues', array());
 	$output = '';
 	// Template - Subtitle
 	if($subtitle) {
