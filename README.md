@@ -11,6 +11,15 @@ Allows people to recommend/send your WordPress blog's post/page to a friend.
 
 ## Description
 
+### General Usage
+1. Under E-Mail Settings, modify the setting Method Used To Send E-Mail accordingly. If the method is wrong, no email will get sent.
+1. You Need To Re-Generate The Permalink (WP-Admin -> Settings -> Permalinks -> Save Changes)
+1. Open `wp-content/themes/<YOUR THEME NAME>/index.php` (You may place it in single.php, post.php, page.php, etc also)
+ * Find: `<?php while (have_posts()) : the_post(); ?>`
+ * Simply add this code inside the loop where you want the email link to display: <code>if(function_exists('email_link')) { email_link(); }</code>
+
+If you DO NOT want the email link to appear in every post/page, DO NOT use the code above. Just use the shortcode by typing [email_link] into the selected post/page content and it will embed the email link into that post/page only.
+
 ### Build Status
 [![Build Status](https://travis-ci.org/lesterchan/wp-email.svg?branch=master)](https://travis-ci.org/lesterchan/wp-email)
 
@@ -26,26 +35,6 @@ Allows people to recommend/send your WordPress blog's post/page to a friend.
 
 ### Donations
 I spent most of my free time creating, updating, maintaining and supporting these plugins, if you really love my plugins and could spare me a couple of bucks as my school allowance, I will really appreciate it. If not feel free to use it without any obligations.
-
-## Installation
-
-You can either install it automatically from the WordPress admin, or do it manually:
-
-1. Upload the whole `wp-email` directory into your plugins folder(`/wp-content/plugins/`)
-1. Activate the plugin through the 'Plugins' menu in WordPress
-
-Once installed take the following steps to set it up:
-
-1. Under E-Mail Settings, modify the setting Method Used To Send E-Mail accordingly. If the method is wrong, no email will get sent.
-1. You Need To Re-Generate The Permalink (WP-Admin -> Settings -> Permalinks -> Save Changes)
-1. Open `wp-content/themes/<YOUR THEME NAME>/index.php` (You may place it in single.php, post.php, page.php, etc also)
- * Find: `<?php while (have_posts()) : the_post(); ?>`
- * Simply add this code inside the loop where you want the email link to display: <code>if(function_exists('email_link')) { email_link(); }</code>
-
-If you DO NOT want the email link to appear in every post/page, DO NOT use the code above. Just use the shortcode by typing [email_link] into the selected post/page content and it will embed the email link into that post/page only.
-
-## Upgrade Notice
-N/A
 
 ## Screenshots
 
