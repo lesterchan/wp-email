@@ -3,7 +3,7 @@
  Plugin Name: WP-EMail
  Plugin URI: https://lesterchan.net/portfolio/programming/php/
  Description: Allows people to recommand/send your WordPress blog's post/page to a friend.
- Version: 2.67.4
+ Version: 2.67.5
  Author: Lester 'GaMerZ' Chan
  Author URI: https://lesterchan.net
  Text Domain: wp-email
@@ -27,7 +27,7 @@
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-define( 'WP_EMAIL_VERSION', '2.67.4' );
+define( 'WP_EMAIL_VERSION', '2.67.5' );
 
 ### Define: Show Email Remarks In Logs?
 define('EMAIL_SHOW_REMARKS', true);
