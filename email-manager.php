@@ -22,12 +22,12 @@ if(!current_user_can('manage_email')) {
 ### E-Mail Variables
 $base_name = plugin_basename('wp-email/email-manager.php');
 $base_page = 'admin.php?page='.$base_name;
-$email_page = empty($_GET['emailpage'])? 1 : max(intval($_GET['emailpage']), 1);
+$email_page = empty($_GET['emailpage'])? 1 : max((int) $_GET['emailpage'], 1);
 $email_sortby = empty($_GET['by'])? '' : trim($_GET['by']);
 $email_sortby_text = '';
 $email_sortorder = empty($_GET['order'])? 'DESC':trim($_GET['order']);
 $email_sortorder_text = '';
-$email_log_perpage = (empty($_GET['perpage']) || intval($_GET['perpage']) < 1)? 20 : intval($_GET['perpage']);
+$email_log_perpage = (empty($_GET['perpage']) || (int) $_GET['perpage'] < 1) ? 20 : (int) $_GET['perpage'];
 $email_sort_url = '';
 
 
@@ -195,12 +195,12 @@ $email_logs = $wpdb->get_results("SELECT * FROM $wpdb->email ORDER BY $email_sor
 				}  else {
 					$style = 'class="alternate"';
 				}
-				$email_id = intval($email_log->email_id);
+				$email_id = (int) $email_log->email_id;
 				$email_yourname = stripslashes($email_log->email_yourname);
 				$email_youremail = stripslashes($email_log->email_youremail);
 				$email_friendname = stripslashes($email_log->email_friendname);
 				$email_friendemail = stripslashes($email_log->email_friendemail);
-				$email_postid = intval($email_log->email_postid);
+				$email_postid = (int) $email_log->email_postid;
 				$email_remarks = htmlspecialchars(stripslashes($email_log->email_yourremarks));
 				$email_posttitle = htmlspecialchars(stripslashes($email_log->email_posttitle));
 				$email_date = mysql2date(sprintf(__('%s @ %s', 'wp-email'), get_option('date_format'), get_option('time_format')), gmdate('Y-m-d H:i:s', $email_log->email_timestamp));

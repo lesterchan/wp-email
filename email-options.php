@@ -35,21 +35,21 @@ if( !empty( $_POST['Submit'] ) ) {
 	$email_options['post_text'] =   ! empty( $_POST['email_post_text'] )    ? addslashes( trim( wp_filter_post_kses( $_POST['email_post_text'] ) ) ) : '';
 	$email_options['page_text'] =   ! empty( $_POST['email_page_text'] )    ? addslashes( trim( wp_filter_post_kses( $_POST['email_page_text']) ) ) : '';
 	$email_options['email_icon'] =  ! empty( $_POST['email_icon'] )         ? trim( $_POST['email_icon'] ) : '';
-	$email_options['email_type'] =  ! empty( $_POST['email_type'] )         ? intval( $_POST['email_type'] ) : 0;
-	$email_options['email_style'] = ! empty( $_POST['email_style'] )        ? intval( $_POST['email_style'] ) : 0;
+	$email_options['email_type'] =  ! empty( $_POST['email_type'] )         ? (int) $_POST['email_type'] : 0;
+	$email_options['email_style'] = ! empty( $_POST['email_style'] )        ? (int) $_POST['email_style'] : 0;
 	$email_options['email_html'] =  ! empty( $_POST['email_html'] )         ? trim( $_POST['email_html'] ) : '';
 	$email_fields = array();
-	$email_fields['yourname'] =     ! empty( $_POST['email_field_yourname'] )       ? intval( $_POST['email_field_yourname'] ) : 0;
-	$email_fields['youremail'] =    ! empty( $_POST['email_field_youremail'] )      ? intval( $_POST['email_field_youremail'] ) : 0;
-	$email_fields['yourremarks'] =  ! empty( $_POST['email_field_yourremarks'] )    ? intval( $_POST['email_field_yourremarks'] ) : 0;
-	$email_fields['friendname'] =   ! empty( $_POST['email_field_friendname'] )     ? intval( $_POST['email_field_friendname'] ) : 0;
-	$email_fields['friendemail'] =  ! empty( $_POST['email_field_friendemail'] )    ? intval( $_POST['email_field_friendemail'] ) : 0;
+	$email_fields['yourname'] =     ! empty( $_POST['email_field_yourname'] )       ? (int) $_POST['email_field_yourname'] : 0;
+	$email_fields['youremail'] =    ! empty( $_POST['email_field_youremail'] )      ? (int) $_POST['email_field_youremail'] : 0;
+	$email_fields['yourremarks'] =  ! empty( $_POST['email_field_yourremarks'] )    ? (int) $_POST['email_field_yourremarks'] : 0;
+	$email_fields['friendname'] =   ! empty( $_POST['email_field_friendname'] )     ? (int) $_POST['email_field_friendname'] : 0;
+	$email_fields['friendemail'] =  ! empty( $_POST['email_field_friendemail'] )    ? (int) $_POST['email_field_friendemail'] : 0;
 	$email_contenttype =            ! empty( $_POST['email_contenttype'] )          ? strip_tags( trim( $_POST['email_contenttype'] ) ) : '';
 	$email_mailer =                 ! empty( $_POST['email_mailer'] )               ? strip_tags( trim( $_POST['email_mailer'] ) ) : '';
-	$email_snippet =                ! empty( $_POST['email_snippet'] )              ? intval( trim( $_POST['email_snippet'] ) ) : 0;
-	$email_interval =               ! empty( $_POST['email_interval'] )             ? intval( trim( $_POST['email_interval'] ) ) : 0;
-	$email_multiple =               ! empty( $_POST['email_multiple'] )             ? intval( trim( $_POST['email_multiple'] ) ) : 0;
-	$email_imageverify =            ! empty( $_POST['email_imageverify'] )          ? intval( trim( $_POST['email_imageverify'] ) ) : 0;
+	$email_snippet =                ! empty( $_POST['email_snippet'] )              ? (int) trim( $_POST['email_snippet'] ) : 0;
+	$email_interval =               ! empty( $_POST['email_interval'] )             ? (int) trim( $_POST['email_interval'] ) : 0;
+	$email_multiple =               ! empty( $_POST['email_multiple'] )             ? (int) trim( $_POST['email_multiple'] ) : 0;
+	$email_imageverify =            ! empty( $_POST['email_imageverify'] )          ? (int) trim( $_POST['email_imageverify'] ) : 0;
 	$email_template_title =         ! empty( $_POST['email_template_title'] )       ? trim( wp_filter_post_kses( $_POST['email_template_title'] ) ) : '';
 	$email_template_subtitle =      ! empty( $_POST['email_template_subtitle'] )    ? trim( wp_filter_post_kses( $_POST['email_template_subtitle'] ) ) : '';
 	$email_template_subject =       ! empty( $_POST['email_template_subject'] )     ? strip_tags( trim( $_POST['email_template_subject'] ) ) : '';
@@ -237,7 +237,7 @@ $email_smtp = get_option('email_smtp');
 					<option value="3"<?php selected('3', $email_options['email_style']); ?>><?php _e('E-Mail Text Link Only', 'wp-email'); ?></option>
 					<option value="4"<?php selected('4', $email_options['email_style']); ?>><?php _e('Custom', 'wp-email'); ?></option>
 				</select>
-				<div id="email_style_custom" style="display: <?php if(intval($email_options['email_style']) == 4) { echo 'block'; } else { echo 'none'; } ?>; margin-top: 20px;">
+				<div id="email_style_custom" style="display: <?php if((int) $email_options['email_style'] === 4) { echo 'block'; } else { echo 'none'; } ?>; margin-top: 20px;">
 					<textarea rows="2" cols="80" name="email_html" id="email_template_html"><?php echo htmlspecialchars(stripslashes($email_options['email_html'])); ?></textarea><br />
 					<?php _e('HTML is allowed.', 'wp-email'); ?><br />
 					%EMAIL_URL% - <?php _e('URL to the email post/page.', 'wp-email'); ?><br />

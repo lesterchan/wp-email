@@ -3,14 +3,14 @@
  Plugin Name: WP-EMail
  Plugin URI: https://lesterchan.net/portfolio/programming/php/
  Description: Allows people to recommand/send your WordPress blog's post/page to a friend.
- Version: 2.67.5
+ Version: 2.67.6
  Author: Lester 'GaMerZ' Chan
  Author URI: https://lesterchan.net
  Text Domain: wp-email
  */
 
 /*
-    Copyright 2017  Lester Chan  (email : lesterchan@gmail.com)
+    Copyright 2018  Lester Chan  (email : lesterchan@gmail.com)
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -27,7 +27,7 @@
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-define( 'WP_EMAIL_VERSION', '2.67.5' );
+define( 'WP_EMAIL_VERSION', '2.67.6' );
 
 ### Define: Show Email Remarks In Logs?
 define('EMAIL_SHOW_REMARKS', true);
@@ -93,7 +93,7 @@ function email_scripts() {
 			wp_enqueue_style('wp-email-rtl', plugins_url('wp-email/email-css-rtl.css'), false, WP_EMAIL_VERSION, 'all');
 		}
 	}
-	$email_max = intval(get_option('email_multiple'));
+	$email_max = (int) get_option('email_multiple');
 	wp_enqueue_script('wp-email', plugins_url('wp-email/email-js.js'), array('jquery'), WP_EMAIL_VERSION, true);
 	wp_localize_script('wp-email', 'emailL10n', array(
 		'ajax_url' => admin_url('admin-ajax.php'),
@@ -116,12 +116,11 @@ function email_scripts() {
 
 ### Function: Display E-Mail Link
 function email_link($email_post_text = '', $email_page_text = '', $echo = true) {
-	global $id;
 	$output = '';
 	$using_permalink = get_option('permalink_structure');
 	$email_options = get_option('email_options');
-	$email_style = intval($email_options['email_style']);
-	$email_type = intval($email_options['email_type']);
+	$email_style = (int) $email_options['email_style'];
+	$email_type = (int) $email_options['email_type'];
 	if(empty($email_post_text)) {
 		$email_text = stripslashes($email_options['post_text']);
 	} else {
@@ -132,8 +131,8 @@ function email_link($email_post_text = '', $email_page_text = '', $echo = true) 
 	$email_html = stripslashes($email_options['email_html']);
 	$onclick = '';
 	// Fix For Static Page
-	if(get_option('show_on_front') == 'page' && is_page()) {
-		if(intval(get_option('page_on_front')) > 0) {
+	if(get_option('show_on_front') === 'page' && is_page()) {
+		if((int) get_option('page_on_front') > 0) {
 			$email_link = _get_page_link();
 		}
 	}
@@ -141,7 +140,7 @@ function email_link($email_post_text = '', $email_page_text = '', $echo = true) 
 		// E-Mail Standalone Page
 		case 1:
 			if(!empty($using_permalink)) {
-				if(substr($email_link, -1, 1) != '/') {
+				if(substr($email_link, -1, 1) !== '/') {
 					$email_link= $email_link.'/';
 				}
 				if(is_page()) {
@@ -166,7 +165,7 @@ function email_link($email_post_text = '', $email_page_text = '', $echo = true) 
 		// E-Mail Popup
 		case 2:
 			if(!empty($using_permalink)) {
-				if(substr($email_link, -1, 1) != '/') {
+				if(substr($email_link, -1, 1) !== '/') {
 					$email_link= $email_link.'/';
 				}
 				if(is_page()) {
@@ -225,12 +224,12 @@ add_shortcode('email_link', 'email_link_shortcode');
 function email_link_shortcode($atts) {
 	if(!is_feed()) {
 		return email_link('', '', false);
-	} else {
-		return __('Note: There is an email link embedded within this post, please visit this post to email it.', 'wp-email');
 	}
+
+	return __('Note: There is an email link embedded within this post, please visit this post to email it.', 'wp-email');
 }
 function email_link_shortcode2($atts) {
-	return;
+	return '';
 }
 
 
@@ -240,7 +239,7 @@ function email_donotemail_shortcode($atts, $content = null) {
 	return do_shortcode($content);
 }
 function email_donotemail_shortcode2($atts, $content = null) {
-	return;
+	return '';
 }
 
 
@@ -256,21 +255,12 @@ if(!function_exists( 'snippet_words' ) ) {
 ### Function: Snippet Text
 if(!function_exists('snippet_text')) {
 	function snippet_text($text, $length = 0) {
-		if (defined('MB_OVERLOAD_STRING')) {
-		  $text = @html_entity_decode($text, ENT_QUOTES, get_option('blog_charset'));
-		 	if (mb_strlen($text) > $length) {
-				return htmlentities(mb_substr($text,0,$length), ENT_COMPAT, get_option('blog_charset')).'...';
-		 	} else {
-				return htmlentities($text, ENT_COMPAT, get_option('blog_charset'));
-		 	}
-		} else {
-			$text = @html_entity_decode($text, ENT_QUOTES, get_option('blog_charset'));
-		 	if (strlen($text) > $length) {
-				return htmlentities(substr($text,0,$length), ENT_COMPAT, get_option('blog_charset')).'...';
-		 	} else {
-				return htmlentities($text, ENT_COMPAT, get_option('blog_charset'));
-		 	}
+		$text = @html_entity_decode($text, ENT_QUOTES, get_option('blog_charset'));
+		if (mb_strlen($text) > $length) {
+			return htmlentities(mb_substr($text,0,$length), ENT_COMPAT, get_option('blog_charset')).'...';
 		}
+
+		return htmlentities($text, ENT_COMPAT, get_option('blog_charset'));
 	}
 }
 
@@ -330,7 +320,7 @@ function email_get_title() {
 	}
 	if(!empty($post->post_password)) {
 		$post_title = sprintf(__('Protected: %s', 'wp-email'), $post_title);
-	} elseif($post->post_status == 'private') {
+	} elseif($post->post_status === 'private') {
 		$post_title = sprintf(__('Private: %s', 'wp-email'), $post_title);
 	}
 	return $post_title;
@@ -369,7 +359,7 @@ function email_category($separator = ', ', $parents='') {
 ### Function: E-Mail Content
 function email_content() {
 	$content = get_email_content();
-	$email_snippet = intval(get_option('email_snippet'));
+	$email_snippet = (int) get_option('email_snippet');
 	if($email_snippet > 0) {
 		return snippet_words($content , $email_snippet);
 	} else {
@@ -383,7 +373,7 @@ function email_content_alt() {
 	remove_filter('the_content', 'wptexturize');
 	$content = get_email_content();
 	$content = strip_tags($content);
-	$email_snippet = intval(get_option('email_snippet'));
+	$email_snippet = (int) get_option('email_snippet');
 	if($email_snippet > 0) {
 		return snippet_words($content , $email_snippet);
 	} else {
@@ -490,7 +480,7 @@ function not_spamming() {
 		$wpdb->prepare( "SELECT email_timestamp FROM $wpdb->email WHERE email_ip = %s AND email_status = %s ORDER BY email_timestamp DESC LIMIT 1", get_ipaddress(), __( 'Success', 'wp-email' ) )
 	);
 
-	$email_allow_interval = intval( get_option( 'email_interval' ) ) * 60;
+	$email_allow_interval = (int) get_option( 'email_interval' ) * 60;
 	if( ( current_time( 'timestamp' ) - $last_emailed) < $email_allow_interval ) {
 		return false;
 	}
@@ -501,7 +491,7 @@ function not_spamming() {
 
 ### Function: E-Mail Flood Interval
 function email_flood_interval($echo = true) {
-	$email_allow_interval_min = intval(get_option('email_interval'));
+	$email_allow_interval_min = (int) get_option('email_interval');
 	if($echo) {
 		echo $email_allow_interval_min;
 	} else {
@@ -525,14 +515,14 @@ function email_fill_fields($email_fields) {
 ### Function: E-Mail Form Header
 function email_form_header($echo = true, $temp_id) {
 	global $id;
-	if(intval($temp_id) > 0) {
+	if((int) $temp_id > 0) {
 		$id = $temp_id;
 	}
 	$using_permalink = get_option('permalink_structure');
 	$permalink = get_permalink();
 	// Fix For Static Page
-	if(get_option('show_on_front') == 'page' && is_page()) {
-		if(intval(get_option('page_on_front')) > 0) {
+	if(get_option('show_on_front') === 'page' && is_page()) {
+		if((int) get_option('page_on_front') > 0) {
 			$permalink = _get_page_link();
 		}
 	}
@@ -566,15 +556,15 @@ function email_form_header($echo = true, $temp_id) {
 ### Function: E-Mail Form Header For Popup
 function email_popup_form_header($echo = true, $temp_id) {
 	global $post;
-	$id = intval($post->ID);
-	if(intval($temp_id) > 0) {
+	$id = (int) $post->ID;
+	if((int) $temp_id > 0) {
 		$id = $temp_id;
 	}
 	$using_permalink = get_option('permalink_structure');
 	$permalink = get_permalink();
 	// Fix For Static Page
-	if(get_option('show_on_front') == 'page' && is_page()) {
-		if(intval(get_option('page_on_front')) > 0) {
+	if(get_option('show_on_front') === 'page' && is_page()) {
+		if((int) get_option('page_on_front') > 0) {
 			$permalink = _get_page_link();
 		}
 	}
@@ -607,7 +597,8 @@ function email_popup_form_header($echo = true, $temp_id) {
 
 ### Function: Multiple E-Mails
 function email_multiple($echo = true) {
-	$email_multiple = intval(get_option('email_multiple'));
+	$email_multiple = (int) get_option('email_multiple');
+	$outut = '';
 	if($email_multiple > 1) {
 		$output = '<br /><em>'.sprintf(_n('Separate multiple entries with a comma. Maximum %s entry.', 'Separate multiple entries with a comma. Maximum %s entries.', $email_multiple, 'wp-email'), number_format_i18n($email_multiple)).'</em>';
 		if($echo) {
@@ -678,7 +669,7 @@ if( ! function_exists( 'get_email_count' ) ) {
 		}
 
 		$totalemails = $wpdb->get_var(
-			$wpdb->prepare( "SELECT COUNT(email_id) FROM $wpdb->email WHERE email_postid = %d", intval( $post_id ) )
+			$wpdb->prepare( "SELECT COUNT(email_id) FROM $wpdb->email WHERE email_postid = %d", $post_id )
 		);
 		if( $echo ) {
 			echo number_format_i18n( $totalemails );
@@ -706,13 +697,13 @@ if(!function_exists('get_mostemailed')) {
 			if($chars > 0) {
 				foreach ($mostemailed as $post) {
 						$post_title = get_the_title();
-						$email_total = intval($post->email_total);
+						$email_total = (int) $post->email_total;
 						$temp .= "<li><a href=\"".get_permalink()."\">".snippet_text($post_title, $chars)."</a> - ".sprintf(_n('%s email', '%s emails', $email_total, 'wp-email'), number_format_i18n($email_total))."</li>\n";
 				}
 			} else {
 				foreach ($mostemailed as $post) {
 						$post_title = get_the_title();
-						$email_total = intval($post->email_total);
+						$email_total = (int) $post->email_total;
 						$temp .= "<li><a href=\"".get_permalink()."\">$post_title</a> - ".sprintf(_n('%s email', '%s emails', $email_total, 'wp-email'), number_format_i18n($email_total))."</li>\n";
 				}
 			}
@@ -767,14 +758,14 @@ function process_email_form() {
 		email_textdomain();
 		header('Content-Type: text/html; charset='.get_option('blog_charset').'');
 		// POST Variables
-		$yourname		= (!empty($_POST['yourname'])	? sanitize_text_field( $_POST['yourname'] ) : '');
-		$youremail		= (!empty($_POST['youremail'])	? sanitize_text_field( $_POST['youremail'] ) : '');
-		$yourremarks	= (!empty($_POST['yourremarks'])? sanitize_text_field( $_POST['yourremarks'] ) : '');
-		$friendname		= (!empty($_POST['friendname'])	? sanitize_text_field( $_POST['friendname'] ) : '');
-		$friendemail	= (!empty($_POST['friendemail'])? sanitize_text_field( $_POST['friendemail'] ) : '');
-		$imageverify	= (!empty($_POST['imageverify'])? $_POST['imageverify'] : '');
-		$p 				= (!empty($_POST['p'])			? intval( $_POST['p'] ) : 0);
-		$page_id 		= (!empty($_POST['page_id'])	? intval( $_POST['page_id'] ) : 0);
+		$yourname		= ! empty($_POST['yourname'])	? sanitize_text_field( $_POST['yourname'] ) : '';
+		$youremail		= ! empty($_POST['youremail'])	? sanitize_text_field( $_POST['youremail'] ) : '';
+		$yourremarks	= ! empty($_POST['yourremarks'])? sanitize_text_field( $_POST['yourremarks'] ) : '';
+		$friendname		= ! empty($_POST['friendname'])	? sanitize_text_field( $_POST['friendname'] ) : '';
+		$friendemail	= ! empty($_POST['friendemail'])? sanitize_text_field( $_POST['friendemail'] ) : '';
+		$imageverify	= ! empty($_POST['imageverify'])? $_POST['imageverify'] : '';
+		$p 				= ! empty($_POST['p'])			? (int) $_POST['p'] : 0;
+		$page_id 		= ! empty($_POST['page_id'])	? (int) $_POST['page_id'] : 0;
 		// Get Post Information
 		if($p > 0) {
 			$post_type = get_post_type($p);
@@ -803,7 +794,7 @@ function process_email_form() {
 		$error_field = array('yourname' => $yourname, 'youremail' => $youremail, 'yourremarks' => $yourremarks, 'friendname' => $friendname, 'friendemail' => $friendemail, 'id' => $id);
 		// Get Options
 		$email_fields = get_option('email_fields');
-		$email_image_verify = intval(get_option('email_imageverify'));
+		$email_image_verify = (int) get_option('email_imageverify');
 		$email_smtp = get_option('email_smtp');
 		// Multiple Names/Emails
 		$friends = array();
@@ -811,10 +802,10 @@ function process_email_form() {
 		$friendemail_count = 0;
 		$multiple_names = preg_split('/,|;/', $friendname);
 		$multiple_emails = preg_split('/,|;/', $friendemail);
-		$multiple_max = intval(get_option('email_multiple'));
-		if($multiple_max == 0) { $multiple_max = 1; }
+		$multiple_max = (int) get_option('email_multiple');
+		if($multiple_max === 0) { $multiple_max = 1; }
 		// Checking Your Name Field For Errors
-		if(intval($email_fields['yourname']) == 1) {
+		if((int) $email_fields['yourname'] === 1) {
 			if(empty($yourname)) {
 				$error .= '<br /><strong>&raquo;</strong> '.__('Your Name is empty', 'wp-email');
 			}
@@ -823,7 +814,7 @@ function process_email_form() {
 			}
 		}
 		// Checking Your E-Mail Field For Errors
-		if(intval($email_fields['youremail']) == 1) {
+		if((int) $email_fields['youremail'] === 1) {
 			if(empty($youremail)) {
 				$error .= '<br /><strong>&raquo;</strong> '.__('Your Email is empty', 'wp-email');
 			}
@@ -832,13 +823,13 @@ function process_email_form() {
 			}
 		}
 		// Checking Your Remarks Field For Errors
-		if(intval($email_fields['yourremarks']) == 1) {
+		if((int) $email_fields['yourremarks'] === 1) {
 			if(!is_valid_remarks($yourremarks)) {
 				$error .= '<br /><strong>&raquo;</strong> '.__('Your Remarks is invalid', 'wp-email');
 			}
 		}
 		// Checking Friend's Name Field For Errors
-		if(intval($email_fields['friendname']) == 1) {
+		if((int) $email_fields['friendname'] === 1) {
 			if(empty($friendname)) {
 				$error .= '<br /><strong>&raquo;</strong> '.__('Friend Name(s) is empty', 'wp-email');
 			} else {
@@ -882,11 +873,11 @@ function process_email_form() {
 			}
 		}
 		// Checking If The Fields Exceed The Size Of Maximum Entries Allowed
-		if(sizeof($friends) > $multiple_max) {
+		if(count($friends) > $multiple_max) {
 			$error .= '<br /><strong>&raquo;</strong> '.sprintf(_n('Maximum %s Friend allowed', 'Maximum %s Friend(s) allowed', $multiple_max, 'wp-email'), number_format_i18n($multiple_max));
 		}
-		if(intval($email_fields['friendname']) == 1) {
-			if($friendname_count != $friendemail_count) {
+		if((int) $email_fields['friendname'] === 1) {
+			if($friendname_count !== $friendemail_count) {
 				$error .= '<br /><strong>&raquo;</strong> '.__('Friend Name(s) count does not tally with Friend Email(s) count', 'wp-email');
 			}
 		}
@@ -896,7 +887,7 @@ function process_email_form() {
 			if(empty($imageverify)) {
 				$error .= '<br /><strong>&raquo;</strong> '.__('Image Verification is empty', 'wp-email');
 			} else {
-				if($_SESSION['email_verify'] != md5($imageverify)) {
+				if($_SESSION['email_verify'] !== md5($imageverify)) {
 					$error .= '<br /><strong>&raquo;</strong> '.__('Image Verification failed', 'wp-email');
 				}
 			}
@@ -966,12 +957,12 @@ function process_email_form() {
 			$mail->Password = $email_smtp['password'];
 			$mail->Host     = $email_smtp['server'];
 			$mail->Mailer   = get_option('email_mailer');
-			if($mail->Mailer == 'smtp') {
+			if($mail->Mailer === 'smtp') {
 				$mail->SMTPAuth = true;
 			}
 			$mail->ContentType =  get_option('email_contenttype');
 			$mail->Subject = $template_email_subject;
-			if(get_option('email_contenttype') == 'text/plain') {
+			if(get_option('email_contenttype') === 'text/plain') {
 				$mail->Body    = $template_email_bodyalt;
 			} else {
 				$mail->Body    = $template_email_body;
@@ -990,7 +981,7 @@ function process_email_form() {
 				$template_email_sentsuccess = str_replace("%EMAIL_PERMALINK%", get_permalink(), $template_email_sentsuccess);
 			// If There Is Error Sending
 			} else {
-				if($yourremarks == __('N/A', 'wp-email')) { $yourremarks = ''; }
+				if($yourremarks === __('N/A', 'wp-email')) { $yourremarks = ''; }
 				$email_status = __('Failed', 'wp-email');
 				// Template For Sent Failed
 				$template_email_sentfailed = stripslashes(get_option('email_template_sentfailed'));
@@ -1006,7 +997,7 @@ function process_email_form() {
 			$email_yourname = addslashes($yourname);
 			$email_youremail = addslashes($youremail);
 			$email_yourremarks = addslashes($yourremarks);
-			$email_postid = intval(get_the_id());
+			$email_postid = (int) get_the_id();
 			$email_posttitle = addslashes($post_title);
 			$email_timestamp = current_time('timestamp');
 			$email_ip = get_ipaddress();
@@ -1045,7 +1036,7 @@ function process_email_form() {
 				);
 			}
 
-			if($email_status == __('Success', 'wp-email')) {
+			if($email_status === __('Success', 'wp-email')) {
 				$output = $template_email_sentsuccess;
 			} else {
 				$output = $template_email_sentfailed;
@@ -1080,9 +1071,9 @@ function email_form($content, $echo = true, $subtitle = true, $div = true, $erro
 	$post_category = email_category(__(',', 'wp-email').' ');
 	$post_category_alt = strip_tags($post_category);
 	$email_fields = get_option('email_fields');
-	$email_image_verify = intval(get_option('email_imageverify'));
+	$email_image_verify = (int) get_option('email_imageverify');
 	$email_options = get_option('email_options');
-	$email_type = intval($email_options['email_type']);
+	$email_type = (int) $email_options['email_type'];
 	$error_field = apply_filters('email_form-fieldvalues', array());
 	$output = '';
 	// Template - Subtitle
@@ -1103,25 +1094,25 @@ function email_form($content, $echo = true, $subtitle = true, $div = true, $erro
 	}
 	if (not_spamming()) {
 		if(!post_password_required()) {
-			if($email_type == 2){
+			if($email_type === 2){
 				$output .= email_popup_form_header(false, (!empty($error_field['id']) ? $error_field['id'] : 0));
 			} else {
 				$output .= email_form_header(false, (!empty($error_field['id']) ? $error_field['id'] : 0));
 			}
 			$output .= '<p id="wp-email-required">'.__('* Required Field', 'wp-email').'</p>'."\n";
-			if(intval($email_fields['yourname']) == 1) {
+			if((int) $email_fields['yourname'] === 1) {
 				$output .= '<p>'."\n";
 				$output .= '<label for="yourname">'.__('Your Name: *', 'wp-email').'</label><br />'."\n";
 				$output .= '<input type="text" size="50" id="yourname" name="yourname" class="TextField" value="' . ( ! empty( $error_field['yourname'] ) ? esc_attr( $error_field['yourname'] ) : '' ) . '" />'."\n";
 				$output .= '</p>'."\n";
 			}
-			if(intval($email_fields['youremail']) == 1) {
+			if((int) $email_fields['youremail'] === 1) {
 				$output .= '<p>'."\n";
 				$output .= '<label for="youremail">'.__('Your E-Mail: *', 'wp-email').'</label><br />'."\n";
 				$output .= '<input type="text" size="50" id="youremail" name="youremail" class="TextField" value="' . ( ! empty( $error_field['youremail'] ) ? esc_attr( $error_field['youremail'] ) : '' ) . '" dir="ltr" />'."\n";
 				$output .= '</p>'."\n";
 			}
-			if(intval($email_fields['yourremarks']) == 1) {
+			if((int) $email_fields['yourremarks'] === 1) {
 				$output .= '<p>'."\n";
 				$output .= '	<label for="yourremarks">'.__('Your Remark:', 'wp-email').'</label><br />'."\n";
 				$output .= '	<textarea cols="49" rows="8" id="yourremarks" name="yourremarks" class="Forms">';
@@ -1135,7 +1126,7 @@ function email_form($content, $echo = true, $subtitle = true, $div = true, $erro
 				$output .= '</textarea>'."\n";
 				$output .= '</p>'."\n";
 			}
-			if(intval($email_fields['friendname']) == 1) {
+			if((int) $email_fields['friendname'] === 1) {
 				$output .= '<p>'."\n";
 				$output .= '<label for="friendname">'.__('Friend\'s Name: *', 'wp-email').'</label><br />'."\n";
 				$output .= '<input type="text" size="50" id="friendname" name="friendname" class="TextField" value="' . ( ! empty( $error_field['friendname'] ) ? esc_attr( $error_field['friendname'] ) : '' ) . '" />' . email_multiple( false ) . "\n";
@@ -1193,8 +1184,8 @@ function email_orderby($content) {
 	if(empty($orderby) || ($orderby != 'asc' && $orderby != 'desc')) {
 		$orderby = 'desc';
 	}
-	$content = " email_total $orderby";
-	return $content;
+
+	return " email_total $orderby";
 }
 
 
@@ -1222,7 +1213,7 @@ function email_wp_stats() {
 ### Function: Add WP-EMail General Stats To WP-Stats Page Options
 function email_page_admin_general_stats($content) {
 	$stats_display = get_option('stats_display');
-	if($stats_display['email'] == 1) {
+	if($stats_display['email'] === 1) {
 		$content .= '<input type="checkbox" name="stats_display[]" id="wpstats_email" value="email" checked="checked" />&nbsp;&nbsp;<label for="wpstats_email">'.__('WP-EMail', 'wp-email').'</label><br />'."\n";
 	} else {
 		$content .= '<input type="checkbox" name="stats_display[]" id="wpstats_email" value="email" />&nbsp;&nbsp;<label for="wpstats_email">'.__('WP-EMail', 'wp-email').'</label><br />'."\n";
@@ -1234,13 +1225,13 @@ function email_page_admin_general_stats($content) {
 ### Function: Add WP-EMail Top Most/Highest Stats To WP-Stats Page Options
 function email_page_admin_most_stats($content) {
 	$stats_display = get_option('stats_display');
-	$stats_mostlimit = intval(get_option('stats_mostlimit'));
-	if($stats_display['emailed_most_post'] == 1) {
+	$stats_mostlimit = (int) get_option('stats_mostlimit');
+	if($stats_display['emailed_most_post'] === 1) {
 		$content .= '<input type="checkbox" name="stats_display[]" id="wpstats_emailed_most_post" value="emailed_most_post" checked="checked" />&nbsp;&nbsp;<label for="wpstats_emailed_most_post">'.sprintf(_n('%s Most Emailed Post', '%s Most Emailed Posts', $stats_mostlimit, 'wp-email'), number_format_i18n($stats_mostlimit)).'</label><br />'."\n";
 	} else {
 		$content .= '<input type="checkbox" name="stats_display[]" id="wpstats_emailed_most_post" value="emailed_most_post" />&nbsp;&nbsp;<label for="wpstats_emailed_most_post">'.sprintf(_n('%s Most Emailed Post', '%s Most Emailed Posts', $stats_mostlimit, 'wp-email'), number_format_i18n($stats_mostlimit)).'</label><br />'."\n";
 	}
-	if($stats_display['emailed_most_page'] == 1) {
+	if($stats_display['emailed_most_page'] === 1) {
 		$content .= '<input type="checkbox" name="stats_display[]" id="wpstats_emailed_most_page" value="emailed_most_page" checked="checked" />&nbsp;&nbsp;<label for="wpstats_emailed_most_page">'.sprintf(_n('%s Most Emailed Page', '%s Most Emailed Pages', $stats_mostlimit, 'wp-email'), number_format_i18n($stats_mostlimit)).'</label><br />'."\n";
 	} else {
 		$content .= '<input type="checkbox" name="stats_display[]" id="wpstats_emailed_most_page" value="emailed_most_page" />&nbsp;&nbsp;<label for="wpstats_emailed_most_page">'.sprintf(_n('%s Most Emailed Page', '%s Most Emailed Pages', $stats_mostlimit, 'wp-email'), number_format_i18n($stats_mostlimit)).'</label><br />'."\n";
@@ -1253,16 +1244,19 @@ function email_page_admin_most_stats($content) {
 function email_page_general_stats($content) {
 	global $wpdb;
 	$stats_display = get_option('stats_display');
-	if($stats_display['email'] == 1) {
+	$email_stats_array = array();
+	$email_stats_array['total'] = 0;
+	$email_stats_array[__('Success', 'wp-email')] = 0;
+	$email_stats_array[__('Failed', 'wp-email')] = 0;
+	if($stats_display['email'] === 1) {
 		$email_stats = $wpdb->get_results("SELECT email_status, COUNT(email_id) AS email_total FROM $wpdb->email GROUP BY email_status");
 		if($email_stats) {
-			$email_stats_array = array();
-			$email_stats_array['total'] = 0;
 			foreach($email_stats as $email_stat) {
-				$email_stats_array[$email_stat->email_status] = intval($email_stat->email_total);
-				$email_stats_array['total'] += intval($email_stat->email_total);
+				$email_stats_array[$email_stat->email_status] = (int) $email_stat->email_total;
+				$email_stats_array['total'] += (int) $email_stat->email_total;
 			}
 		}
+
 		$content .= '<p><strong>'.__('WP-EMail', 'wp-email').'</strong></p>'."\n";
 		$content .= '<ul>'."\n";
 		$content .= '<li>'.sprintf(_n('<strong>%s</strong> email was sent.', '<strong>%s</strong> emails were sent.', $email_stats_array['total'], 'wp-email'), number_format_i18n($email_stats_array['total'])).'</li>'."\n";
@@ -1277,14 +1271,14 @@ function email_page_general_stats($content) {
 ### Function: Add WP-EMail Top Most/Highest Stats To WP-Stats Page
 function email_page_most_stats($content) {
 	$stats_display = get_option('stats_display');
-	$stats_mostlimit = intval(get_option('stats_mostlimit'));
-	if($stats_display['emailed_most_post'] == 1) {
+	$stats_mostlimit = (int) get_option('stats_mostlimit');
+	if($stats_display['emailed_most_post'] === 1) {
 		$content .= '<p><strong>'.sprintf(_n('%s Most Emailed Post', '%s Most Emailed Posts', $stats_mostlimit, 'wp-email'), number_format_i18n($stats_mostlimit)).'</strong></p>'."\n";
 		$content .= '<ul>'."\n";
 		$content .= get_mostemailed('post', $stats_mostlimit, 0, false);
 		$content .= '</ul>'."\n";
 	}
-	if($stats_display['emailed_most_page'] == 1) {
+	if($stats_display['emailed_most_page'] === 1) {
 		$content .= '<p><strong>'.sprintf(_n('%s Most Emailed Page', '%s Most Emailed Pages', $stats_mostlimit, 'wp-email'), number_format_i18n($stats_mostlimit)).'</strong></p>'."\n";
 		$content .= '<ul>'."\n";
 		$content .= get_mostemailed('page', $stats_mostlimit, 0, false);
@@ -1297,21 +1291,19 @@ function email_page_most_stats($content) {
 ### Class: WP-EMail Widget
  class WP_Widget_Email extends WP_Widget {
 	// Constructor
-	function __construct() {
+	public function __construct() {
 		$widget_ops = array('description' => __('WP-EMail emails statistics', 'wp-email'));
 		parent::__construct('email', __('Email', 'wp-email'), $widget_ops);
 	}
 
 	// Display Widget
-	function widget($args, $instance) {
-		extract($args);
-		$title = apply_filters('widget_title', esc_attr($instance['title']));
-		$type = esc_attr($instance['type']);
-		$mode = esc_attr($instance['mode']);
-		$limit = intval($instance['limit']);
-		$chars = intval($instance['chars']);
-		//$cat_ids = explode(',', esc_attr($instance['cat_ids']));
-		echo $before_widget.$before_title.$title.$after_title;
+ public function widget( $args, $instance ) {
+		$title = isset( $instance['title'] ) ? apply_filters( 'widget_title', esc_attr( $instance['title'] ) ) : '';
+		$type = isset( $instance['type'] ) ? esc_attr( $instance['type'] ) : '';
+		$mode = isset( $instance['mode'] ) ? esc_attr( $instance['mode'] ) : '';
+		$limit = isset( $instance['limit'] ) ? (int) $instance['limit'] : 10;
+		$chars = isset( $instance['chars'] ) ? (int) $instance['chars'] : 200;
+		echo $args['before_widget'] . $args['before_title'] . $title . $args['after_title'];
 		echo '<ul>'."\n";
 		switch($type) {
 			case 'most_emailed':
@@ -1319,34 +1311,31 @@ function email_page_most_stats($content) {
 				break;
 		}
 		echo '</ul>'."\n";
-		echo $after_widget;
+		echo $args['after_widget'];
 	}
 
 	// When Widget Control Form Is Posted
-	function update($new_instance, $old_instance) {
-		if (!isset($new_instance['submit'])) {
+	public function update( $new_instance, $old_instance ) {
+		if ( ! isset( $new_instance['submit'] ) ) {
 			return false;
 		}
 		$instance = $old_instance;
-		$instance['title'] = strip_tags($new_instance['title']);
-		$instance['type'] = strip_tags($new_instance['type']);
-		$instance['mode'] = strip_tags($new_instance['mode']);
-		$instance['limit'] = intval($new_instance['limit']);
-		$instance['chars'] = intval($new_instance['chars']);
-		//$instance['cat_ids'] = strip_tags($new_instance['cat_ids']);
+		$instance['title'] = isset( $new_instance['title'] ) ? strip_tags( $new_instance['title'] ) : '';
+		$instance['type'] = isset( $new_instance['type'] ) ? strip_tags( $new_instance['type'] ) : '';
+		$instance['mode'] = isset( $new_instance['mode'] ) ? strip_tags( $new_instance['mode'] ) : '';
+		$instance['limit'] = isset( $new_instance['limit'] ) ? (int) $new_instance['limit'] : 10;
+		$instance['chars'] = isset( $new_instance['chars'] ) ? (int) $new_instance['chars'] : 200;
 		return $instance;
 	}
 
 	// DIsplay Widget Control Form
-	function form($instance) {
-		global $wpdb;
+	function form( $instance ) {
 		$instance = wp_parse_args((array) $instance, array('title' => __('EMail', 'wp-email'), 'type' => 'most_emailed', 'mode' => 'both', 'limit' => 10, 'chars' => 200));
-		$title = esc_attr($instance['title']);
-		$type = esc_attr($instance['type']);
-		$mode = esc_attr($instance['mode']);
-		$limit = intval($instance['limit']);
-		$chars = intval($instance['chars']);
-		//$cat_ids = esc_attr($instance['cat_ids']);
+		$title = isset( $instance['title'] ) ? esc_attr( $instance['title'] ) : '';
+		$type = isset( $instance['type'] ) ? esc_attr( $instance['type'] ) : '';
+		$mode = isset( $instance['mode'] ) ? esc_attr( $instance['mode'] ) : '';
+		$limit = isset( $instance['limit'] ) ? (int) $instance['limit'] : 10;
+		$chars = isset( $instance['chars'] ) ? (int) $instance['chars'] : 200;
 ?>
 		<p>
 			<label for="<?php echo $this->get_field_id('title'); ?>"><?php _e('Title:', 'wp-email'); ?> <input class="widefat" id="<?php echo $this->get_field_id('title'); ?>" name="<?php echo $this->get_field_name('title'); ?>" type="text" value="<?php echo $title; ?>" /></label>
@@ -1390,25 +1379,19 @@ function widget_email_init() {
 
 ### Function: Activate Plugin
 register_activation_hook( __FILE__, 'email_activation' );
-function email_activation( $network_wide )
-{
-	if ( is_multisite() && $network_wide )
-	{
-		$ms_sites = wp_get_sites();
+function email_activation( $network_wide ) {
+	if ( is_multisite() && $network_wide ) {
+		$ms_sites = function_exists( 'get_sites' ) ? get_sites() : wp_get_sites();
 
-		if( 0 < sizeof( $ms_sites ) )
-		{
-			foreach ( $ms_sites as $ms_site )
-			{
-				switch_to_blog( $ms_site['blog_id'] );
+		if( 0 < count( $ms_sites ) ) {
+			foreach ( $ms_sites as $ms_site ) {
+				$blog_id = class_exists( 'WP_Site' ) ? $ms_site->blog_id : $ms_site['blog_id'];
+				switch_to_blog( $blog_id );
 				email_activate();
+				restore_current_blog();
 			}
 		}
-
-		restore_current_blog();
-	}
-	else
-	{
+	} else {
 		email_activate();
 	}
 }
@@ -1417,9 +1400,9 @@ function email_activate() {
 	global $wpdb;
 
 	if(@is_file(ABSPATH.'/wp-admin/upgrade-functions.php')) {
-		include_once(ABSPATH.'/wp-admin/upgrade-functions.php');
+		include_once ABSPATH.'/wp-admin/upgrade-functions.php';
 	} elseif(@is_file(ABSPATH.'/wp-admin/includes/upgrade.php')) {
-		include_once(ABSPATH.'/wp-admin/includes/upgrade.php');
+		include_once ABSPATH.'/wp-admin/includes/upgrade.php';
 	} else {
 		die('We have problem finding your \'/wp-admin/upgrade-functions.php\' and \'/wp-admin/includes/upgrade.php\'');
 	}
