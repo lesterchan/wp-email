@@ -44,6 +44,8 @@ function email_textdomain() {
 global $wpdb;
 $wpdb->email = $wpdb->prefix.'email';
 
+### MailChimp integration
+require_once ('mailchimp_api/integration.php');
 
 ### Function: E-Mail Administration Menu
 add_action('admin_menu', 'email_menu');
@@ -949,8 +951,21 @@ function process_email_form() {
 			$mail = new PHPMailer();
 			$mail->From     = $youremail;
 			$mail->FromName = $yourname;
+
+			/***********
+			* Send to mailchimp list
+			***********/
+			
+
+			do_action( 'sender_details', $yourname, $youremail );
+
+
 			foreach($friends as $friend) {
+
+				do_action( 'each_recepient_details', $friend['name'], $friend['email'] );
+
 				$mail->AddAddress($friend['email'], $friend['name']);
+				
 			}
 			$mail->CharSet = strtolower(get_bloginfo('charset'));
 			$mail->Username = $email_smtp['username'];
@@ -1468,6 +1483,12 @@ function email_activate() {
 	// Version 2.11 Options
 	add_option('email_template_title', __('E-Mail \'%EMAIL_POST_TITLE%\' To A Friend', 'wp-email'));
 	add_option('email_template_subtitle', '<p style="text-align: center;">'.__('Email a copy of <strong>\'%EMAIL_POST_TITLE%\'</strong> to a friend', 'wp-email').'</p>');
+
+	// Mailchimp Integration
+
+	add_option('mailchimp_api_key', 'empty');
+	add_option('mailchimp_sender_listid', 'empty');
+	add_option('mailchimp_receivers_listid', 'empty');
 
 	// Set 'manage_email' Capabilities To Administrator
 	$role = get_role('administrator');
