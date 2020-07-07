@@ -1,18 +1,4 @@
 <?php
-/*
- * WordPress Plugin: WP-EMail
- * Copyright (c) 2012 Lester "GaMerZ" Chan
- *
- * File Written By:
- * - Lester "GaMerZ" Chan
- * - http://lesterchan.net
- *
- * File Information:
- * - Configure E-Mail Options
- * - wp-content/plugins/wp-email/email-options.php
- */
-
-
 ### Check Whether User Can Manage EMail
 if(!current_user_can('manage_email')) {
 	die('Access Denied');
@@ -134,7 +120,7 @@ $email_smtp = get_option('email_smtp');
 				default_template = "<p><?php _e('Article: <strong>%EMAIL_POST_TITLE%</strong> has been sent to <strong>%EMAIL_FRIEND_NAME% (%EMAIL_FRIEND_EMAIL%)</strong>', 'wp-email'); ?></p><p>&laquo; <a href=\"%EMAIL_PERMALINK%\"><?php _e('Back to %EMAIL_POST_TITLE%', 'wp-email'); ?></a></p>";
 				break;
 			case "sentfailed":
-				default_template = "<p><?php _e('An error has occurred when trying to send this email: ', 'wp-email'); ?><br /><strong>&raquo;</strong> %EMAIL_ERROR_MSG%</p>";
+				default_template = "<p><?php _e('An error has occurred when trying to send this email.', 'wp-email'); ?></p>";
 				break;
 			case "error":
 				default_template = "<p><?php _e('An error has occurred: ', 'wp-email'); ?><br /><strong>&raquo;</strong> %EMAIL_ERROR_MSG%</p>";
@@ -463,7 +449,6 @@ $email_smtp = get_option('email_smtp');
 				<?php _e('Allowed Variables:', 'wp-email'); ?><br />
 				<p style="margin: 2px 0;">- %EMAIL_FRIEND_NAME%</p>
 				<p style="margin: 2px 0;">- %EMAIL_FRIEND_EMAIL%</p>
-				<p style="margin: 2px 0;">- %EMAIL_ERROR_MSG%</p>
 				<p style="margin: 2px 0;">- %EMAIL_POST_TITLE%</p>
 				<p style="margin: 2px 0;">- %EMAIL_BLOG_NAME%</p>
 				<p style="margin: 2px 0;">- %EMAIL_BLOG_URL%</p>

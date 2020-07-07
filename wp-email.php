@@ -3,14 +3,14 @@
  Plugin Name: WP-EMail
  Plugin URI: https://lesterchan.net/portfolio/programming/php/
  Description: Allows people to recommand/send your WordPress blog's post/page to a friend.
- Version: 2.67.6
+ Version: 2.68.0
  Author: Lester 'GaMerZ' Chan
  Author URI: https://lesterchan.net
  Text Domain: wp-email
  */
 
 /*
-    Copyright 2018  Lester Chan  (email : lesterchan@gmail.com)
+    Copyright 2020  Lester Chan  (email : lesterchan@gmail.com)
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -27,7 +27,7 @@
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-define( 'WP_EMAIL_VERSION', '2.67.6' );
+define( 'WP_EMAIL_VERSION', '2.68.0' );
 
 ### Define: Show Email Remarks In Logs?
 define('EMAIL_SHOW_REMARKS', true);
@@ -941,35 +941,24 @@ function process_email_form() {
 			$template_email_bodyalt = str_replace("%EMAIL_POST_CONTENT%", $post_content_alt, $template_email_bodyalt);
 			$template_email_bodyalt = str_replace("%EMAIL_BLOG_NAME%", get_bloginfo('name'), $template_email_bodyalt);
 			$template_email_bodyalt = str_replace("%EMAIL_BLOG_URL%", get_bloginfo('url'), $template_email_bodyalt);
-			$template_email_bodyalt = str_replace("%EMAIL_PERMALINK%", get_permalink(), $template_email_bodyalt);
-			// PHP Mailer Variables
-			if (!class_exists("phpmailer")) {
-				require_once(ABSPATH.WPINC.'/class-phpmailer.php');
-			}
-			$mail = new PHPMailer();
-			$mail->From     = $youremail;
-			$mail->FromName = $yourname;
+			$template_email_bodyalt = str_replace("%EMAIL_PERMALINK%", get_permalink(), $template_email_bodyalt)
+
+			$email_contenttype = get_option( 'email_contenttype' );
+			$email_charset = get_bloginfo( 'charset' );
+			$from = $yourname . ' <' . $youremail . '>';
+			$to = array();
 			foreach($friends as $friend) {
-				$mail->AddAddress($friend['email'], $friend['name']);
+				$to[] = $friend['name'] . ' <' . $friend['email'] . '>';
 			}
-			$mail->CharSet = strtolower(get_bloginfo('charset'));
-			$mail->Username = $email_smtp['username'];
-			$mail->Password = $email_smtp['password'];
-			$mail->Host     = $email_smtp['server'];
-			$mail->Mailer   = get_option('email_mailer');
-			if($mail->Mailer === 'smtp') {
-				$mail->SMTPAuth = true;
-			}
-			$mail->ContentType =  get_option('email_contenttype');
-			$mail->Subject = $template_email_subject;
-			if(get_option('email_contenttype') === 'text/plain') {
-				$mail->Body    = $template_email_bodyalt;
-			} else {
-				$mail->Body    = $template_email_body;
-				$mail->AltBody = $template_email_bodyalt;
-			}
-			// Send The Mail if($mail->Send()) {
-			if($mail->Send()) {
+			$subject = $template_email_subject;
+			$message = $email_contenttype === 'text/plain' ? $template_email_bodyalt : $template_email_body;
+			$headers = array(
+				'From: ' . $from,
+				'Content-Type: ' . $email_contenttype . '; charset=' . $email_charset,
+			);
+			$send_mail = wp_mail( implode( ', ', $to ), $subject, $message, $headers );
+
+			if( $send_mail ) {
 				$email_status = __('Success', 'wp-email');
 				// Template For Sent Successfully
 				$template_email_sentsuccess = stripslashes(get_option('email_template_sentsuccess'));
@@ -987,7 +976,7 @@ function process_email_form() {
 				$template_email_sentfailed = stripslashes(get_option('email_template_sentfailed'));
 				$template_email_sentfailed = str_replace("%EMAIL_FRIEND_NAME%", $friendname, $template_email_sentfailed);
 				$template_email_sentfailed = str_replace("%EMAIL_FRIEND_EMAIL%", $friendemail, $template_email_sentfailed);
-				$template_email_sentfailed = str_replace("%EMAIL_ERROR_MSG%", $mail->ErrorInfo, $template_email_sentfailed);
+				$template_email_sentfailed = str_replace("%EMAIL_ERROR_MSG%", '', $template_email_sentfailed);
 				$template_email_sentfailed = str_replace("%EMAIL_POST_TITLE%", $post_title, $template_email_sentfailed);
 				$template_email_sentfailed = str_replace("%EMAIL_BLOG_NAME%", get_bloginfo('name'), $template_email_sentfailed);
 				$template_email_sentfailed = str_replace("%EMAIL_BLOG_URL%", get_bloginfo('url'), $template_email_sentfailed);
@@ -1435,9 +1424,7 @@ function email_activate() {
 	maybe_create_table($wpdb->email, $create_table);
 
 	// Add In Options
-	add_option('email_smtp', array('username' => '', 'password' => '', 'server' => ''));
 	add_option('email_contenttype', 'text/html');
-	add_option('email_mailer', 'php');
 	add_option('email_template_subject', __('Recommended Article By %EMAIL_YOUR_NAME%: %EMAIL_POST_TITLE%', 'wp-email'));
 	add_option('email_template_body', __('<p>Hi <strong>%EMAIL_FRIEND_NAME%</strong>,<br />Your friend, <strong>%EMAIL_YOUR_NAME%</strong>, has recommended this article entitled \'<strong>%EMAIL_POST_TITLE%</strong>\' to you.</p><p><strong>Here is his/her remark:</strong><br />%EMAIL_YOUR_REMARKS%</p><p><strong>%EMAIL_POST_TITLE%</strong><br />Posted By %EMAIL_POST_AUTHOR% On %EMAIL_POST_DATE% In %EMAIL_POST_CATEGORY%</p>%EMAIL_POST_CONTENT%<p>Article taken from %EMAIL_BLOG_NAME% - <a href="%EMAIL_BLOG_URL%">%EMAIL_BLOG_URL%</a><br />URL to article: <a href="%EMAIL_PERMALINK%">%EMAIL_PERMALINK%</a></p>', 'wp-email'));
 	add_option('email_template_bodyalt', __('Hi %EMAIL_FRIEND_NAME%,'."\n".
@@ -1450,7 +1437,7 @@ function email_activate() {
 		'Article taken from %EMAIL_BLOG_NAME% - %EMAIL_BLOG_URL%'."\n".
 		'URL to article: %EMAIL_PERMALINK%', 'wp-email'));
 	add_option('email_template_sentsuccess', '<p>'.__('Article: <strong>%EMAIL_POST_TITLE%</strong> has been sent to <strong>%EMAIL_FRIEND_NAME% (%EMAIL_FRIEND_EMAIL%)</strong></p><p>&laquo; <a href="%EMAIL_PERMALINK%">'.__('Back to %EMAIL_POST_TITLE%', 'wp-email').'</a></p>', 'wp-email'));
-	add_option('email_template_sentfailed', '<p>'.__('An error has occurred when trying to send this email: ', 'wp-email').'<br /><strong>&raquo;</strong> %EMAIL_ERROR_MSG%</p>');
+	add_option('email_template_sentfailed', '<p>'.__('An error has occurred when trying to send this email.', 'wp-email').'</p>');
 	add_option('email_template_error', '<p>'.__('An error has occurred: ', 'wp-email').'<br /><strong>&raquo;</strong> %EMAIL_ERROR_MSG%</p>');
 	add_option('email_interval', 10);
 	add_option('email_snippet', 0);
@@ -1468,6 +1455,10 @@ function email_activate() {
 	// Version 2.11 Options
 	add_option('email_template_title', __('E-Mail \'%EMAIL_POST_TITLE%\' To A Friend', 'wp-email'));
 	add_option('email_template_subtitle', '<p style="text-align: center;">'.__('Email a copy of <strong>\'%EMAIL_POST_TITLE%\'</strong> to a friend', 'wp-email').'</p>');
+
+	// Version 2.68.0
+	remove_option( 'email_smtp' );
+	remove_option( 'email_mailer' );
 
 	// Set 'manage_email' Capabilities To Administrator
 	$role = get_role('administrator');

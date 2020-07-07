@@ -1,18 +1,4 @@
 <?php
-/**
- * WordPress Plugin: WP-EMail
- * Copyright (c) 2012 Lester "GaMerZ" Chan
- *
- * File Written By:
- * - Lester "GaMerZ" Chan
- * - http://lesterchan.net
- *
- * File Information:
- * - Manages Your E-Mail Logs
- * - wp-content/plugins/wp-email/email-manager.php
- */
-
-
 ### Check Whether User Can Manage EMail
 if(!current_user_can('manage_email')) {
 	die('Access Denied');

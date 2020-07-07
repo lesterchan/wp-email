@@ -1,18 +1,4 @@
 <?php
-/**
- * WordPress Plugin: WP-EMail
- * Copyright (c) 2012 Lester "GaMerZ" Chan
- *
- * File Written By:
- * - Lester "GaMerZ" Chan
- * - http://lesterchan.net
- *
- * File Information:
- * - E-Mail Post/Page To A Friend (Popup Window)
- * - wp-content/plugins/wp-email/email-popup.php
- */
-
-
 ### Session Start
 @session_start();
 
@@ -28,7 +14,7 @@ add_filter('the_title', 'email_title');
 	<title><?php bloginfo('name'); ?> <?php if ( is_single() ) { ?> &raquo; <?php _e('Blog Archive', 'wp-email'); ?> <?php } ?> <?php wp_title(); ?></title>
 	<link rel="stylesheet" href="<?php bloginfo('stylesheet_url'); ?>" type="text/css" media="screen" />
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	
+
 	<script type="text/javascript">
 	/* <![CDATA[*/
 		function repositionPopup() {

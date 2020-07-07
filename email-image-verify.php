@@ -1,18 +1,4 @@
 <?php
-/**
- * WordPress Plugin: WP-EMail
- * Copyright (c) 2012 Lester "GaMerZ" Chan
- *
- * File Written By:
- * - Lester "GaMerZ" Chan
- * - http://lesterchan.net
- *
- * File Information:
- * - E-Mail Image Verification
- * - wp-content/plugins/wp-email/email-image-verify.php
- */
-
-
 ### Start Session
 @session_start();
 
