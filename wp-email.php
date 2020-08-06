@@ -795,7 +795,6 @@ function process_email_form() {
 		// Get Options
 		$email_fields = get_option('email_fields');
 		$email_image_verify = (int) get_option('email_imageverify');
-		$email_smtp = get_option('email_smtp');
 		// Multiple Names/Emails
 		$friends = array();
 		$friendname_count = 0;

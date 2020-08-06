@@ -3,7 +3,7 @@ Contributors: GamerZ
 Donate link: https://lesterchan.net/site/donation/  
 Tags: email, e-mail, wp-email, mail, send, recommend, ajax, friend  
 Requires at least: 4.0  
-Tested up to: 5.4  
+Tested up to: 5.5  
 Stable tag: 2.68.0  
 License: GPLv2 or later  
 
@@ -149,6 +149,7 @@ If you add a custom field with the key "wp-email-remark" it will be placed in th
 ## Changelog
 ### 2.68.0
 * NEW: Uses `wp_mail()` instead of PHPMailer
+* NEW: Removed SMTP & Mailer Settings
 
 ### 2.67.6
 FIXED: Notices
