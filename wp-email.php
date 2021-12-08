@@ -3,7 +3,7 @@
  Plugin Name: WP-EMail
  Plugin URI: https://lesterchan.net/portfolio/programming/php/
  Description: Allows people to recommand/send your WordPress blog's post/page to a friend.
- Version: 2.68.1
+ Version: 2.68.2
  Author: Lester 'GaMerZ' Chan
  Author URI: https://lesterchan.net
  Text Domain: wp-email
@@ -27,7 +27,7 @@
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-define( 'WP_EMAIL_VERSION', '2.68.1' );
+define( 'WP_EMAIL_VERSION', '2.68.2' );
 
 ### Define: Show Email Remarks In Logs?
 define('EMAIL_SHOW_REMARKS', true);
@@ -513,7 +513,7 @@ function email_fill_fields($email_fields) {
 
 
 ### Function: E-Mail Form Header
-function email_form_header($echo = true, $temp_id) {
+function email_form_header( $temp_id, $echo = true ) {
 	global $id;
 	if((int) $temp_id > 0) {
 		$id = $temp_id;
@@ -1085,7 +1085,7 @@ function email_form($content, $echo = true, $subtitle = true, $div = true, $erro
 			if($email_type === 2){
 				$output .= email_popup_form_header(false, (!empty($error_field['id']) ? $error_field['id'] : 0));
 			} else {
-				$output .= email_form_header(false, (!empty($error_field['id']) ? $error_field['id'] : 0));
+				$output .= email_form_header( ( ! empty( $error_field['id'] ) ? $error_field['id'] : 0 ), false );
 			}
 			$output .= '<p id="wp-email-required">'.__('* Required Field', 'wp-email').'</p>'."\n";
 			if((int) $email_fields['yourname'] === 1) {
