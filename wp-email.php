@@ -3,14 +3,14 @@
  Plugin Name: WP-EMail
  Plugin URI: https://lesterchan.net/portfolio/programming/php/
  Description: Allows people to recommand/send your WordPress blog's post/page to a friend.
- Version: 2.68.2
+ Version: 2.69.0
  Author: Lester 'GaMerZ' Chan
  Author URI: https://lesterchan.net
  Text Domain: wp-email
  */
 
 /*
-    Copyright 2020  Lester Chan  (email : lesterchan@gmail.com)
+    Copyright 2022  Lester Chan  (email : lesterchan@gmail.com)
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -27,7 +27,7 @@
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-define( 'WP_EMAIL_VERSION', '2.68.2' );
+define( 'WP_EMAIL_VERSION', '2.69.0' );
 
 ### Define: Show Email Remarks In Logs?
 define('EMAIL_SHOW_REMARKS', true);
@@ -412,19 +412,29 @@ function get_email_content() {
 
 
 ### Function: Get IP Address
-if(!function_exists('get_ipaddress')) {
+if ( ! function_exists( 'get_ipaddress' ) ) {
 	function get_ipaddress() {
-		foreach ( array( 'HTTP_CLIENT_IP', 'HTTP_X_FORWARDED_FOR', 'HTTP_X_FORWARDED', 'HTTP_X_CLUSTER_CLIENT_IP', 'HTTP_FORWARDED_FOR', 'HTTP_FORWARDED', 'REMOTE_ADDR' ) as $key ) {
+		foreach ( array( 'HTTP_CF_CONNECTING_IP', 'HTTP_CLIENT_IP', 'HTTP_X_FORWARDED_FOR', 'HTTP_X_FORWARDED', 'HTTP_X_CLUSTER_CLIENT_IP', 'HTTP_FORWARDED_FOR', 'HTTP_FORWARDED', 'REMOTE_ADDR' ) as $key ) {
 			if ( array_key_exists( $key, $_SERVER ) === true ) {
 				foreach ( explode( ',', $_SERVER[$key] ) as $ip ) {
 					$ip = trim( $ip );
-					if ( filter_var( $ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) !== false ) {
+					if ( filter_var( $ip, FILTER_VALIDATE_IP ) !== false ) {
 						return esc_attr( $ip );
 					}
 				}
 			}
 		}
 	}
+}
+
+function email_get_ipaddress() {
+	$ip = get_ipaddress();
+	$email_options = get_option( 'email_options' );
+	if ( ! empty( $email_options ) && ! empty( $email_options['ip_header'] ) && ! empty( $_SERVER[ $email_options['ip_header'] ] ) ) {
+		$ip = esc_attr( $_SERVER[ $email_options['ip_header'] ] );
+	}
+
+	return apply_filters( 'wp_email_ipaddress', $ip );
 }
 
 ### Function: There Are Still Many PHP 4.x Users
@@ -477,7 +487,7 @@ function not_spamming() {
 	global $wpdb;
 
 	$last_emailed = $wpdb->get_var(
-		$wpdb->prepare( "SELECT email_timestamp FROM $wpdb->email WHERE email_ip = %s AND email_status = %s ORDER BY email_timestamp DESC LIMIT 1", get_ipaddress(), __( 'Success', 'wp-email' ) )
+		$wpdb->prepare( "SELECT email_timestamp FROM $wpdb->email WHERE email_ip = %s AND email_status = %s ORDER BY email_timestamp DESC LIMIT 1", email_get_ipaddress(), __( 'Success', 'wp-email' ) )
 	);
 
 	$email_allow_interval = (int) get_option( 'email_interval' ) * 60;
@@ -988,7 +998,7 @@ function process_email_form() {
 			$email_postid = (int) get_the_id();
 			$email_posttitle = addslashes($post_title);
 			$email_timestamp = current_time('timestamp');
-			$email_ip = get_ipaddress();
+			$email_ip = email_get_ipaddress();
 			$email_host = esc_attr(@gethostbyaddr($email_ip));
 			foreach($friends as $friend) {
 				$email_friendname = addslashes($friend['name']);
@@ -1446,7 +1456,7 @@ function email_activate() {
 	add_option('email_imageverify', 1);
 
 	// Version 2.10 Options
-	$email_options = array('post_text' => __('Email This Post', 'wp-email'), 'page_text' => __('Email This Page', 'wp-email'), 'email_icon' => 'email_famfamfam.png', 'email_type' => 1, 'email_style' => 1, 'email_html' => '<a href="%EMAIL_URL%" rel="nofollow" title="%EMAIL_TEXT%">%EMAIL_TEXT%</a>');
+	$email_options = array('post_text' => __('Email This Post', 'wp-email'), 'page_text' => __('Email This Page', 'wp-email'), 'email_icon' => 'email_famfamfam.png', 'email_type' => 1, 'email_style' => 1, 'email_html' => '<a href="%EMAIL_URL%" rel="nofollow" title="%EMAIL_TEXT%">%EMAIL_TEXT%</a>', 'ip_header' => '');
 	add_option('email_options', $email_options);
 	$email_fields = array('yourname' => 1, 'youremail' => 1, 'yourremarks' => 1, 'friendname' => 1, 'friendemail' => 1);
 	add_option('email_fields', $email_fields);

@@ -20,6 +20,7 @@ if( !empty( $_POST['Submit'] ) ) {
 	$email_options['email_type'] =  ! empty( $_POST['email_type'] )         ? (int) $_POST['email_type'] : 0;
 	$email_options['email_style'] = ! empty( $_POST['email_style'] )        ? (int) $_POST['email_style'] : 0;
 	$email_options['email_html'] =  ! empty( $_POST['email_html'] )         ? trim( $_POST['email_html'] ) : '';
+	$email_options['ip_header']   = ! empty( $_POST['email_ip_header'] )    ? sanitize_text_field( $_POST['email_ip_header'] ) : '';
 	$email_fields = array();
 	$email_fields['yourname'] =     ! empty( $_POST['email_field_yourname'] )       ? (int) $_POST['email_field_yourname'] : 0;
 	$email_fields['youremail'] =    ! empty( $_POST['email_field_youremail'] )      ? (int) $_POST['email_field_youremail'] : 0;
@@ -242,6 +243,10 @@ $email_fields = get_option('email_fields');
 		<tr>
 			<th scope="row" valign="top"><?php _e('Interval Between E-Mails:', 'wp-email'); ?></th>
 			<td><input type="text" id="email_interval" name="email_interval" value="<?php echo  get_option('email_interval'); ?>" size="5" maxlength="5" /> <?php _e('Mins', 'wp-email'); ?><br /><?php _e('It allows you to specify the interval in minutes between each email sent per user based on IP to prevent spam and flood.', 'wp-email'); ?></td>
+		</tr>
+		<tr>
+			<th scope="row" valign="top"><?php _e( 'Header That Contains The IP:', 'wp-email' ); ?></th>
+			<td><input type="text" name="email_ip_header" value="<?php echo ( ! empty( $email_options['ip_header'] ) ? esc_attr( $email_options['ip_header'] ) : '' ); ?>" size="30" /> <?php _e( 'You can leave it blank to use the default', 'wp-email' ); ?><br /><?php _e( 'Example: REMOTE_ADDR', 'wp-email' ); ?></td>
 		</tr>
 		<tr>
 				<th scope="row" valign="top"><?php _e('Max Number Of Multiple E-Mails:', 'wp-email'); ?></th>
