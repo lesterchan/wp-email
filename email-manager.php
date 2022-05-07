@@ -1,31 +1,35 @@
 <?php
 ### Check Whether User Can Manage EMail
-if(!current_user_can('manage_email')) {
+if ( ! current_user_can( 'manage_email' ) ) {
 	die('Access Denied');
 }
 
+### Check Nonce
+if ( ! empty( $_GET['by'] ) || ! empty( $_GET['order'] ) || ! empty( $_GET['perpage'] )) {
+	check_admin_referer( 'wp-email_sort' );
+}
 
 ### E-Mail Variables
-$base_name = plugin_basename('wp-email/email-manager.php');
+$base_name = plugin_basename( 'wp-email/email-manager.php') ;
 $base_page = 'admin.php?page='.$base_name;
-$email_page = empty($_GET['emailpage'])? 1 : max((int) $_GET['emailpage'], 1);
-$email_sortby = empty($_GET['by'])? '' : trim($_GET['by']);
+$email_page = empty( $_GET['emailpage'] )? 1 : max((int) $_GET['emailpage'], 1);
+$email_sortby = empty( $_GET['by'] )? '' : sanitize_key( $_GET['by'] );
 $email_sortby_text = '';
-$email_sortorder = empty($_GET['order'])? 'DESC':trim($_GET['order']);
+$email_sortorder = empty( $_GET['order'] )? 'DESC': sanitize_key( $_GET['order'] );
 $email_sortorder_text = '';
-$email_log_perpage = (empty($_GET['perpage']) || (int) $_GET['perpage'] < 1) ? 20 : (int) $_GET['perpage'];
+$email_log_perpage = ( empty($_GET['perpage'] ) || (int) $_GET['perpage'] < 1 ) ? 20 : (int) $_GET['perpage'];
 $email_sort_url = '';
 
 
 ### Form Sorting URL
-if(!empty($email_sortby)) {
-	$email_sort_url .= '&amp;by='.$email_sortby;
+if ( ! empty($email_sortby ) ) {
+	$email_sort_url .= '&amp;by=' . $email_sortby;
 }
-if(!empty($email_sortorder)) {
-	$email_sort_url .= '&amp;order='.$email_sortorder;
+if ( ! empty( $email_sortorder ) ) {
+	$email_sort_url .= '&amp;order=' . $email_sortorder;
 }
-if(!empty($email_log_perpage)) {
-	$email_sort_url .= '&amp;perpage='.$email_log_perpage;
+if ( ! empty( $email_log_perpage ) ) {
+	$email_sort_url .= '&amp;perpage=' . $email_log_perpage;
 }
 
 
@@ -92,10 +96,11 @@ switch($email_sortorder) {
 
 
 ### Form Processing
-if(!empty($_POST['delete_logs'])) {
-	if(trim($_POST['delete_logs_yes']) == 'yes') {
-		$delete_logs = $wpdb->query("DELETE FROM $wpdb->email");
-		if($delete_logs) {
+if ( ! empty( $_POST['delete_logs'] ) ) {
+	check_admin_referer( 'wp-email_delete-logs' );
+	if( trim( $_POST['delete_logs_yes'] ) === 'yes' ) {
+		$delete_logs = $wpdb->query( "DELETE FROM $wpdb->email" );
+		if( $delete_logs ) {
 			$text = '<p style="color: green;">'.__('All E-Mail Logs Have Been Deleted.', 'wp-email').'</p>';
 		} else {
 			$text = '<p style="color: red;">'.__('An Error Has Occured While Deleting All E-Mail Logs.', 'wp-email').'</p>';
@@ -273,6 +278,7 @@ $email_logs = $wpdb->get_results("SELECT * FROM $wpdb->email ORDER BY $email_sor
 		?>
 	<br />
 	<form action="<?php echo admin_url('admin.php?page='.plugin_basename(__FILE__)); ?>" method="get">
+		<?php wp_nonce_field( 'wp-email_sort' ); ?>
 		<table class="widefat">
 			<tr>
 				<td>
@@ -343,6 +349,7 @@ $email_logs = $wpdb->get_results("SELECT * FROM $wpdb->email ORDER BY $email_sor
 	<br style="clear" />
 	<div align="center">
 		<form method="post" action="<?php echo admin_url('admin.php?page='.plugin_basename(__FILE__)); ?>">
+			<?php wp_nonce_field('wp-email_delete-logs'); ?>
 			<strong><?php _e('Are You Sure You Want To Delete All E-Mail Logs?', 'wp-email'); ?></strong><br /><br />
 			<input type="checkbox" name="delete_logs_yes" value="yes" />&nbsp;<?php _e('Yes', 'wp-email'); ?><br /><br />
 			<input type="submit" name="delete_logs" value="<?php _e('Delete', 'wp-email'); ?>" class="button" onclick="return confirm('<?php _e('You Are About To Delete All E-Mail Logs\nThis Action Is Not Reversible.\n\n Choose [Cancel] to stop, [OK] to delete.', 'wp-email'); ?>')" />
