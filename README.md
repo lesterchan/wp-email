@@ -4,7 +4,7 @@ Donate link: https://lesterchan.net/site/donation/
 Tags: email, e-mail, wp-email, mail, send, recommend, ajax, friend  
 Requires at least: 4.0  
 Tested up to: 6.2  
-Stable tag: 2.69.0  
+Stable tag: 2.69.1  
 License: GPLv2 or later  
 
 Allows people to recommend/send your WordPress blog's post/page to a friend.
@@ -147,6 +147,9 @@ If you add a custom field with the key "wp-email-title" it will be used as the E
 If you add a custom field with the key "wp-email-remark" it will be placed in the remarks field in the E-Mail form.
 
 ## Changelog
+### 2.69.1
+* FIXED: XSS for text links
+
 ### 2.69.0 
 * NEW: Supports specifying which header to read the user's IP from. Props Marc Montpas.
 * FIXED: Added more nonce check to email-manager.php

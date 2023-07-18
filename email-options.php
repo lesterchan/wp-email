@@ -145,13 +145,13 @@ $email_fields = get_option('email_fields');
 		<tr>
 			<th scope="row" valign="top"><?php _e('E-Mail Text Link For Post', 'wp-email'); ?></th>
 			<td>
-				<input type="text" name="email_post_text" value="<?php echo stripslashes($email_options['post_text']); ?>" size="30" />
+				<input type="text" name="email_post_text" value="<?php echo esc_attr( $email_options['post_text'] ); ?>" size="30" />
 			</td>
 		</tr>
 		<tr>
 			<th scope="row" valign="top"><?php _e('E-Mail Text Link For Page', 'wp-email'); ?></th>
 			<td>
-				<input type="text" name="email_page_text" value="<?php echo stripslashes($email_options['page_text']); ?>" size="30" />
+				<input type="text" name="email_page_text" value="<?php echo esc_attr( $email_options['page_text'] ); ?>" size="30" />
 			</td>
 		</tr>
 		<tr>
@@ -167,13 +167,13 @@ $email_fields = get_option('email_fields');
 								if(is_file($email_icon_path.'/'.$filename)) {
 									echo '<p>';
 									if($email_icon == $filename) {
-										echo '<input type="radio" name="email_icon" value="'.$filename.'" checked="checked" />'."\n";
+										echo '<input type="radio" name="email_icon" value="' . esc_attr( $filename ) . '" checked="checked" />'."\n";
 									} else {
-										echo '<input type="radio" name="email_icon" value="'.$filename.'" />'."\n";
+										echo '<input type="radio" name="email_icon" value="' . esc_attr( $filename ) . '" />'."\n";
 									}
 									echo '&nbsp;&nbsp;&nbsp;';
-									echo '<img src="'.$email_icon_url.'/'.$filename.'" alt="'.$filename.'" />'."\n";
-									echo '&nbsp;&nbsp;&nbsp;('.$filename.')';
+									echo '<img src="' . esc_attr( $email_icon_url . '/' . $filename ) . '" alt="' . esc_attr( $filename ) . '" />'."\n";
+									echo '&nbsp;&nbsp;&nbsp;(' . $filename . ')';
 									echo '</p>'."\n";
 								}
 							}
@@ -238,11 +238,11 @@ $email_fields = get_option('email_fields');
 		</tr>
 		<tr>
 			<th scope="row" valign="top"><?php _e('No. Of Words Before Cutting Off:', 'wp-email'); ?></th>
-			<td><input type="text" id="email_snippet" name="email_snippet" value="<?php echo  get_option('email_snippet'); ?>" size="5" maxlength="5" /><br /><?php _e('Setting this value more than 0 will enable the snippet feature. This feature will allow you to send a portion (defined by the text field above) of the article to your friend instead of the whole article.', 'wp-email'); ?></td>
+			<td><input type="text" id="email_snippet" name="email_snippet" value="<?php echo esc_attr( get_option('email_snippet') ) ; ?>" size="5" maxlength="5" /><br /><?php _e('Setting this value more than 0 will enable the snippet feature. This feature will allow you to send a portion (defined by the text field above) of the article to your friend instead of the whole article.', 'wp-email'); ?></td>
 		</tr>
 		<tr>
 			<th scope="row" valign="top"><?php _e('Interval Between E-Mails:', 'wp-email'); ?></th>
-			<td><input type="text" id="email_interval" name="email_interval" value="<?php echo  get_option('email_interval'); ?>" size="5" maxlength="5" /> <?php _e('Mins', 'wp-email'); ?><br /><?php _e('It allows you to specify the interval in minutes between each email sent per user based on IP to prevent spam and flood.', 'wp-email'); ?></td>
+			<td><input type="text" id="email_interval" name="email_interval" value="<?php echo esc_attr( get_option('email_interval') ); ?>" size="5" maxlength="5" /> <?php _e('Mins', 'wp-email'); ?><br /><?php _e('It allows you to specify the interval in minutes between each email sent per user based on IP to prevent spam and flood.', 'wp-email'); ?></td>
 		</tr>
 		<tr>
 			<th scope="row" valign="top"><?php _e( 'Header That Contains The IP:', 'wp-email' ); ?></th>
@@ -250,7 +250,7 @@ $email_fields = get_option('email_fields');
 		</tr>
 		<tr>
 				<th scope="row" valign="top"><?php _e('Max Number Of Multiple E-Mails:', 'wp-email'); ?></th>
-				<td><input type="text" id="email_multiple" name="email_multiple" value="<?php echo  get_option('email_multiple'); ?>" size="5" maxlength="3" /><br /><?php _e('Setting this value more than 1 will enable this feature. It allows the maximum number of multiple e-mails that can be send at one go.', 'wp-email'); ?></td>
+				<td><input type="text" id="email_multiple" name="email_multiple" value="<?php echo esc_attr( get_option('email_multiple') ); ?>" size="5" maxlength="3" /><br /><?php _e('Setting this value more than 1 will enable this feature. It allows the maximum number of multiple e-mails that can be send at one go.', 'wp-email'); ?></td>
 		</tr>
 		<tr>
 			<th scope="row" valign="top"><?php _e('Enable Image Verification:', 'wp-email'); ?></th>
