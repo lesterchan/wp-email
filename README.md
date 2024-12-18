@@ -1,7 +1,7 @@
 # WP-EMail
 Contributors: GamerZ  
 Donate link: https://lesterchan.net/site/donation/  
-Tags: email, e-mail, wp-email, mail, send, recommend, ajax, friend  
+Tags: email, e-mail, wp-email, mail, recommend  
 Requires at least: 4.6  
 Tested up to: 6.7  
 Stable tag: 2.69.2  
