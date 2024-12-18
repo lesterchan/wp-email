@@ -4,7 +4,7 @@ Donate link: https://lesterchan.net/site/donation/
 Tags: email, e-mail, wp-email, mail, recommend  
 Requires at least: 4.6  
 Tested up to: 6.7  
-Stable tag: 2.69.2  
+Stable tag: 2.69.3  
 License: GPLv2 or later  
 
 Allows people to recommend/send your WordPress blog's post/page to a friend.
@@ -147,6 +147,9 @@ If you add a custom field with the key "wp-email-title" it will be used as the E
 If you add a custom field with the key "wp-email-remark" it will be placed in the remarks field in the E-Mail form.
 
 ## Changelog
+### 2.69.3
+* FIXED: Remove email_textdomain()
+
 ### 2.69.2
 * FIXED: PHP Warning
 * FIXED: Remove load_plugin_textdomain since it is no longer needed since WP 4.6

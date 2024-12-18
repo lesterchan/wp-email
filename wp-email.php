@@ -27,7 +27,7 @@
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-define( 'WP_EMAIL_VERSION', '2.69.2' );
+define( 'WP_EMAIL_VERSION', '2.69.3' );
 
 ### Define: Show Email Remarks In Logs?
 define('EMAIL_SHOW_REMARKS', true);
@@ -758,7 +758,6 @@ function process_email_form() {
 		}
 
 		@session_start();
-		email_textdomain();
 		header('Content-Type: text/html; charset='.get_option('blog_charset').'');
 		// POST Variables
 		$yourname		= ! empty($_POST['yourname'])	? sanitize_text_field( $_POST['yourname'] ) : '';
@@ -1363,7 +1362,6 @@ function email_page_most_stats($content) {
 ### Function: Init WP-EMail Widget
 add_action('widgets_init', 'widget_email_init');
 function widget_email_init() {
-	email_textdomain();
 	register_widget('WP_Widget_Email');
 }
 
