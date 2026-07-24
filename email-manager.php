@@ -187,17 +187,17 @@ $email_logs = $wpdb->get_results("SELECT * FROM $wpdb->email ORDER BY $email_sor
 					$style = 'class="alternate"';
 				}
 				$email_id = (int) $email_log->email_id;
-				$email_yourname = stripslashes($email_log->email_yourname);
-				$email_youremail = stripslashes($email_log->email_youremail);
-				$email_friendname = stripslashes($email_log->email_friendname);
-				$email_friendemail = stripslashes($email_log->email_friendemail);
+				$email_yourname = esc_html(stripslashes($email_log->email_yourname));
+				$email_youremail = esc_html(stripslashes($email_log->email_youremail));
+				$email_friendname = esc_html(stripslashes($email_log->email_friendname));
+				$email_friendemail = esc_html(stripslashes($email_log->email_friendemail));
 				$email_postid = (int) $email_log->email_postid;
-				$email_remarks = htmlspecialchars(stripslashes($email_log->email_yourremarks));
-				$email_posttitle = htmlspecialchars(stripslashes($email_log->email_posttitle));
+				$email_remarks = esc_html(stripslashes($email_log->email_yourremarks));
+				$email_posttitle = esc_html(stripslashes($email_log->email_posttitle));
 				$email_date = mysql2date(sprintf(__('%s @ %s', 'wp-email'), get_option('date_format'), get_option('time_format')), gmdate('Y-m-d H:i:s', $email_log->email_timestamp));
-				$email_ip = $email_log->email_ip;
-				$email_host = $email_log->email_host;
-				$email_status = stripslashes($email_log->email_status);
+				$email_ip = esc_html($email_log->email_ip);
+				$email_host = esc_html($email_log->email_host);
+				$email_status = esc_html(stripslashes($email_log->email_status));
 				echo "<tr $style>\n";
 				echo "<td>".number_format_i18n($email_id)."</td>\n";
 				echo "<td>$email_yourname<br />$email_youremail</td>\n";

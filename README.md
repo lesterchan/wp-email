@@ -3,8 +3,8 @@ Contributors: GamerZ
 Donate link: https://lesterchan.net/site/donation/  
 Tags: email, e-mail, wp-email, mail, recommend  
 Requires at least: 4.6  
-Tested up to: 6.7  
-Stable tag: 2.69.3  
+Tested up to: 7.0  
+Stable tag: 2.69.4  
 License: GPLv2 or later  
 
 Allows people to recommend/send your WordPress blog's post/page to a friend.
@@ -20,9 +20,6 @@ Allows people to recommend/send your WordPress blog's post/page to a friend.
 
 If you DO NOT want the email link to appear in every post/page, DO NOT use the code above. Just use the shortcode by typing [email_link] into the selected post/page content and it will embed the email link into that post/page only.
 
-### Build Status
-[![Build Status](https://travis-ci.org/lesterchan/wp-email.svg?branch=master)](https://travis-ci.org/lesterchan/wp-email)
-
 ### Development
 * [https://github.com/lesterchan/wp-email](https://github.com/lesterchan/wp-email "https://github.com/lesterchan/wp-email")
 
@@ -31,7 +28,6 @@ If you DO NOT want the email link to appear in every post/page, DO NOT use the c
 
 ### Credits
 * Plugin icon by [Yannick](http://yanlu.de) from [Flaticon](http://www.flaticon.com)
-* Icons courtesy of [FamFamFam](http://www.famfamfam.com/).
 
 ### Donations
 I spent most of my free time creating, updating, maintaining and supporting these plugins, if you really love my plugins and could spare me a couple of bucks as my school allowance, I will really appreciate it. If not feel free to use it without any obligations.
@@ -147,6 +143,11 @@ If you add a custom field with the key "wp-email-title" it will be used as the E
 If you add a custom field with the key "wp-email-remark" it will be placed in the remarks field in the E-Mail form.
 
 ## Changelog
+### 2.69.4
+* NEW: Bump to WordPress 7.0
+* FIXED: Undefined array key warnings on missing stats_display options
+* FIXED: Escape e-mail log values on output in the admin log viewer
+
 ### 2.69.3
 * FIXED: Remove email_textdomain()
 
