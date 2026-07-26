@@ -2,10 +2,12 @@
 Contributors: GamerZ  
 Donate link: https://lesterchan.net/site/donation/  
 Tags: email, e-mail, wp-email, mail, recommend  
-Requires at least: 4.6  
+Requires at least: 6.0  
 Tested up to: 7.0  
-Stable tag: 2.69.4  
-License: GPLv2 or later  
+Stable tag: 3.0.0  
+Requires PHP: 7.4  
+License: GPLv2 or later
+License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
 Allows people to recommend/send your WordPress blog's post/page to a friend.
 
@@ -23,11 +25,8 @@ If you DO NOT want the email link to appear in every post/page, DO NOT use the c
 ### Development
 * [https://github.com/lesterchan/wp-email](https://github.com/lesterchan/wp-email "https://github.com/lesterchan/wp-email")
 
-### Translations
-* [http://dev.wp-plugins.org/browser/wp-email/i18n/](http://dev.wp-plugins.org/browser/wp-email/i18n/ "http://dev.wp-plugins.org/browser/wp-email/i18n/")
-
 ### Credits
-* Plugin icon by [Yannick](http://yanlu.de) from [Flaticon](http://www.flaticon.com)
+* Plugin icon by [Yannick](https://yanlu.de) from [Flaticon](https://www.flaticon.com)
 
 ### Donations
 I spent most of my free time creating, updating, maintaining and supporting these plugins, if you really love my plugins and could spare me a couple of bucks as my school allowance, I will really appreciate it. If not feel free to use it without any obligations.
@@ -42,9 +41,9 @@ I spent most of my free time creating, updating, maintaining and supporting thes
 
 ## Frequently Asked Questions
 
-### Does it support SMTP authentication with servers utilizing SSL encryption?
+### How does the plugin send mail?
 
-1. Yes. Go to `WP-Admin -> E-Mail -> Email Options`, under `SMTP Server`, use `ssl://smtp.gmail.com:465` if you are using Gmail SMTP.
+Through `wp_mail()`, so it uses whatever WordPress itself is configured to use. The plugin dropped its own SMTP settings in 2.68.0; if you need SMTP, install an SMTP plugin and WP-EMail will follow it.
 
 ### How do I add this to my theme?
 
@@ -65,9 +64,9 @@ if(function_exists('email_link'))
 You can also force `email_link()` to return the link rather than echo it by setting the third parameter to false:
 ```
 if(function_exists('email_link')) {
-	$email_link email_link( 'E-Mail Text Link for Post', 'E-Mail Text Link for Page', false);
+	$email_link = email_link( 'E-Mail Text Link for Post', 'E-Mail Text Link for Page', false );
 } else {
-	$email_link '';
+	$email_link = '';
 }
 
 echo $email_link;
@@ -116,9 +115,11 @@ if (function_exists('get_emails_failed'))
 
 ### How do I hide remarks when viewing E-Mail logs in WP-Admin?
 
-1. Open `wp-email.php`
-1. Find `define('EMAIL_SHOW_REMARKS', true);`
-1. Replace with `define('EMAIL_SHOW_REMARKS', false);`
+Add this to your `wp-config.php`:
+```
+define( 'EMAIL_SHOW_REMARKS', false );
+```
+Since 3.0.0 the plugin only defines this if you have not, so your setting survives upgrades.
 
 ### How can I keep some post text from being sent in the E-Mail?
 
@@ -143,6 +144,25 @@ If you add a custom field with the key "wp-email-title" it will be used as the E
 If you add a custom field with the key "wp-email-remark" it will be placed in the remarks field in the E-Mail form.
 
 ## Changelog
+### 3.0.0
+* NEW: Restructured into `includes/class-email-*.php`. The template tags (`email_link()`, `get_emails()`, `get_mostemailed()` and the rest) keep their names and signatures, and the `wp_email_ipaddress`, `wp_email_template_redirect` and `email_form-fieldvalues` filters are unchanged.
+* NEW: The fifteen `wp_options` rows the plugin used are consolidated into the single `email_options` row it already owned. Your settings are migrated automatically on upgrade.
+* NEW: The options page is built on the WordPress Settings API, and the e-mail log is a standard admin list table with sortable columns and a per-page screen option.
+* NEW: Image verification no longer uses PHP sessions. Sessions are unavailable behind most page caches and on a lot of hosting, which made verification fail outright; the challenge now lives in a short-lived transient issued per form. If your server has no GD library the option is shown as unavailable instead of silently rejecting every message.
+* NEW: The JavaScript was rewritten without jQuery, and every inline `onclick` is gone.
+* NEW: The e-mail table gained indexes on the post ID, status and IP columns.
+* **IMPORTANT:** Proxy headers such as `X-Forwarded-For` are no longer trusted by default. The interval between e-mails is keyed on the sender's IP, and honouring those headers unconditionally let anyone bypass it. If your site is behind Cloudflare or another reverse proxy, either set `Header That Contains The IP` on the options page or add `define( 'WP_EMAIL_TRUST_PROXY', true );` to `wp-config.php`. Otherwise every visitor will look like your proxy and share one interval.
+* **IMPORTANT:** Requires WordPress 6.0 and PHP 7.4.
+* FIXED: Uninstalling on a multisite network called `wp_get_sites()`, removed in WordPress 5.1, and fatalled instead of cleaning up. It also stopped at the hundredth site, leaving options and tables behind on every site after that.
+* FIXED: The e-mail form on a Page posted to an `emailpage/` URL that was never registered.
+* FIXED: The first validation error lost part of its text and rendered a stray `</strong>`.
+* FIXED: A failed submission came back with every field blank instead of keeping what you typed.
+* FIXED: Logged names and remarks were escaped twice, so apostrophes accumulated backslashes.
+* FIXED: `[email_link]` and `[donotemail]` stopped working for the rest of the page once an e-mail body had been rendered.
+* FIXED: jQuery was loaded on every page of the site whether or not anything used it.
+* FIXED: The e-mail status was stored translated, so changing your site language orphaned old log rows from the totals. Existing rows are corrected on upgrade.
+* NEW: Added a PHPUnit test suite and GitHub Actions CI.
+
 ### 2.69.4
 * NEW: Bump to WordPress 7.0
 * FIXED: Undefined array key warnings on missing stats_display options
@@ -186,7 +206,7 @@ FIXED: Notices
 * FIXED: esc_attr() on form fields to prevent XSS. Props Edward Woodfall.
 
 ### 2.67.2
-* FIXED: Fixed SQL Injection in inserting email logs. Props [Jxs.nl](http://jxs.nl).
+* FIXED: Fixed SQL Injection in inserting email logs. Props [Jxs.nl](https://jxs.nl).
 
 ### 2.67.1
 * FIXED: Fixed vulnerability in `get_email_ipaddress()`
@@ -208,7 +228,7 @@ FIXED: Notices
 * NEW: Added in `wp_email_template_redirect` filter to allow other plugins disable template redirect when query var contains 'email'
 
 ### 2.63
-* NEW: Finally there is custom post type support. Props [nimmolo](http://andrewnimmo.org/ "nimmolo").
+* NEW: Finally there is custom post type support. Props [nimmolo](https://andrewnimmo.org/ "nimmolo").
 * NEW: Allow Multisite Network Activate
 * NEW: Uses WordPress uninstall.php file to uninstall the plugin
 * NEW: Added noindex, nofollow to meta tag to email-standalone.php
