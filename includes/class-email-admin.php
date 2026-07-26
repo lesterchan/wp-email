@@ -46,6 +46,24 @@ class Email_Admin {
 	}
 
 	/**
+	 * Build the logs list table.
+	 *
+	 * Loads WP_List_Table's subclass on demand rather than at plugin boot,
+	 * since it is only ever needed on this one screen.
+	 *
+	 * @return Email_Logs_Table
+	 */
+	private function table() {
+		if ( ! $this->table ) {
+			require_once __DIR__ . '/class-email-logs-table.php';
+
+			$this->table = new Email_Logs_Table();
+		}
+
+		return $this->table;
+	}
+
+	/**
 	 * Register the menu and its two screens.
 	 *
 	 * @return void
@@ -104,7 +122,7 @@ class Email_Admin {
 			)
 		);
 
-		$this->table = new Email_Logs_Table();
+		$this->table();
 	}
 
 	/**
@@ -160,11 +178,8 @@ class Email_Admin {
 			wp_die( esc_html__( 'You do not have permission to manage e-mail.', 'wp-email' ) );
 		}
 
-		if ( ! $this->table ) {
-			$this->table = new Email_Logs_Table();
-		}
-
-		$this->table->prepare_items();
+		$table = $this->table();
+		$table->prepare_items();
 
 		$total   = Email_Logs::count_all();
 		$success = Email_Logs::count_by_status( Email_Logs::STATUS_SUCCESS );
@@ -179,7 +194,7 @@ class Email_Admin {
 
 			<form method="get">
 				<input type="hidden" name="page" value="<?php echo esc_attr( self::LOGS_SLUG ); ?>" />
-				<?php $this->table->display(); ?>
+				<?php $table->display(); ?>
 			</form>
 
 			<h2><?php esc_html_e( 'E-Mail Logs Stats', 'wp-email' ); ?></h2>

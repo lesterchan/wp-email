@@ -34,10 +34,8 @@ class Test_Email_Admin extends WP_UnitTestCase {
 		}
 
 		require_once ABSPATH . 'wp-admin/includes/admin.php';
-		require_once ABSPATH . 'wp-admin/includes/class-wp-list-table.php';
 		require_once dirname( __DIR__ ) . '/includes/class-email-admin.php';
 		require_once dirname( __DIR__ ) . '/includes/class-email-settings.php';
-		require_once dirname( __DIR__ ) . '/includes/class-email-logs-table.php';
 
 		$this->admin = self::factory()->user->create( array( 'role' => 'administrator' ) );
 		wp_set_current_user( $this->admin );
@@ -73,6 +71,10 @@ class Test_Email_Admin extends WP_UnitTestCase {
 
 	/**
 	 * Render the logs screen.
+	 *
+	 * Deliberately does not require class-email-logs-table.php: loading it here
+	 * would hide the plugin failing to load it itself, which is exactly the
+	 * fatal this masked once already.
 	 *
 	 * @return string
 	 */
@@ -171,6 +173,8 @@ class Test_Email_Admin extends WP_UnitTestCase {
 	 * The logs table sorts only on known columns.
 	 */
 	public function test_the_logs_table_sorts_only_on_known_columns() {
+		require_once dirname( __DIR__ ) . '/includes/class-email-logs-table.php';
+
 		$table = new Email_Logs_Table();
 
 		foreach ( array_values( $table->get_sortable_columns() ) as $sortable ) {
