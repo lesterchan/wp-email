@@ -37,6 +37,11 @@ class Test_Email_Admin extends WP_UnitTestCase {
 		require_once dirname( __DIR__ ) . '/includes/class-email-admin.php';
 		require_once dirname( __DIR__ ) . '/includes/class-email-settings.php';
 
+		// WP_List_Table::__construct() falls back to $GLOBALS['hook_suffix']
+		// when no screen is passed, and WordPress 6.0 reads it unguarded. A real
+		// admin request always has it set.
+		$GLOBALS['hook_suffix'] = 'toplevel_page_wp-email';
+
 		$this->admin = self::factory()->user->create( array( 'role' => 'administrator' ) );
 		wp_set_current_user( $this->admin );
 	}
