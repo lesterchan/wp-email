@@ -14,13 +14,39 @@ Allows people to recommend/send your WordPress blog's post/page to a friend.
 ## Description
 
 ### General Usage
-1. Under E-Mail Settings, modify the setting Method Used To Send E-Mail accordingly. If the method is wrong, no email will get sent.
-1. You Need To Re-Generate The Permalink (WP-Admin -> Settings -> Permalinks -> Save Changes)
-1. Open `wp-content/themes/<YOUR THEME NAME>/index.php` (You may place it in single.php, post.php, page.php, etc also)
- * Find: `<?php while (have_posts()) : the_post(); ?>`
- * Simply add this code inside the loop where you want the email link to display: <code>if(function_exists('email_link')) { email_link(); }</code>
 
-If you DO NOT want the email link to appear in every post/page, DO NOT use the code above. Just use the shortcode by typing [email_link] into the selected post/page content and it will embed the email link into that post/page only.
+The plugin works as soon as it is activated — mail goes out through `wp_mail()`, so it
+uses whatever WordPress itself is set up to use. All you have to decide is where the
+e-mail link appears.
+
+**On selected posts and pages**, type the shortcode into the content:
+
+```
+[email_link]
+```
+
+This works in both block and classic themes, and puts the link exactly where you want
+it rather than on everything.
+
+**On every post and page**, call the template tag from your theme instead. In a classic
+theme, open `wp-content/themes/<YOUR THEME NAME>/index.php` — or `single.php`,
+`page.php`, and so on — find:
+
+```php
+<?php while ( have_posts() ) : the_post(); ?>
+```
+
+and add this inside the loop, where you want the link to show:
+
+```php
+<?php if ( function_exists( 'email_link' ) ) { email_link(); } ?>
+```
+
+Use one or the other, not both, or the link appears twice.
+
+If the link is there but clicking it gives a 404, re-save your permalinks under
+`WP-Admin -> Settings -> Permalinks`. The plugin registers its `/email/` endpoint on
+activation, but a site with unusual rewrite rules can need the nudge.
 
 ### Development
 * [https://github.com/lesterchan/wp-email](https://github.com/lesterchan/wp-email "https://github.com/lesterchan/wp-email")
@@ -34,8 +60,8 @@ I spent most of my free time creating, updating, maintaining and supporting thes
 ## Screenshots
 
 1. Admin - E-Mail Logs
-2. Admin - Options Page
-3. Admin - Templates Page
+2. Admin - E-Mail Options
+3. Admin - E-Mail Options, template section
 4. Sample E-Mail Post link
 5. Sample E-Mail Post screen
 
