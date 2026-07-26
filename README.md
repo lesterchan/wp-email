@@ -113,6 +113,41 @@ if (function_exists('get_emails_failed'))
 	get_emails_failed();
 ```
 
+### Visitors are told to wait before sending, or every log row shows the same IP
+
+Your site is behind a reverse proxy or CDN — Cloudflare, a load balancer, nginx in
+front of Apache — so the address PHP sees is the proxy's, not the visitor's. Because
+the interval between e-mails is keyed on that address, every visitor shares one
+interval and each of them is told to wait for somebody else's send.
+
+The real address is in a forwarded header, but WP-EMail ignores those by default: any
+client can send one with any value, so trusting them blindly lets a visitor forge an
+address and bypass the interval entirely. Opt in only if a proxy you control actually
+sets the header.
+
+If you know which header it is, name it under `WP-Admin -> E-Mail -> E-Mail Options`
+in the `Header That Contains The IP` field — for example `HTTP_CF_CONNECTING_IP` for
+Cloudflare. That is the narrowest option, and the one to prefer.
+
+To trust the usual set instead (`X-Forwarded-For`, `CF-Connecting-IP` and friends), add
+this to `wp-config.php` above the `/* That's all, stop editing! */` line:
+
+```php
+define( 'WP_EMAIL_TRUST_PROXY', true );
+```
+
+If you need to decide per request — say, only trust the header when the request
+arrives from your load balancer — use the filter instead:
+
+```php
+add_filter( 'wp_email_trust_proxy', function () {
+	return isset( $_SERVER['REMOTE_ADDR'] ) && '10.0.0.1' === $_SERVER['REMOTE_ADDR'];
+} );
+```
+
+With none of the three set, the plugin uses `REMOTE_ADDR` — correct on a plain host,
+and the proxy's address behind one.
+
 ### How do I hide remarks when viewing E-Mail logs in WP-Admin?
 
 Add this to your `wp-config.php`:
@@ -151,7 +186,7 @@ If you add a custom field with the key "wp-email-remark" it will be placed in th
 * NEW: Image verification no longer uses PHP sessions. Sessions are unavailable behind most page caches and on a lot of hosting, which made verification fail outright; the challenge now lives in a short-lived transient issued per form. If your server has no GD library the option is shown as unavailable instead of silently rejecting every message.
 * NEW: The JavaScript was rewritten without jQuery, and every inline `onclick` is gone.
 * NEW: The e-mail table gained indexes on the post ID, status and IP columns.
-* **IMPORTANT:** Proxy headers such as `X-Forwarded-For` are no longer trusted by default. The interval between e-mails is keyed on the sender's IP, and honouring those headers unconditionally let anyone bypass it. If your site is behind Cloudflare or another reverse proxy, either set `Header That Contains The IP` on the options page or add `define( 'WP_EMAIL_TRUST_PROXY', true );` to `wp-config.php`. Otherwise every visitor will look like your proxy and share one interval.
+* **IMPORTANT:** Proxy headers such as `X-Forwarded-For` are no longer trusted by default, because trusting them let anyone bypass the interval between e-mails. Sites behind Cloudflare or another reverse proxy must opt in via the `Header That Contains The IP` setting, the `WP_EMAIL_TRUST_PROXY` constant, or the `wp_email_trust_proxy` filter. See the FAQ.
 * **IMPORTANT:** Requires WordPress 6.0 and PHP 7.4.
 * FIXED: Uninstalling on a multisite network called `wp_get_sites()`, removed in WordPress 5.1, and fatalled instead of cleaning up. It also stopped at the hundredth site, leaving options and tables behind on every site after that.
 * FIXED: The e-mail form on a Page posted to an `emailpage/` URL that was never registered.

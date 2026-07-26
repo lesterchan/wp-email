@@ -844,4 +844,82 @@ class Test_Email_Form extends WP_Ajax_UnitTestCase {
 
 		$this->assertSame( 1, Email_Logs::count_all() );
 	}
+
+	/**
+	 * The filter can opt in without the constant being defined.
+	 */
+	public function test_the_trust_proxy_filter_opts_in() {
+		$_SERVER['HTTP_X_FORWARDED_FOR'] = '203.0.113.7';
+
+		$this->assertSame( '198.51.100.200', Email_Form::ip_address() );
+
+		add_filter( 'wp_email_trust_proxy', '__return_true' );
+
+		$this->assertSame( '203.0.113.7', Email_Form::ip_address() );
+
+		remove_filter( 'wp_email_trust_proxy', '__return_true' );
+	}
+
+	/**
+	 * It can decide per request rather than once in wp-config.php.
+	 */
+	public function test_the_trust_proxy_filter_can_decide_per_request() {
+		$_SERVER['HTTP_X_FORWARDED_FOR'] = '203.0.113.7';
+
+		// The documented pattern: trust the header only when the request
+		// actually arrives from a known load balancer.
+		$only_from_balancer = static function () {
+			return isset( $_SERVER['REMOTE_ADDR'] ) && '10.0.0.1' === $_SERVER['REMOTE_ADDR'];
+		};
+
+		add_filter( 'wp_email_trust_proxy', $only_from_balancer );
+
+		$this->assertSame( '198.51.100.200', Email_Form::ip_address() );
+
+		$_SERVER['REMOTE_ADDR'] = '10.0.0.1';
+
+		$this->assertSame( '203.0.113.7', Email_Form::ip_address() );
+
+		remove_filter( 'wp_email_trust_proxy', $only_from_balancer );
+	}
+
+	/**
+	 * A named header still wins over the filter.
+	 */
+	public function test_a_named_header_wins_over_the_filter() {
+		$options                         = Email_Options::all();
+		$options['sending']['ip_header'] = 'HTTP_X_REAL_IP';
+		Email_Options::update( $options );
+
+		$_SERVER['HTTP_X_REAL_IP']       = '203.0.113.20';
+		$_SERVER['HTTP_X_FORWARDED_FOR'] = '203.0.113.21';
+
+		add_filter( 'wp_email_trust_proxy', '__return_true' );
+
+		$this->assertSame( '203.0.113.20', Email_Form::ip_address() );
+
+		remove_filter( 'wp_email_trust_proxy', '__return_true' );
+		unset( $_SERVER['HTTP_X_REAL_IP'] );
+	}
+
+	/**
+	 * The filter defaults to false, so nothing changes without an opt-in.
+	 */
+	public function test_the_trust_proxy_filter_defaults_to_false() {
+		$seen = null;
+
+		add_filter(
+			'wp_email_trust_proxy',
+			function ( $trust ) use ( &$seen ) {
+				$seen = $trust;
+				return $trust;
+			}
+		);
+
+		Email_Form::ip_address();
+
+		remove_all_filters( 'wp_email_trust_proxy' );
+
+		$this->assertFalse( $seen );
+	}
 }

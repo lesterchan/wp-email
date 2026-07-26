@@ -429,9 +429,10 @@ class Email_Settings {
 				esc_html_e( 'Leave blank to use REMOTE_ADDR. Only set this if a proxy in front of WordPress always overwrites the header, otherwise a visitor can forge it and bypass the interval above.', 'wp-email' );
 				echo '<br />';
 				printf(
-					/* translators: %s: The WP_EMAIL_TRUST_PROXY constant, in a code span. */
-					esc_html__( 'Alternatively define %s to trust the usual proxy headers.', 'wp-email' ),
-					'<code>WP_EMAIL_TRUST_PROXY</code>'
+					/* translators: 1: The WP_EMAIL_TRUST_PROXY constant, 2: the wp_email_trust_proxy filter, both in code spans. */
+					esc_html__( 'Alternatively define %1$s, or return true from the %2$s filter, to trust the usual proxy headers.', 'wp-email' ),
+					'<code>WP_EMAIL_TRUST_PROXY</code>',
+					'<code>wp_email_trust_proxy</code>'
 				);
 				echo '</p>';
 				break;

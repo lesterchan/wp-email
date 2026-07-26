@@ -107,4 +107,21 @@ class Test_Email_Trust_Proxy extends WP_UnitTestCase {
 
 		unset( $_SERVER['HTTP_X_REAL_IP'] );
 	}
+
+	/**
+	 * The filter can veto the constant.
+	 */
+	public function test_the_filter_can_override_the_constant() {
+		define( 'WP_EMAIL_TRUST_PROXY', true );
+
+		$_SERVER['HTTP_X_FORWARDED_FOR'] = '203.0.113.7';
+
+		add_filter( 'wp_email_trust_proxy', '__return_false' );
+
+		// The filter is the last word, so a site can keep the constant in
+		// wp-config.php and still refuse the header for particular requests.
+		$this->assertSame( '198.51.100.200', Email_Form::ip_address() );
+
+		remove_filter( 'wp_email_trust_proxy', '__return_false' );
+	}
 }

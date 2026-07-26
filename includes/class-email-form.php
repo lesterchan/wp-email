@@ -40,8 +40,9 @@ class Email_Form {
 	 * honouring them unconditionally -- as the plugin did before 3.0.0 -- let
 	 * anyone bypass it by sending a different X-Forwarded-For each time.
 	 *
-	 * Sites genuinely behind a proxy opt in, either by naming the header on the
-	 * settings screen or by defining WP_EMAIL_TRUST_PROXY.
+	 * Sites genuinely behind a proxy opt in three ways: by naming the header on
+	 * the settings screen, by defining WP_EMAIL_TRUST_PROXY, or by returning
+	 * true from the wp_email_trust_proxy filter.
 	 *
 	 * @return string
 	 */
@@ -52,13 +53,27 @@ class Email_Form {
 		$ip     = self::valid_ip( isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : '' );
 		$header = (string) Email_Options::get( 'sending', 'ip_header' );
 
+		/**
+		 * Filters whether the usual proxy headers may be trusted.
+		 *
+		 * Lets the decision be made per request -- trusting the header only when
+		 * the request actually arrives from a known load balancer, say -- rather
+		 * than once in wp-config.php.
+		 *
+		 * @param bool $trust Defaults to the WP_EMAIL_TRUST_PROXY constant.
+		 */
+		$trust_proxy = (bool) apply_filters(
+			'wp_email_trust_proxy',
+			defined( 'WP_EMAIL_TRUST_PROXY' ) && WP_EMAIL_TRUST_PROXY
+		);
+
 		if ( '' !== $header && ! empty( $_SERVER[ $header ] ) ) {
 			$candidate = self::first_valid_ip( sanitize_text_field( wp_unslash( $_SERVER[ $header ] ) ) );
 
 			if ( '' !== $candidate ) {
 				$ip = $candidate;
 			}
-		} elseif ( defined( 'WP_EMAIL_TRUST_PROXY' ) && WP_EMAIL_TRUST_PROXY ) {
+		} elseif ( $trust_proxy ) {
 			$headers = array(
 				'HTTP_CF_CONNECTING_IP',
 				'HTTP_CLIENT_IP',
