@@ -1,0 +1,90 @@
+<?xml version="1.0"?>
+<ruleset name="WP-EMail">
+	<description>WordPress Coding Standards for WP-EMail.</description>
+
+	<!--
+		PHP only. WPCS has had no JavaScript sniffs since 3.0, so scanning .js
+		here would only apply PHP_CodeSniffer's own PEAR/Squiz *PHP* conventions
+		to JavaScript through a tokenizer that PHP_CodeSniffer 4.0 removes
+		outright. JavaScript is linted with ESLint instead.
+	-->
+	<arg name="extensions" value="php"/>
+	<arg name="colors"/>
+	<arg value="sp"/>
+
+	<file>.</file>
+
+	<!--
+		Dependency trees. Without these the scan walks every installed package
+		and runs the runner out of memory.
+	-->
+	<exclude-pattern>*/node_modules/*</exclude-pattern>
+	<exclude-pattern>*/vendor/*</exclude-pattern>
+
+	<rule ref="WordPress"/>
+
+	<config name="text_domain" value="wp-email"/>
+	<config name="minimum_wp_version" value="6.0"/>
+
+	<!--
+		wp_strip_all_tags() sanitizes; the sniff cannot see through it and
+		reports the raw superglobal as unsanitized.
+	-->
+	<rule ref="WordPress.Security.ValidatedSanitizedInput">
+		<properties>
+			<property name="customSanitizingFunctions" type="array">
+				<element value="wp_strip_all_tags"/>
+			</property>
+		</properties>
+	</rule>
+
+	<!--
+		The default e-mail templates are translatable strings that contain the
+		plugin's own %EMAIL_POST_TITLE% style tokens. The i18n sniffs read a
+		literal %E... as a printf placeholder and want it numbered, and phpcbf
+		acts on that: it rewrites %EMAIL_POST_TITLE% to %1$EMAIL_POST_TITLE%,
+		which silently corrupts the template every user is told to edit.
+
+		The tokens are expanded by Email_Template::expand(), not by printf, so
+		there is nothing to order. Scoped to the one file holding the defaults;
+		everywhere else these sniffs still apply, and real printf placeholders
+		in this plugin do carry translators: comments.
+	-->
+	<rule ref="WordPress.WP.I18n.UnorderedPlaceholdersText">
+		<exclude-pattern>includes/class-email-options\.php</exclude-pattern>
+	</rule>
+	<rule ref="WordPress.WP.I18n.MissingTranslatorsComment">
+		<exclude-pattern>includes/class-email-options\.php</exclude-pattern>
+	</rule>
+
+	<!--
+		The plugin owns the email table, so every read and write is by
+		definition a direct query with nothing to cache and no core API to use.
+	-->
+	<rule ref="WordPress.DB.DirectDatabaseQuery">
+		<severity>0</severity>
+	</rule>
+
+	<!--
+		Table names are identifiers built from $wpdb->prefix and a literal, with
+		no user input. Identifiers cannot be bound, and the %i placeholder needs
+		WordPress 6.2 while this plugin supports 6.0.
+	-->
+	<rule ref="WordPress.DB.PreparedSQL.InterpolatedNotPrepared">
+		<severity>0</severity>
+	</rule>
+
+	<!--
+		The send endpoint answers logged-out visitors. It does check a nonce,
+		but the sniff cannot follow the check from process() into read_input(),
+		which is where the superglobals are actually read.
+	-->
+	<rule ref="WordPress.Security.NonceVerification">
+		<exclude-pattern>includes/class-email-form\.php</exclude-pattern>
+	</rule>
+
+	<!-- Tests drive the table directly and print to the CLI. -->
+	<rule ref="WordPress.Security.EscapeOutput">
+		<exclude-pattern>tests/*</exclude-pattern>
+	</rule>
+</ruleset>
