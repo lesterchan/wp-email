@@ -22,10 +22,33 @@ class Email_WpStats {
 	 * Hook into WP-Stats.
 	 */
 	public function __construct() {
+		add_filter( 'wp_stats_display_defaults', array( $this, 'display_defaults' ) );
 		add_filter( 'wp_stats_page_admin_plugins', array( $this, 'admin_general' ) );
 		add_filter( 'wp_stats_page_admin_most', array( $this, 'admin_most' ) );
 		add_filter( 'wp_stats_page_plugins', array( $this, 'general' ) );
 		add_filter( 'wp_stats_page_most', array( $this, 'most' ) );
+	}
+
+	/**
+	 * Tell WP-Stats about the toggles this plugin owns, and their defaults.
+	 *
+	 * Without this WP-Stats only learns a key exists once its checkbox has been
+	 * submitted, so the panels would start out off on a fresh install.
+	 *
+	 * @param array $defaults Registered toggles.
+	 *
+	 * @return array
+	 */
+	public function display_defaults( $defaults ) {
+		// WP-Stats' own defaults win, so this only ever adds.
+		return array_merge(
+			array(
+				'email'             => 1,
+				'emailed_most_post' => 1,
+				'emailed_most_page' => 0,
+			),
+			(array) $defaults
+		);
 	}
 
 	/**
@@ -36,6 +59,11 @@ class Email_WpStats {
 	 * @return bool
 	 */
 	private function is_displayed( $key ) {
+		if ( function_exists( 'wp_stats_display_enabled' ) ) {
+			return wp_stats_display_enabled( $key );
+		}
+
+		// WP-Stats before 3.0.0 kept the toggles in their own option row.
 		$stats_display = get_option( 'stats_display' );
 
 		if ( ! is_array( $stats_display ) ) {
@@ -51,6 +79,10 @@ class Email_WpStats {
 	 * @return int
 	 */
 	private function most_limit() {
+		if ( function_exists( 'wp_stats_most_limit' ) ) {
+			return wp_stats_most_limit();
+		}
+
 		return (int) get_option( 'stats_mostlimit' );
 	}
 
@@ -63,6 +95,12 @@ class Email_WpStats {
 	 * @return string
 	 */
 	private function checkbox( $value, $label ) {
+		// WP-Stats 3.0.0 owns the field name, because it changed when the option
+		// rows were consolidated.
+		if ( function_exists( 'wp_stats_checkbox' ) ) {
+			return wp_stats_checkbox( $value, $label );
+		}
+
 		return sprintf(
 			'<input type="checkbox" name="stats_display[]" id="wpstats_%1$s" value="%1$s"%2$s />&nbsp;&nbsp;<label for="wpstats_%1$s">%3$s</label><br />' . "\n",
 			esc_attr( $value ),
