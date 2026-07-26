@@ -245,7 +245,7 @@ $email_logs = $wpdb->get_results("SELECT * FROM $wpdb->email ORDER BY $email_sor
 			</tr>
 			<tr class="alternate">
 				<td colspan="2" align="center">
-					<?php printf(__('Pages (%s): ', 'wp-postratings'), number_format_i18n($total_pages)); ?>
+					<?php printf(__('Pages (%s): ', 'wp-email'), number_format_i18n($total_pages)); ?>
 					<?php
 						if ($email_page >= 4) {
 							echo '<strong><a href="'.$base_page.'&amp;emailpage=1'.$email_sort_url.'" title="'.__('Go to First Page', 'wp-email').'">&laquo; '.__('First', 'wp-email').'</a></strong> ... ';
@@ -266,7 +266,7 @@ $email_logs = $wpdb->get_results("SELECT * FROM $wpdb->email ORDER BY $email_sor
 							echo ' <strong><a href="'.$base_page.'&amp;emailpage='.($email_page+1).$email_sort_url.'" title="'.__('Go to Page', 'wp-email').' '.number_format_i18n($email_page+1).' &raquo;">&raquo;</a></strong> ';
 						}
 						if (($email_page+2) < $total_pages) {
-							echo ' ... <strong><a href="'.$base_page.'&amp;emailpage='.($total_pages).$email_sort_url.'" title="'.__('Go to Last Page', 'wp-email'), 'wp-email'.'">'.__('Last', 'wp-email').' &raquo;</a></strong>';
+							echo ' ... <strong><a href="'.$base_page.'&amp;emailpage='.($total_pages).$email_sort_url.'" title="'.__('Go to Last Page', 'wp-email').'">'.__('Last', 'wp-email').' &raquo;</a></strong>';
 						}
 					?>
 				</td>

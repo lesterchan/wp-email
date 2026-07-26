@@ -64,13 +64,6 @@ function email_variables($public_query_vars) {
 }
 
 
-### Function: Print Out jQuery Script At The Top
-add_action('wp_head', 'email_javascripts_header');
-function email_javascripts_header() {
-	wp_print_scripts('jquery');
-}
-
-
 ### Function: Enqueue E-Mail Javascripts/CSS
 add_action('wp_enqueue_scripts', 'email_scripts');
 function email_scripts() {
@@ -530,22 +523,17 @@ function email_form_header( $temp_id, $echo = true ) {
 		}
 	}
 	$output = '';
+	// The 'email' endpoint is registered for EP_PERMALINK | EP_PAGES, so pages
+	// and posts share it. The old 'emailpage/' path was never registered.
 	if(!empty($using_permalink)) {
-		if(is_page()) {
-			$output .= '<form action="'.$permalink.'emailpage/" method="post">'."\n";
-			$output .= '<p style="display: none;"><input type="hidden" id="page_id" name="page_id" value="'.$id.'" /></p>'."\n";
-		} else {
-			$output = '<form action="'.$permalink.'email/" method="post">'."\n";
-			$output .= '<p style="display: none;"><input type="hidden" id="p" name="p" value="'.$id.'" /></p>'."\n";
-		}
+		$output = '<form action="'.$permalink.'email/" method="post">'."\n";
 	} else {
-		if(is_page()) {
-			$output .= '<form action="'.$permalink.'&amp;wp_email=1" method="post">'."\n";
-			$output .= '<p style="display: none;"><input type="hidden" id="page_id" name="page_id" value="'.$id.'" /></p>'."\n";
-		} else {
-			$output .= '<form action="'.$permalink.'&amp;wp_email=1" method="post">'."\n";
-			$output .= '<p style="display: none;"><input type="hidden" id="p" name="p" value="'.$id.'" /></p>'."\n";
-		}
+		$output = '<form action="'.$permalink.'&amp;wp_email=1" method="post">'."\n";
+	}
+	if(is_page()) {
+		$output .= '<p style="display: none;"><input type="hidden" id="page_id" name="page_id" value="'.$id.'" /></p>'."\n";
+	} else {
+		$output .= '<p style="display: none;"><input type="hidden" id="p" name="p" value="'.$id.'" /></p>'."\n";
 	}
 	$output .= '<p style="display: none;"><input type="hidden" id="wp-email_nonce" name="wp-email_nonce" value="'.wp_create_nonce('wp-email-nonce').'" /></p>'."\n";
 	if($echo) {
@@ -572,22 +560,18 @@ function email_popup_form_header($echo = true, $temp_id = 0) {
 		}
 	}
 	$output = '';
+	// As above: one registered 'emailpopup' endpoint covers posts and pages,
+	// and the non-permalink branch has to use the real 'wp_email_popup' query
+	// var rather than the 'emailpopup' name, which nothing ever answered to.
 	if(!empty($using_permalink)) {
-		if(is_page()) {
-			$output .= '<form action="'.$permalink.'emailpopuppage/" method="post">'."\n";
-			$output .= '<p style="display: none;"><input type="hidden" id="page_id" name="page_id" value="'.$id.'" /></p>'."\n";
-		} else {
-			$output = '<form action="'.$permalink.'emailpopup/" method="post">'."\n";
-			$output .= '<p style="display: none;"><input type="hidden" id="p" name="p" value="'.$id.'" /></p>'."\n";
-		}
+		$output = '<form action="'.$permalink.'emailpopup/" method="post">'."\n";
 	} else {
-		if(is_page()) {
-			$output .= '<form action="'.$permalink.'&amp;emailpopup=1" method="post">'."\n";
-			$output .= '<p style="display: none;"><input type="hidden" id="page_id" name="page_id" value="'.$id.'" /></p>'."\n";
-		} else {
-			$output .= '<form action="'.$permalink.'&amp;emailpopup=1" method="post">'."\n";
-			$output .= '<p style="display: none;"><input type="hidden" id="p" name="p" value="'.$id.'" /></p>'."\n";
-		}
+		$output = '<form action="'.$permalink.'&amp;wp_email_popup=1" method="post">'."\n";
+	}
+	if(is_page()) {
+		$output .= '<p style="display: none;"><input type="hidden" id="page_id" name="page_id" value="'.$id.'" /></p>'."\n";
+	} else {
+		$output .= '<p style="display: none;"><input type="hidden" id="p" name="p" value="'.$id.'" /></p>'."\n";
 	}
 	$output .= '<p style="display: none;"><input type="hidden" id="wp-email_nonce" name="wp-email_nonce" value="'.wp_create_nonce('wp-email-nonce').'" /></p>'."\n";
 	if($echo) {
@@ -601,11 +585,11 @@ function email_popup_form_header($echo = true, $temp_id = 0) {
 ### Function: Multiple E-Mails
 function email_multiple($echo = true) {
 	$email_multiple = (int) get_option('email_multiple');
-	$outut = '';
+	$output = '';
 	if($email_multiple > 1) {
 		$output = '<br /><em>'.sprintf(_n('Separate multiple entries with a comma. Maximum %s entry.', 'Separate multiple entries with a comma. Maximum %s entries.', $email_multiple, 'wp-email'), number_format_i18n($email_multiple)).'</em>';
 		if($echo) {
-			echo $outut;
+			echo $output;
 		} else {
 			return $output;
 		}
@@ -759,13 +743,15 @@ function process_email_form() {
 
 		@session_start();
 		header('Content-Type: text/html; charset='.get_option('blog_charset').'');
-		// POST Variables
-		$yourname		= ! empty($_POST['yourname'])	? sanitize_text_field( $_POST['yourname'] ) : '';
-		$youremail		= ! empty($_POST['youremail'])	? sanitize_text_field( $_POST['youremail'] ) : '';
-		$yourremarks	= ! empty($_POST['yourremarks'])? sanitize_text_field( $_POST['yourremarks'] ) : '';
-		$friendname		= ! empty($_POST['friendname'])	? sanitize_text_field( $_POST['friendname'] ) : '';
-		$friendemail	= ! empty($_POST['friendemail'])? sanitize_text_field( $_POST['friendemail'] ) : '';
-		$imageverify	= ! empty($_POST['imageverify'])? $_POST['imageverify'] : '';
+		// POST Variables. WordPress slash-escapes every superglobal, so each
+		// read is unslashed before sanitizing; the values are then handed to
+		// $wpdb->insert(), which escapes them itself.
+		$yourname		= ! empty($_POST['yourname'])	? sanitize_text_field( wp_unslash( $_POST['yourname'] ) ) : '';
+		$youremail		= ! empty($_POST['youremail'])	? sanitize_text_field( wp_unslash( $_POST['youremail'] ) ) : '';
+		$yourremarks	= ! empty($_POST['yourremarks'])? sanitize_text_field( wp_unslash( $_POST['yourremarks'] ) ) : '';
+		$friendname		= ! empty($_POST['friendname'])	? sanitize_text_field( wp_unslash( $_POST['friendname'] ) ) : '';
+		$friendemail	= ! empty($_POST['friendemail'])? sanitize_text_field( wp_unslash( $_POST['friendemail'] ) ) : '';
+		$imageverify	= ! empty($_POST['imageverify'])? sanitize_text_field( wp_unslash( $_POST['imageverify'] ) ) : '';
 		$p 				= ! empty($_POST['p'])			? (int) $_POST['p'] : 0;
 		$page_id 		= ! empty($_POST['page_id'])	? (int) $_POST['page_id'] : 0;
 		// Get Post Information
@@ -888,7 +874,7 @@ function process_email_form() {
 			if(empty($imageverify)) {
 				$error .= '<br /><strong>&raquo;</strong> '.__('Image Verification is empty', 'wp-email');
 			} else {
-				if($_SESSION['email_verify'] !== md5($imageverify)) {
+				if(!isset($_SESSION['email_verify']) || $_SESSION['email_verify'] !== md5($imageverify)) {
 					$error .= '<br /><strong>&raquo;</strong> '.__('Image Verification failed', 'wp-email');
 				}
 			}
@@ -983,18 +969,20 @@ function process_email_form() {
 				$template_email_sentfailed = str_replace("%EMAIL_BLOG_URL%", get_bloginfo('url'), $template_email_sentfailed);
 				$template_email_sentfailed = str_replace("%EMAIL_PERMALINK%", get_permalink(), $template_email_sentfailed);
 			}
-			// Logging
-			$email_yourname = addslashes($yourname);
-			$email_youremail = addslashes($youremail);
-			$email_yourremarks = addslashes($yourremarks);
+			// Logging. No addslashes() here: $wpdb->insert() escapes its own
+			// values, so pre-slashing them stored a second layer of backslashes
+			// that the logs screen then had to strip back out on display.
+			$email_yourname = $yourname;
+			$email_youremail = $youremail;
+			$email_yourremarks = $yourremarks;
 			$email_postid = (int) get_the_id();
-			$email_posttitle = addslashes($post_title);
+			$email_posttitle = $post_title;
 			$email_timestamp = current_time('timestamp');
 			$email_ip = email_get_ipaddress();
 			$email_host = esc_attr(@gethostbyaddr($email_ip));
 			foreach($friends as $friend) {
-				$email_friendname = addslashes($friend['name']);
-				$email_friendemail = addslashes($friend['email']);
+				$email_friendname = $friend['name'];
+				$email_friendemail = $friend['email'];
 				$wpdb->insert(
 					$wpdb->email,
 					array(
@@ -1035,7 +1023,14 @@ function process_email_form() {
 			exit();
 		// If There Are Errors
 		} else {
-			$error = substr($error, 21);
+			// Strip the leading separator only. The old substr( $error, 21 )
+			// assumed a 21-character prefix, but '<br /><strong>&raquo;</strong> '
+			// is 31, so it ate nine characters of the first message and left a
+			// stray '</strong>' in front of it.
+			$error_separator = '<br /><strong>&raquo;</strong> ';
+			if ( 0 === strpos( $error, $error_separator ) ) {
+				$error = substr( $error, strlen( $error_separator ) );
+			}
 			$template_email_error = stripslashes(get_option('email_template_error'));
 			$template_email_error = str_replace("%EMAIL_ERROR_MSG%", $error, $template_email_error);
 			$template_email_error = str_replace("%EMAIL_BLOG_NAME%", get_bloginfo('name'), $template_email_error);
@@ -1064,7 +1059,18 @@ function email_form($content, $echo = true, $subtitle = true, $div = true, $erro
 	$email_image_verify = (int) get_option('email_imageverify');
 	$email_options = get_option('email_options');
 	$email_type = (int) $email_options['email_type'];
-	$error_field = apply_filters('email_form-fieldvalues', array());
+	// Seed from the filter (which pre-fills name/email for logged-in users),
+	// then let anything the visitor actually submitted win. The old code
+	// assigned the filter result straight over $error_field, so every value
+	// typed into the form was discarded the moment validation failed.
+	$submitted = is_array( $error_field ) ? $error_field : array();
+	$submitted = array_filter(
+		$submitted,
+		function ( $value ) {
+			return null !== $value && '' !== $value;
+		}
+	);
+	$error_field = array_merge( apply_filters('email_form-fieldvalues', array()), $submitted );
 	$output = '';
 	// Template - Subtitle
 	if($subtitle) {
