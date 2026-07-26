@@ -83,8 +83,30 @@
 		<exclude-pattern>includes/class-email-form\.php</exclude-pattern>
 	</rule>
 
-	<!-- Tests drive the table directly and print to the CLI. -->
+	<!-- manage_email is added to the administrator role on activation. -->
+	<rule ref="WordPress.WP.Capabilities">
+		<properties>
+			<property name="custom_capabilities" type="array">
+				<element value="manage_email"/>
+			</property>
+		</properties>
+	</rule>
+
+	<!--
+		Tests drive the plugin's own entry points directly: they build the
+		superglobals a request would have arrived with, read fixture files off
+		disk, and compare against the local timestamps the table stores.
+	-->
 	<rule ref="WordPress.Security.EscapeOutput">
+		<exclude-pattern>tests/*</exclude-pattern>
+	</rule>
+	<rule ref="WordPress.Security.NonceVerification">
+		<exclude-pattern>tests/*</exclude-pattern>
+	</rule>
+	<rule ref="WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents">
+		<exclude-pattern>tests/*</exclude-pattern>
+	</rule>
+	<rule ref="WordPress.DateTime.CurrentTimeTimestamp">
 		<exclude-pattern>tests/*</exclude-pattern>
 	</rule>
 </ruleset>

@@ -6,23 +6,23 @@
  * in data attributes, so they are escaped once as attribute text rather than
  * being interpolated into executable markup.
  */
-( function () {
+( function() {
 	'use strict';
 
 	function onClick( event ) {
-		var target = event.target;
+		const target = event.target;
 
 		if ( ! target || ! target.closest ) {
 			return;
 		}
 
-		var restore = target.closest( '[data-wp-email-restore]' );
+		const restore = target.closest( '[data-wp-email-restore]' );
 
 		if ( restore ) {
 			event.preventDefault();
 
-			var field = document.getElementById(
-				restore.getAttribute( 'data-wp-email-restore' )
+			const field = document.getElementById(
+				restore.getAttribute( 'data-wp-email-restore' ),
 			);
 
 			if ( field ) {
@@ -32,12 +32,14 @@
 			return;
 		}
 
-		var confirmer = target.closest( '[data-wp-email-confirm]' );
+		const confirmer = target.closest( '[data-wp-email-confirm]' );
 
-		if (
-			confirmer &&
-			! window.confirm( confirmer.getAttribute( 'data-wp-email-confirm' ) )
-		) {
+		// Deleting every log row is irreversible and has always been gated on
+		// a confirm; the checkbox beside it is the other half of that gate.
+		// eslint-disable-next-line no-alert
+		const confirmed = confirmer && window.confirm( confirmer.getAttribute( 'data-wp-email-confirm' ) );
+
+		if ( confirmer && ! confirmed ) {
 			event.preventDefault();
 		}
 	}
@@ -48,15 +50,15 @@
 	 * @param {HTMLSelectElement} select The controlling select.
 	 */
 	function applyToggle( select ) {
-		var target = document.getElementById(
-			select.getAttribute( 'data-wp-email-toggle' )
+		const target = document.getElementById(
+			select.getAttribute( 'data-wp-email-toggle' ),
 		);
 
 		if ( ! target ) {
 			return;
 		}
 
-		var wanted = select.getAttribute( 'data-wp-email-toggle-value' );
+		const wanted = select.getAttribute( 'data-wp-email-toggle-value' );
 
 		target.style.display = select.value === wanted ? '' : 'none';
 	}
@@ -64,12 +66,12 @@
 	function init() {
 		document.addEventListener( 'click', onClick );
 
-		var toggles = document.querySelectorAll( '[data-wp-email-toggle]' );
+		const toggles = document.querySelectorAll( '[data-wp-email-toggle]' );
 
-		Array.prototype.forEach.call( toggles, function ( select ) {
+		Array.prototype.forEach.call( toggles, function( select ) {
 			applyToggle( select );
 
-			select.addEventListener( 'change', function () {
+			select.addEventListener( 'change', function() {
 				applyToggle( select );
 			} );
 		} );
@@ -80,4 +82,4 @@
 	} else {
 		init();
 	}
-} )();
+}() );

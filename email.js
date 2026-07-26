@@ -6,12 +6,12 @@
  * handler is bound once on document, so a form swapped in over AJAX keeps
  * working without rebinding.
  */
-( function () {
+( function() {
 	'use strict';
 
-	var NAME_PATTERN = /[(\*\(\)\[\]\+\,\/\?\:\;\'\"\`\~\\#\$\%\^\&\<\>)+]/;
-	var EMAIL_PATTERN = /^([a-zA-Z0-9_\.\-])+\@(([a-zA-Z0-9\-])+\.)+([a-zA-Z0-9]{2,})+$/;
-	var INJECTION_STRINGS = [
+	const NAME_PATTERN = /[(\*\(\)\[\]\+\,\/\?\:\;\'\"\`\~\\#\$\%\^\&\<\>)+]/;
+	const EMAIL_PATTERN = /^([a-zA-Z0-9_\.\-])+\@(([a-zA-Z0-9\-])+\.)+([a-zA-Z0-9]{2,})+$/;
+	const INJECTION_STRINGS = [
 		'apparently-to',
 		'content-disposition',
 		'content-type',
@@ -34,7 +34,7 @@
 	}
 
 	function valueOf( id ) {
-		var el = byId( id );
+		const el = byId( id );
 		return el ? el.value : null;
 	}
 
@@ -51,15 +51,15 @@
 	}
 
 	function isValidRemarks( value ) {
-		var haystack = value.trim().toLowerCase();
+		const haystack = value.trim().toLowerCase();
 
-		return ! INJECTION_STRINGS.some( function ( needle ) {
+		return ! INJECTION_STRINGS.some( function( needle ) {
 			return -1 !== haystack.indexOf( needle );
 		} );
 	}
 
 	function splitList( value ) {
-		return value.split( /[,;]+/ ).map( function ( part ) {
+		return value.split( /[,;]+/ ).map( function( part ) {
 			return part.trim();
 		} );
 	}
@@ -70,12 +70,12 @@
 	 * @return {Object|null} The values to post.
 	 */
 	function collect() {
-		var max = parseInt( window.emailL10n.max_allowed, 10 ) || 1;
-		var errors = [];
-		var values = {};
-		var names = [];
-		var emails = [];
-		var value;
+		const max = parseInt( window.emailL10n.max_allowed, 10 ) || 1;
+		const errors = [];
+		const values = {};
+		let names = [];
+		let emails = [];
+		let value;
 
 		value = valueOf( 'yourname' );
 		if ( null !== value ) {
@@ -110,7 +110,7 @@
 			} else {
 				names = splitList( value );
 
-				names.forEach( function ( name ) {
+				names.forEach( function( name ) {
 					if ( isEmpty( name ) || ! isValidName( name ) ) {
 						errors.push( window.emailL10n.text_friend_name_invalid + name );
 					}
@@ -130,7 +130,7 @@
 		} else {
 			emails = splitList( values.friendemail );
 
-			emails.forEach( function ( email ) {
+			emails.forEach( function( email ) {
 				if ( isEmpty( email ) || ! isValidEmail( email ) ) {
 					errors.push( window.emailL10n.text_friend_email_invalid + email );
 				}
@@ -156,17 +156,20 @@
 		}
 
 		if ( errors.length ) {
+			// A blocking alert is what this form has always used to report
+			// validation errors, and the server repeats every check anyway.
+			// eslint-disable-next-line no-alert
 			window.alert(
 				window.emailL10n.text_error +
 					'\n__________________________________\n\n' +
 					errors.join( '\n' ) +
-					'\n'
+					'\n',
 			);
 			return null;
 		}
 
-		[ 'p', 'page_id' ].forEach( function ( id ) {
-			var found = valueOf( id );
+		[ 'p', 'page_id' ].forEach( function( id ) {
+			const found = valueOf( id );
 			if ( null !== found ) {
 				values[ id ] = found;
 			}
@@ -191,30 +194,30 @@
 			'friendname',
 			'friendemail',
 			'imageverify',
-		].forEach( function ( id ) {
-			var el = byId( id );
+		].forEach( function( id ) {
+			const el = byId( id );
 			if ( el ) {
 				el.disabled = busy;
 			}
 		} );
 
-		var loading = byId( 'wp-email-loading' );
+		const loading = byId( 'wp-email-loading' );
 		if ( loading ) {
 			loading.style.display = busy ? 'block' : 'none';
 		}
 	}
 
 	function submitForm() {
-		var values = collect();
+		const values = collect();
 
 		if ( null === values ) {
 			return;
 		}
 
-		var body = new URLSearchParams();
+		const body = new URLSearchParams();
 		body.append( 'action', 'email' );
 
-		Object.keys( values ).forEach( function ( key ) {
+		Object.keys( values ).forEach( function( key ) {
 			body.append( key, values[ key ] );
 		} );
 
@@ -229,17 +232,17 @@
 				},
 				body: body.toString(),
 			} )
-			.then( function ( response ) {
+			.then( function( response ) {
 				return response.text();
 			} )
-			.then( function ( html ) {
-				var container = byId( 'wp-email-content' );
+			.then( function( html ) {
+				const container = byId( 'wp-email-content' );
 
 				if ( container ) {
 					container.innerHTML = html;
 				}
 			} )
-			.catch( function () {
+			.catch( function() {
 				setBusy( false );
 			} );
 	}
@@ -252,33 +255,33 @@
 	 *
 	 * @param {string} url Where to point the popup.
 	 */
-	window.email_popup = function ( url ) {
+	window.email_popup = function( url ) {
 		window.open(
 			url,
 			'_blank',
-			'width=500,height=500,toolbar=0,menubar=0,location=0,resizable=0,scrollbars=1,status=0'
+			'width=500,height=500,toolbar=0,menubar=0,location=0,resizable=0,scrollbars=1,status=0',
 		);
 	};
 
 	function repositionPopup() {
-		var content = byId( 'wp-email-popup' );
+		const content = byId( 'wp-email-popup' );
 
 		if ( ! content ) {
 			return;
 		}
 
-		var width = content.offsetWidth + 30;
-		var height = content.offsetHeight + 50;
+		const width = content.offsetWidth + 30;
+		const height = content.offsetHeight + 50;
 
 		window.resizeTo( width, height );
 		window.moveTo(
 			( window.screen.width - width ) / 2,
-			( window.screen.height - height ) / 2
+			( window.screen.height - height ) / 2,
 		);
 	}
 
 	function onClick( event ) {
-		var target = event.target;
+		const target = event.target;
 
 		if ( ! target || ! target.closest ) {
 			return;
@@ -290,7 +293,7 @@
 			return;
 		}
 
-		var popup = target.closest( '[data-wp-email-popup]' );
+		const popup = target.closest( '[data-wp-email-popup]' );
 		if ( popup && popup.href ) {
 			event.preventDefault();
 			window.email_popup( popup.href );
@@ -316,4 +319,4 @@
 	} else {
 		init();
 	}
-} )();
+}() );
