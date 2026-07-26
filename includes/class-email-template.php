@@ -28,15 +28,16 @@ class Email_Template {
 	 * @return string
 	 */
 	public static function expand( $template, array $vars ) {
-		$search  = array();
-		$replace = array();
+		$pairs = array();
 
 		foreach ( $vars as $name => $value ) {
-			$search[]  = '%' . $name . '%';
-			$replace[] = (string) $value;
+			$pairs[ '%' . $name . '%' ] = (string) $value;
 		}
 
-		return str_replace( $search, $replace, (string) $template );
+		// strtr() rather than str_replace(): str_replace() walks the array and
+		// re-scans its own output, so a value that happens to contain another
+		// token would itself be expanded. strtr() makes a single pass.
+		return strtr( (string) $template, $pairs );
 	}
 
 	/**

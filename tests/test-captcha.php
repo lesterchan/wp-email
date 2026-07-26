@@ -185,4 +185,99 @@ class Test_Email_Captcha extends WP_UnitTestCase {
 			);
 		}
 	}
+
+	/**
+	 * The image URL points at the public AJAX endpoint and carries the token.
+	 */
+	public function test_the_image_url_targets_the_public_endpoint() {
+		$url = Email_Captcha::image_url( str_repeat( 'a', 32 ) );
+
+		$this->assertStringContainsString( 'admin-ajax.php', $url );
+		$this->assertStringContainsString( 'action=wp_email_captcha', $url );
+		$this->assertStringContainsString( 'token=' . str_repeat( 'a', 32 ), $url );
+	}
+
+	/**
+	 * A token with URL-significant characters is encoded, not injected.
+	 */
+	public function test_the_image_url_encodes_its_token() {
+		$this->assertStringNotContainsString( '&foo=bar', Email_Captcha::image_url( 'x&foo=bar' ) );
+	}
+
+	/**
+	 * Verification is off while the setting is off.
+	 */
+	public function test_is_enabled_follows_the_setting() {
+		$options                           = Email_Options::all();
+		$options['sending']['imageverify'] = 0;
+		Email_Options::update( $options );
+
+		$this->assertFalse( Email_Captcha::is_enabled() );
+
+		$options['sending']['imageverify'] = 1;
+		Email_Options::update( $options );
+
+		$this->assertSame( Email_Captcha::is_available(), Email_Captcha::is_enabled() );
+	}
+
+	/**
+	 * The endpoint 404s for a token that was never issued.
+	 *
+	 * Only the refusing branch is driven here: the success branch ends in
+	 * Exit() after writing a JPEG, which would take the test runner with it.
+	 */
+	public function test_the_endpoint_refuses_an_unknown_token() {
+		$_GET['token'] = str_repeat( 'b', 32 );
+
+		$this->expectException( 'WPDieException' );
+
+		Email_Captcha::serve();
+	}
+
+	/**
+	 * It 404s for a malformed token rather than looking anything up.
+	 */
+	public function test_the_endpoint_refuses_a_malformed_token() {
+		$_GET['token'] = '../../../etc/passwd';
+
+		$this->expectException( 'WPDieException' );
+
+		Email_Captcha::serve();
+	}
+
+	/**
+	 * It 404s when no token is given at all.
+	 */
+	public function test_the_endpoint_refuses_a_missing_token() {
+		unset( $_GET['token'] );
+
+		$this->expectException( 'WPDieException' );
+
+		Email_Captcha::serve();
+	}
+
+	/**
+	 * Requesting the image does not consume the challenge.
+	 */
+	public function test_requesting_the_image_does_not_spend_the_answer() {
+		if ( ! Email_Captcha::is_available() ) {
+			$this->markTestSkipped( 'No GD library on this PHP build.' );
+		}
+
+		$token  = Email_Captcha::issue();
+		$answer = $this->answer_for( $token );
+
+		// A reload or a caching proxy re-fetching the <img> must not invalidate
+		// the form the visitor is still filling in. Only verify() spends it.
+		$this->assertSame( $answer, $this->answer_for( $token ) );
+		$this->assertTrue( Email_Captcha::verify( $token, $answer ) );
+	}
+
+	/**
+	 * An issued challenge does not outlive its window.
+	 */
+	public function test_a_challenge_has_a_bounded_lifetime() {
+		$this->assertLessThanOrEqual( 900, Email_Captcha::TTL );
+		$this->assertGreaterThan( 0, Email_Captcha::TTL );
+	}
 }

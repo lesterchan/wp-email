@@ -542,4 +542,306 @@ class Test_Email_Form extends WP_Ajax_UnitTestCase {
 		$this->assertNull( $this->mail );
 		$this->assertSame( 0, Email_Logs::count_all() );
 	}
+
+	/**
+	 * A plain-text send uses the alternate body and strips markup.
+	 */
+	public function test_a_plain_text_send_uses_the_alternate_body() {
+		$options                           = Email_Options::all();
+		$options['sending']['contenttype'] = 'text/plain';
+		$options['templates']['bodyalt']   = 'ALT: %EMAIL_POST_CONTENT%';
+		Email_Options::update( $options );
+
+		$this->submit(
+			array(
+				'yourname'    => 'Sender Name',
+				'youremail'   => 'sender@example.com',
+				'friendname'  => 'Friend One',
+				'friendemail' => 'one@example.com',
+			)
+		);
+
+		$this->assertIsArray( $this->mail );
+		$this->assertStringContainsString( 'ALT:', $this->mail['message'] );
+		$this->assertStringNotContainsString( '<p>', $this->mail['message'] );
+
+		$headers = implode( "\n", (array) $this->mail['headers'] );
+		$this->assertStringContainsString( 'text/plain', $headers );
+	}
+
+	/**
+	 * An HTML send on an RTL site wraps the body so it reads correctly.
+	 */
+	public function test_an_html_send_on_an_rtl_site_is_wrapped() {
+		// is_rtl() reads $wp_locale->text_direction directly; core has no
+		// filter for it.
+		$GLOBALS['wp_locale']->text_direction = 'rtl';
+
+		$this->submit(
+			array(
+				'yourname'    => 'Sender Name',
+				'youremail'   => 'sender@example.com',
+				'friendname'  => 'Friend One',
+				'friendemail' => 'one@example.com',
+			)
+		);
+
+		$GLOBALS['wp_locale']->text_direction = 'ltr';
+
+		$this->assertIsArray( $this->mail );
+		$this->assertStringContainsString( 'direction: rtl', $this->mail['message'] );
+	}
+
+	/**
+	 * A plain-text send is never wrapped in a div, RTL or not.
+	 */
+	public function test_a_plain_text_send_is_never_wrapped() {
+		$options                           = Email_Options::all();
+		$options['sending']['contenttype'] = 'text/plain';
+		Email_Options::update( $options );
+
+		// is_rtl() reads $wp_locale->text_direction directly; core has no
+		// filter for it.
+		$GLOBALS['wp_locale']->text_direction = 'rtl';
+
+		$this->submit(
+			array(
+				'yourname'    => 'Sender Name',
+				'youremail'   => 'sender@example.com',
+				'friendname'  => 'Friend One',
+				'friendemail' => 'one@example.com',
+			)
+		);
+
+		$GLOBALS['wp_locale']->text_direction = 'ltr';
+
+		$this->assertStringNotContainsString( 'direction: rtl', $this->mail['message'] );
+	}
+
+	/**
+	 * A failed delivery is logged as failed and reported to the sender.
+	 */
+	public function test_a_refused_delivery_is_logged_as_failed() {
+		remove_all_filters( 'pre_wp_mail' );
+		add_filter( 'pre_wp_mail', '__return_false' );
+
+		$options                            = Email_Options::all();
+		$options['templates']['sentfailed'] = 'FAILED: %EMAIL_FRIEND_NAME%';
+		Email_Options::update( $options );
+
+		$response = $this->submit(
+			array(
+				'yourname'    => 'Sender Name',
+				'youremail'   => 'sender@example.com',
+				'friendname'  => 'Friend One',
+				'friendemail' => 'one@example.com',
+			)
+		);
+
+		$this->assertStringContainsString( 'FAILED: Friend One', $response );
+
+		$rows = Email_Logs::query();
+		$this->assertSame( Email_Logs::STATUS_FAILED, $rows[0]->email_status );
+	}
+
+	/**
+	 * Recipients without a matching name are still addressed.
+	 */
+	public function test_a_send_without_friend_names_still_addresses_everyone() {
+		$options                         = Email_Options::all();
+		$options['fields']['friendname'] = 0;
+		Email_Options::update( $options );
+
+		$this->submit(
+			array(
+				'yourname'    => 'Sender Name',
+				'youremail'   => 'sender@example.com',
+				'friendemail' => 'one@example.com,two@example.com',
+			)
+		);
+
+		$this->assertIsArray( $this->mail );
+
+		$to = is_array( $this->mail['to'] ) ? implode( ', ', $this->mail['to'] ) : $this->mail['to'];
+
+		$this->assertStringContainsString( 'one@example.com', $to );
+		$this->assertStringContainsString( 'two@example.com', $to );
+		$this->assertSame( 2, Email_Logs::count_all() );
+	}
+
+	/**
+	 * An empty remark is recorded as N/A rather than blank.
+	 */
+	public function test_an_empty_remark_becomes_not_applicable() {
+		$options                      = Email_Options::all();
+		$options['templates']['body'] = 'R: %EMAIL_YOUR_REMARKS%';
+		Email_Options::update( $options );
+
+		$this->submit(
+			array(
+				'yourname'    => 'Sender Name',
+				'youremail'   => 'sender@example.com',
+				'friendname'  => 'Friend One',
+				'friendemail' => 'one@example.com',
+			)
+		);
+
+		$this->assertStringContainsString( 'R: N/A', $this->mail['message'] );
+	}
+
+	/**
+	 * The subject never carries markup into the mail header.
+	 */
+	public function test_the_subject_is_decoded_for_the_header() {
+		$options                         = Email_Options::all();
+		$options['templates']['subject'] = 'Read &amp; enjoy: %EMAIL_POST_TITLE%';
+		Email_Options::update( $options );
+
+		$this->submit(
+			array(
+				'yourname'    => 'Sender Name',
+				'youremail'   => 'sender@example.com',
+				'friendname'  => 'Friend One',
+				'friendemail' => 'one@example.com',
+			)
+		);
+
+		// Entities belong in a body, not in a Subject: header.
+		$this->assertStringContainsString( 'Read & enjoy', $this->mail['subject'] );
+		$this->assertStringNotContainsString( '&amp;', $this->mail['subject'] );
+	}
+
+	/**
+	 * Blocked by the interval, the form explains the wait instead of the fields.
+	 */
+	public function test_a_blocked_visitor_is_told_to_wait() {
+		Email_Logs::insert(
+			array(
+				'yourname'    => 'Recent',
+				'youremail'   => 'r@example.com',
+				'yourremarks' => '',
+				'friendname'  => 'F',
+				'friendemail' => 'f@example.com',
+				'postid'      => $this->post_id,
+				'posttitle'   => 'Harness Post',
+				'timestamp'   => current_time( 'timestamp' ),
+				'ip'          => '198.51.100.200',
+				'host'        => '',
+				'status'      => Email_Logs::STATUS_SUCCESS,
+			)
+		);
+
+		$this->go_to( get_permalink( $this->post_id ) );
+		the_post();
+
+		$form = Email_Form::render( '', false );
+
+		$this->assertStringContainsString( 'Please wait', $form );
+		$this->assertStringNotContainsString( 'name="friendemail"', $form );
+	}
+
+	/**
+	 * A password-protected post shows the password form, never the e-mail form.
+	 */
+	public function test_a_protected_post_shows_the_password_form() {
+		$protected = self::factory()->post->create(
+			array( 'post_password' => 'hunter2' )
+		);
+
+		$this->go_to( get_permalink( $protected ) );
+		the_post();
+
+		$form = Email_Form::render( '', false );
+
+		$this->assertStringNotContainsString( 'name="friendemail"', $form );
+		$this->assertStringContainsString( 'post_password', $form );
+	}
+
+	/**
+	 * Without pretty permalinks the form posts to the query-var URL.
+	 */
+	public function test_the_form_action_falls_back_to_a_query_var() {
+		$this->set_permalink_structure( '' );
+
+		$this->go_to( get_permalink( $this->post_id ) );
+		the_post();
+
+		$this->assertStringContainsString( 'wp_email=1', Email_Form::header( $this->post_id, false ) );
+		$this->assertStringContainsString( 'wp_email_popup=1', Email_Form::header( $this->post_id, true ) );
+	}
+
+	/**
+	 * A post carries the p field, a page the page_id field.
+	 */
+	public function test_the_header_names_the_right_id_field() {
+		$this->go_to( get_permalink( $this->post_id ) );
+		the_post();
+
+		$this->assertStringContainsString( 'name="p"', Email_Form::header( $this->post_id, false ) );
+
+		$page_id = self::factory()->post->create( array( 'post_type' => 'page' ) );
+		$this->go_to( get_permalink( $page_id ) );
+		the_post();
+
+		$this->assertStringContainsString( 'name="page_id"', Email_Form::header( $page_id, false ) );
+	}
+
+	/**
+	 * The recipient cap never drops below one however it is configured.
+	 */
+	public function test_the_recipient_cap_has_a_floor() {
+		$options                        = Email_Options::all();
+		$options['sending']['multiple'] = 0;
+		Email_Options::update( $options );
+
+		$this->assertSame( 1, Email_Form::max_recipients() );
+	}
+
+	/**
+	 * The multiple-entries hint appears only when more than one is allowed.
+	 */
+	public function test_the_multiple_hint_appears_only_when_useful() {
+		$options                        = Email_Options::all();
+		$options['sending']['multiple'] = 1;
+		Email_Options::update( $options );
+
+		$this->assertSame( '', Email_Form::multiple_hint() );
+
+		$options['sending']['multiple'] = 4;
+		Email_Options::update( $options );
+
+		$this->assertStringContainsString( 'Maximum 4 entries', Email_Form::multiple_hint() );
+	}
+
+	/**
+	 * An address list may be separated by semicolons as well as commas.
+	 */
+	public function test_recipients_may_be_separated_by_semicolons() {
+		$this->submit(
+			array(
+				'yourname'    => 'Sender Name',
+				'youremail'   => 'sender@example.com',
+				'friendname'  => 'Friend One; Friend Two',
+				'friendemail' => 'one@example.com;two@example.com',
+			)
+		);
+
+		$this->assertSame( 2, Email_Logs::count_all() );
+	}
+
+	/**
+	 * Stray separators do not create empty recipients.
+	 */
+	public function test_stray_separators_are_ignored() {
+		$this->submit(
+			array(
+				'yourname'    => 'Sender Name',
+				'youremail'   => 'sender@example.com',
+				'friendname'  => 'Friend One,',
+				'friendemail' => 'one@example.com,',
+			)
+		);
+
+		$this->assertSame( 1, Email_Logs::count_all() );
+	}
 }

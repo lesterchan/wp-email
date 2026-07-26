@@ -292,4 +292,76 @@ class Test_Email_Logs extends WP_UnitTestCase {
 
 		$this->assertSame( array(), Email_Logs::most_emailed( 'post', 10 ) );
 	}
+
+	/**
+	 * Rows written with a translated status are rewritten to the canonical one.
+	 */
+	public function test_normalize_statuses_rewrites_translated_rows() {
+		global $wpdb;
+
+		$this->log();
+
+		// Simulate what a non-English 2.x install left behind.
+		$wpdb->update(
+			$wpdb->email,
+			array( 'email_status' => 'Réussi' ),
+			array( 'email_status' => Email_Logs::STATUS_SUCCESS ),
+			array( '%s' ),
+			array( '%s' )
+		);
+
+		$this->assertSame( 0, Email_Logs::count_by_status( Email_Logs::STATUS_SUCCESS ) );
+
+		add_filter( 'gettext_wp-email', array( $this, 'translate_success' ), 10, 2 );
+		Email_Logs::normalize_statuses();
+		remove_filter( 'gettext_wp-email', array( $this, 'translate_success' ), 10 );
+
+		$this->assertSame( 1, Email_Logs::count_by_status( Email_Logs::STATUS_SUCCESS ) );
+	}
+
+	/**
+	 * Stand in for a locale that translates the status.
+	 *
+	 * @param string $translation Translated text.
+	 * @param string $text        Original text.
+	 *
+	 * @return string
+	 */
+	public function translate_success( $translation, $text ) {
+		return 'Success' === $text ? 'Réussi' : $translation;
+	}
+
+	/**
+	 * On an English install it is a no-op rather than a pointless write.
+	 */
+	public function test_normalize_statuses_is_a_no_op_in_english() {
+		$this->log();
+
+		Email_Logs::normalize_statuses();
+
+		$this->assertSame( 1, Email_Logs::count_by_status( Email_Logs::STATUS_SUCCESS ) );
+	}
+
+	/**
+	 * The sortable column map only names real columns.
+	 */
+	public function test_every_sortable_column_exists_on_the_table() {
+		global $wpdb;
+
+		$columns = $wpdb->get_col( "SHOW COLUMNS FROM {$wpdb->email}" );
+
+		foreach ( Email_Logs::sortable_columns() as $key => $column ) {
+			$this->assertContains( $column, $columns, "{$key} maps to a column that does not exist" );
+		}
+	}
+
+	/**
+	 * An empty table reports zero rather than null.
+	 */
+	public function test_counts_are_zero_on_an_empty_table() {
+		$this->assertSame( 0, Email_Logs::count_all() );
+		$this->assertSame( 0, Email_Logs::count_by_status( Email_Logs::STATUS_SUCCESS ) );
+		$this->assertSame( 0, Email_Logs::count_for_post( 1 ) );
+		$this->assertSame( array(), Email_Logs::query() );
+	}
 }

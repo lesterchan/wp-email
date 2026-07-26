@@ -113,10 +113,12 @@ function process_email_form() {
 /**
  * Add the filters that turn a post into the e-mail form.
  *
+ * @param WP_Query|null $query Query being started, as loop_start passes it.
+ *
  * @return void
  */
-function email_addfilters() {
-	Email::add_filters();
+function email_addfilters( $query = null ) {
+	Email::add_filters( $query );
 }
 
 /**

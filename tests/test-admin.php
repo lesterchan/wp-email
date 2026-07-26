@@ -73,8 +73,8 @@ class Test_Email_Admin extends WP_UnitTestCase {
 	 * Render the logs screen.
 	 *
 	 * Deliberately does not require class-email-logs-table.php: loading it here
-	 * would hide the plugin failing to load it itself, which is exactly the
-	 * fatal this masked once already.
+	 * Would hide the plugin failing to load it itself, which is exactly the
+	 * Fatal this masked once already.
 	 *
 	 * @return string
 	 */

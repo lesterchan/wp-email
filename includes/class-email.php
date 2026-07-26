@@ -238,10 +238,20 @@ class Email {
 	/**
 	 * Add the filters that turn a post into the e-mail form.
 	 *
+	 * Runs on loop_start, which passes the query being started. That argument
+	 * is what has to be judged: the global is_main_query() describes
+	 * $GLOBALS['wp_query'], so a secondary loop on the e-mail page -- a widget,
+	 * a related-posts block -- would otherwise get the title rewritten and the
+	 * form injected into its content.
+	 *
+	 * @param WP_Query|null $query Query being started.
+	 *
 	 * @return void
 	 */
-	public static function add_filters() {
-		if ( ! is_main_query() ) {
+	public static function add_filters( $query = null ) {
+		$is_main = $query instanceof WP_Query ? $query->is_main_query() : is_main_query();
+
+		if ( ! $is_main ) {
 			return;
 		}
 
