@@ -146,12 +146,11 @@ class WP_Email_Captcha {
 	 * @return void
 	 */
 	public static function serve() {
-		// No nonce: this is an <img src> fetched by the browser for a visitor
-		// who may be logged out, so a nonce would prove nothing and would break
+		// No nonce: this is an <img src> fetched by the browser for a visitor who
+		// may be logged out, so a nonce would prove nothing and would break
 		// caching of the tag. The token is the only credential, and it is
 		// worthless without the challenge behind it.
-		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		$token = isset( $_GET['token'] ) ? self::sanitize_token( sanitize_text_field( wp_unslash( $_GET['token'] ) ) ) : '';
+		$token = isset( $_GET['token'] ) ? self::sanitize_token( sanitize_text_field( wp_unslash( $_GET['token'] ) ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- An <img src> fetched by the browser for a logged-out visitor; the one-shot token is the credential and a nonce would only break caching of the tag.
 		$code  = '' === $token ? false : get_transient( self::TRANSIENT_PREFIX . $token );
 
 		// Deliberately not consumed here: the image can be re-requested (a

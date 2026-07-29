@@ -253,20 +253,28 @@ class WP_Email_Logs {
 
 		$limit = max( 1, (int) $limit );
 
+		// Two whole queries rather than one with an assembled WHERE clause:
+		// prepare() has to be called at the query site for the sniff to see it,
+		// and a $sql built above and passed in reads as unprepared however it
+		// was built.
 		if ( empty( $mode ) || 'both' === $mode ) {
-			$sql = $wpdb->prepare(
-				"SELECT {$wpdb->posts}.*, COUNT({$wpdb->email}.email_postid) AS email_total
-				FROM {$wpdb->email}
-				LEFT JOIN {$wpdb->posts} ON {$wpdb->email}.email_postid = {$wpdb->posts}.ID
-				WHERE post_date < %s AND post_password = '' AND post_status = 'publish'
-				GROUP BY {$wpdb->email}.email_postid
-				ORDER BY email_total DESC
-				LIMIT %d",
-				current_time( 'mysql' ),
-				$limit
+			return (array) $wpdb->get_results(
+				$wpdb->prepare(
+					"SELECT {$wpdb->posts}.*, COUNT({$wpdb->email}.email_postid) AS email_total
+					FROM {$wpdb->email}
+					LEFT JOIN {$wpdb->posts} ON {$wpdb->email}.email_postid = {$wpdb->posts}.ID
+					WHERE post_date < %s AND post_password = '' AND post_status = 'publish'
+					GROUP BY {$wpdb->email}.email_postid
+					ORDER BY email_total DESC
+					LIMIT %d",
+					current_time( 'mysql' ),
+					$limit
+				)
 			);
-		} else {
-			$sql = $wpdb->prepare(
+		}
+
+		return (array) $wpdb->get_results(
+			$wpdb->prepare(
 				"SELECT {$wpdb->posts}.*, COUNT({$wpdb->email}.email_postid) AS email_total
 				FROM {$wpdb->email}
 				LEFT JOIN {$wpdb->posts} ON {$wpdb->email}.email_postid = {$wpdb->posts}.ID
@@ -277,12 +285,8 @@ class WP_Email_Logs {
 				current_time( 'mysql' ),
 				$mode,
 				$limit
-			);
-		}
-
-		// Both branches above assign the result of $wpdb->prepare(); the sniff
-		// only recognises prepare() called inline at the query site.
-		return (array) $wpdb->get_results( $sql ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+			)
+		);
 	}
 
 	/**

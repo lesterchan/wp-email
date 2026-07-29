@@ -165,7 +165,7 @@ class WP_Email_Form {
 
 		// Local, not UTC: compared against email_timestamp, which the plugin
 		// has stored in site-local time since 2.x. See WP_Email_Logs::insert().
-		$now = current_time( 'timestamp' ); // phpcs:ignore WordPress.DateTime.CurrentTimeTimestamp.Requested
+		$now = current_time( 'timestamp' ); // phpcs:ignore WordPress.DateTime.CurrentTimeTimestamp.Requested -- Compared against email_timestamp, which has held site-local time since 2.x; a UTC value here would misjudge the interval by the site's offset.
 
 		return ( $now - $last ) >= $interval;
 	}
@@ -323,7 +323,7 @@ class WP_Email_Form {
 
 		// Force the whole post into one page: the e-mail carries the entire
 		// article, never a <!--nextpage--> slice.
-		$multipage = false; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
+		$multipage = false; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- The e-mail carries the whole article, so the <!--nextpage--> split has to be off for this render.
 
 		$fields = WP_Email_Options::all()['fields'];
 		$output = '';
@@ -501,9 +501,9 @@ class WP_Email_Form {
 		// being sent rather than whatever admin-ajax.php happens to have.
 		// admin-ajax.php has no loop of its own, so the post being sent has to
 		// be installed as the current one for the template tags to resolve.
-		$GLOBALS['post'] = $post; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
+		$GLOBALS['post'] = $post; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- admin-ajax.php has no loop, so the post being sent has to be installed as the current one for the template tags to resolve.
 		setup_postdata( $post );
-		$GLOBALS['id'] = $post->ID; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
+		$GLOBALS['id'] = $post->ID; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- Set with $GLOBALS['post'] above; setup_postdata() reads it and admin-ajax.php never set it.
 
 		$errors = self::validate( $input );
 
@@ -774,7 +774,7 @@ class WP_Email_Form {
 					// held local timestamps since 2.x and the logs screen reads
 					// them back as local. Switching to time() would shift every
 					// historical row by the site's offset.
-					'timestamp'   => current_time( 'timestamp' ), // phpcs:ignore WordPress.DateTime.CurrentTimeTimestamp.Requested
+					'timestamp'   => current_time( 'timestamp' ), // phpcs:ignore WordPress.DateTime.CurrentTimeTimestamp.Requested -- The column has held site-local time since 2.x; switching to UTC would shift every historical row by the site's offset.
 					'ip'          => $ip,
 					'host'        => '' === $ip ? '' : gethostbyaddr( $ip ),
 					'status'      => $status,

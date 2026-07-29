@@ -474,11 +474,15 @@ class WP_Email_Options {
 	 * @return void
 	 */
 	protected static function migrate_legacy_rows() {
-		$stored = get_option( 'email_options', array() );
+		// Read through LEGACY_ROWS rather than by name, so the list of rows the
+		// migration reads and the list it deletes are the same list.
+		$legacy = array();
 
-		if ( ! is_array( $stored ) ) {
-			$stored = array();
+		foreach ( self::LEGACY_ROWS as $row ) {
+			$legacy[ $row ] = get_option( $row, null );
 		}
+
+		$stored = is_array( $legacy['email_options'] ) ? $legacy['email_options'] : array();
 
 		$defaults = self::defaults();
 		$new      = $defaults;
@@ -513,10 +517,8 @@ class WP_Email_Options {
 				$new['sending']['ip_header'] = $stored['ip_header'];
 			}
 
-			$legacy_fields = get_option( 'email_fields' );
-
-			if ( is_array( $legacy_fields ) ) {
-				$new['fields'] = array_merge( $new['fields'], $legacy_fields );
+			if ( is_array( $legacy['email_fields'] ) ) {
+				$new['fields'] = array_merge( $new['fields'], $legacy['email_fields'] );
 			}
 
 			$scalars = array(
@@ -528,7 +530,7 @@ class WP_Email_Options {
 			);
 
 			foreach ( $scalars as $option_name => $key ) {
-				$value = get_option( $option_name, null );
+				$value = $legacy[ $option_name ];
 
 				if ( null !== $value && false !== $value ) {
 					$new['sending'][ $key ] = $value;
@@ -536,7 +538,7 @@ class WP_Email_Options {
 			}
 
 			foreach ( array_keys( $defaults['templates'] ) as $key ) {
-				$value = get_option( 'email_template_' . $key, null );
+				$value = $legacy[ 'email_template_' . $key ];
 
 				if ( null !== $value && false !== $value ) {
 					// Stored slashed by the old options screen, which ran the
