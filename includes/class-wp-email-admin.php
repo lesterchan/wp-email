@@ -131,13 +131,14 @@ class WP_Email_Admin {
 		}
 
 		$this->maybe_delete_logs();
+		$this->register_notice();
 
 		add_screen_option(
 			'per_page',
 			array(
 				'label'   => __( 'Logs per page', 'wp-email' ),
 				'default' => 20,
-				'option'  => 'email_logs_per_page',
+				'option'  => 'wp_email_logs_per_page',
 			)
 		);
 
@@ -207,7 +208,7 @@ class WP_Email_Admin {
 		<div class="wrap">
 			<h1><?php esc_html_e( 'Manage E-Mail', 'wp-email' ); ?></h1>
 
-			<?php $this->render_notice(); ?>
+			<?php settings_errors( 'wp_email' ); ?>
 
 			<h2><?php esc_html_e( 'E-Mail Logs', 'wp-email' ); ?></h2>
 
@@ -259,23 +260,31 @@ class WP_Email_Admin {
 	}
 
 	/**
-	 * Show the outcome of a deletion.
+	 * Queue the outcome of a deletion for settings_errors().
+	 *
+	 * Registered rather than printed: core owns the notice markup, and going
+	 * through add_settings_error() means this screen's messages look exactly
+	 * like the settings screen's without either one hand-rolling a <div>.
 	 *
 	 * @return void
 	 */
-	private function render_notice() {
-		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Display-only; the action itself was nonce checked.
+	public function register_notice() {
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Display-only; the action that produced the notice was nonce checked before it redirected here.
 		$notice = isset( $_GET['wp-email-notice'] ) ? sanitize_key( wp_unslash( $_GET['wp-email-notice'] ) ) : '';
 
 		if ( 'deleted' === $notice ) {
-			printf(
-				'<div id="message" class="notice notice-success is-dismissible"><p>%s</p></div>',
-				esc_html__( 'All E-Mail Logs Have Been Deleted.', 'wp-email' )
+			add_settings_error(
+				'wp_email',
+				'wp_email_logs_deleted',
+				__( 'All E-Mail Logs Have Been Deleted.', 'wp-email' ),
+				'success'
 			);
 		} elseif ( 'not-confirmed' === $notice ) {
-			printf(
-				'<div id="message" class="notice notice-warning is-dismissible"><p>%s</p></div>',
-				esc_html__( 'No E-Mail Logs Were Deleted: the confirmation box was not ticked.', 'wp-email' )
+			add_settings_error(
+				'wp_email',
+				'wp_email_logs_not_confirmed',
+				__( 'No E-Mail Logs Were Deleted: the confirmation box was not ticked.', 'wp-email' ),
+				'warning'
 			);
 		}
 	}

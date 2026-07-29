@@ -91,12 +91,13 @@ class WP_Email_Logs_Table extends WP_List_Table {
 	 * @return void
 	 */
 	public function prepare_items() {
-		$per_page = $this->get_items_per_page( 'email_logs_per_page', 20 );
+		$per_page = $this->get_items_per_page( 'wp_email_logs_per_page', 20 );
 
-		// phpcs:disable WordPress.Security.NonceVerification.Recommended -- Read-only sorting and paging of an admin screen.
+		// Core builds a sortable column header by swapping these two keys on the
+		// current URL, so the link carries no nonce and there is nothing to
+		// verify. The shared phpcs.xml scopes that exclusion to *-table.php.
 		$orderby = isset( $_GET['orderby'] ) ? sanitize_key( wp_unslash( $_GET['orderby'] ) ) : 'date';
 		$order   = isset( $_GET['order'] ) ? sanitize_key( wp_unslash( $_GET['order'] ) ) : 'desc';
-		// phpcs:enable WordPress.Security.NonceVerification.Recommended
 
 		$total = WP_Email_Logs::count_all();
 

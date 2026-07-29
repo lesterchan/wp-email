@@ -47,6 +47,9 @@
 	/**
 	 * Show or hide a block depending on a select's value.
 	 *
+	 * The hidden attribute rather than an inline display style, so the markup
+	 * PHP prints carries no style attribute for the handler to fight with.
+	 *
 	 * @param {HTMLSelectElement} select The controlling select.
 	 */
 	function applyToggle( select ) {
@@ -60,7 +63,7 @@
 
 		const wanted = select.getAttribute( 'data-wp-email-toggle-value' );
 
-		target.style.display = select.value === wanted ? '' : 'none';
+		target.hidden = select.value !== wanted;
 	}
 
 	function init() {

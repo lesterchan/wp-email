@@ -32,7 +32,6 @@ class Test_Email_Admin_Actions extends WP_UnitTestCase {
 		}
 
 		require_once ABSPATH . 'wp-admin/includes/admin.php';
-		require_once dirname( __DIR__ ) . '/includes/class-wp-email-admin.php';
 
 		// WP_List_Table::__construct() falls back to $GLOBALS['hook_suffix']
 		// when no screen is passed, and WordPress 6.0 reads it unguarded. A real
@@ -265,14 +264,19 @@ class Test_Email_Admin_Actions extends WP_UnitTestCase {
 
 		( new WP_Email_Admin() )->add_menu();
 
-		$slugs = wp_list_pluck( $submenu[ WP_Email_Admin::LOGS_SLUG ], 2 );
+		$slugs = wp_list_pluck( $submenu[ WP_Email_Admin::PAGE ], 2 );
 
-		$this->assertContains( WP_Email_Admin::LOGS_SLUG, $slugs );
-		$this->assertContains( WP_Email_Admin::OPTIONS_SLUG, $slugs );
+		// The data screen first, Settings last, per STANDARDS.md 4.1.
+		$this->assertSame( array( WP_Email_Admin::PAGE, WP_Email_Settings::PAGE ), $slugs );
 
-		foreach ( $submenu[ WP_Email_Admin::LOGS_SLUG ] as $entry ) {
-			$this->assertSame( WP_Email_Admin::CAPABILITY, $entry[1] );
-		}
+		$capabilities = wp_list_pluck( $submenu[ WP_Email_Admin::PAGE ], 1 );
+
+		// The logs screen keeps the plugin's own capability because it is a
+		// data screen; the settings screen takes manage_options (4.2, 2.7).
+		$this->assertSame(
+			array( WP_Email_Admin::CAPABILITY, WP_Email_Settings::CAPABILITY ),
+			$capabilities
+		);
 	}
 
 	/**
@@ -290,8 +294,6 @@ class Test_Email_Admin_Actions extends WP_UnitTestCase {
 	 * The options screen is refused too.
 	 */
 	public function test_the_options_screen_is_refused_without_the_capability() {
-		require_once dirname( __DIR__ ) . '/includes/class-wp-email-settings.php';
-
 		wp_set_current_user( self::factory()->user->create( array( 'role' => 'subscriber' ) ) );
 
 		$this->expectException( 'WPDieException' );

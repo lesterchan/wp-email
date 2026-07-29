@@ -34,8 +34,6 @@ class Test_Email_Admin extends WP_UnitTestCase {
 		}
 
 		require_once ABSPATH . 'wp-admin/includes/admin.php';
-		require_once dirname( __DIR__ ) . '/includes/class-wp-email-admin.php';
-		require_once dirname( __DIR__ ) . '/includes/class-wp-email-settings.php';
 
 		// WP_List_Table::__construct() falls back to $GLOBALS['hook_suffix']
 		// when no screen is passed, and WordPress 6.0 reads it unguarded. A real
@@ -99,7 +97,7 @@ class Test_Email_Admin extends WP_UnitTestCase {
 	 * @return string
 	 */
 	private function render_options() {
-		set_current_screen( 'e-mail_page_wp-email-options' );
+		set_current_screen( 'e-mail_page_wp-email-settings' );
 
 		$settings = new WP_Email_Settings();
 		$settings->register();
@@ -178,7 +176,6 @@ class Test_Email_Admin extends WP_UnitTestCase {
 	 * The logs table sorts only on known columns.
 	 */
 	public function test_the_logs_table_sorts_only_on_known_columns() {
-		require_once dirname( __DIR__ ) . '/includes/class-wp-email-logs-table.php';
 
 		$table = new WP_Email_Logs_Table();
 
@@ -216,8 +213,8 @@ class Test_Email_Admin extends WP_UnitTestCase {
 	public function test_the_options_screen_renders_every_section() {
 		$html = $this->render_options();
 
-		$this->assertStringContainsString( 'E-Mail Options', $html );
-		$this->assertStringContainsString( 'E-Mail Styles', $html );
+		$this->assertStringContainsString( 'E-Mail Settings', $html );
+		$this->assertStringContainsString( 'E-Mail Link', $html );
 		$this->assertStringContainsString( 'E-Mail Text Link For Post', $html );
 		$this->assertStringContainsString( 'email_famfamfam.png', $html );
 		$this->assertStringContainsString( 'E-Mail Link Type', $html );
@@ -226,6 +223,7 @@ class Test_Email_Admin extends WP_UnitTestCase {
 		$this->assertStringContainsString( 'Header That Contains The IP', $html );
 		$this->assertStringContainsString( 'E-Mail Subject', $html );
 		$this->assertStringContainsString( 'E-Mail Body', $html );
+		$this->assertStringContainsString( 'WP-Stats', $html );
 		$this->assertStringContainsString( 'Restore Default Template', $html );
 	}
 
@@ -237,7 +235,7 @@ class Test_Email_Admin extends WP_UnitTestCase {
 
 		$this->assertStringContainsString( 'action="options.php"', $html );
 		// settings_fields() emits single-quoted attributes.
-		$this->assertStringContainsString( "name='option_page' value='wp-email'", $html );
+		$this->assertStringContainsString( "name='option_page' value='wp_email_options'", $html );
 		$this->assertStringContainsString( '_wpnonce', $html );
 	}
 
