@@ -1,20 +1,18 @@
 <?php
 /**
- * WP-EMail class-email-form.php
+ * WP-EMail class-wp-email-form.php
  *
  * @package WP-EMail
  */
 
-if ( ! defined( 'ABSPATH' ) ) {
-	exit;
-}
+defined( 'ABSPATH' ) || exit;
 
 /**
  * The front-end form and the endpoint that processes it.
  *
  * @since 3.0.0
  */
-class Email_Form {
+class WP_Email_Form {
 
 	/**
 	 * Nonce action for the form.
@@ -51,7 +49,7 @@ class Email_Form {
 		// filter_var( ..., FILTER_VALIDATE_IP ) in valid_ip() is what actually
 		// decides whether the value is usable.
 		$ip     = self::valid_ip( isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : '' );
-		$header = (string) Email_Options::get( 'sending', 'ip_header' );
+		$header = (string) WP_Email_Options::get( 'sending', 'ip_header' );
 
 		/**
 		 * Filters whether the usual proxy headers may be trusted.
@@ -144,7 +142,7 @@ class Email_Form {
 	 * @return int
 	 */
 	public static function flood_interval() {
-		return (int) Email_Options::get( 'sending', 'interval' );
+		return (int) WP_Email_Options::get( 'sending', 'interval' );
 	}
 
 	/**
@@ -159,14 +157,14 @@ class Email_Form {
 			return true;
 		}
 
-		$last = Email_Logs::last_sent_at( self::ip_address() );
+		$last = WP_Email_Logs::last_sent_at( self::ip_address() );
 
 		if ( ! $last ) {
 			return true;
 		}
 
 		// Local, not UTC: compared against email_timestamp, which the plugin
-		// has stored in site-local time since 2.x. See Email_Logs::insert().
+		// has stored in site-local time since 2.x. See WP_Email_Logs::insert().
 		$now = current_time( 'timestamp' ); // phpcs:ignore WordPress.DateTime.CurrentTimeTimestamp.Requested
 
 		return ( $now - $last ) >= $interval;
@@ -237,7 +235,7 @@ class Email_Form {
 	 * @return int
 	 */
 	public static function max_recipients() {
-		return max( 1, (int) Email_Options::get( 'sending', 'multiple' ) );
+		return max( 1, (int) WP_Email_Options::get( 'sending', 'multiple' ) );
 	}
 
 	/**
@@ -325,11 +323,11 @@ class Email_Form {
 		// article, never a <!--nextpage--> slice.
 		$multipage = false; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
 
-		$fields = Email_Options::all()['fields'];
+		$fields = WP_Email_Options::all()['fields'];
 		$output = '';
 
 		if ( $subtitle ) {
-			$output .= Email_Template::expand( Email_Options::template( 'subtitle' ), Email_Template::post_vars() );
+			$output .= WP_Email_Template::expand( WP_Email_Options::template( 'subtitle' ), WP_Email_Template::post_vars() );
 		}
 
 		if ( $div ) {
@@ -359,7 +357,7 @@ class Email_Form {
 			$output .= '</div>' . "\n";
 		}
 
-		Email::remove_filters();
+		WP_Email::remove_filters();
 
 		if ( $echo_output ) {
 			echo $output; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped at each sink above.
@@ -400,7 +398,7 @@ class Email_Form {
 		};
 
 		$post_id = isset( $values['id'] ) ? (int) $values['id'] : 0;
-		$popup   = 2 === (int) Email_Options::get( 'link', 'type' );
+		$popup   = 2 === (int) WP_Email_Options::get( 'link', 'type' );
 
 		$output  = self::header( $post_id, $popup );
 		$output .= '<p id="wp-email-required">' . esc_html__( '* Required Field', 'wp-email' ) . '</p>' . "\n";
@@ -423,7 +421,7 @@ class Email_Form {
 			$remarks = $value_of( 'yourremarks' );
 
 			if ( '' === $remarks ) {
-				$remarks = Email_Template::remark();
+				$remarks = WP_Email_Template::remark();
 			}
 
 			$output .= '<p>' . "\n";
@@ -446,12 +444,12 @@ class Email_Form {
 		$output .= self::multiple_hint() . "\n";
 		$output .= '</p>' . "\n";
 
-		if ( Email_Captcha::is_enabled() ) {
-			$token = Email_Captcha::issue();
+		if ( WP_Email_Captcha::is_enabled() ) {
+			$token = WP_Email_Captcha::issue();
 
 			$output .= '<p>' . "\n";
 			$output .= '<label for="imageverify">' . esc_html__( 'Image Verification: *', 'wp-email' ) . '</label><br />' . "\n";
-			$output .= '<img src="' . esc_url( Email_Captcha::image_url( $token ) ) . '" width="55" height="15" alt="' . esc_attr__( 'E-Mail Image Verification', 'wp-email' ) . '" />';
+			$output .= '<img src="' . esc_url( WP_Email_Captcha::image_url( $token ) ) . '" width="55" height="15" alt="' . esc_attr__( 'E-Mail Image Verification', 'wp-email' ) . '" />';
 			$output .= '<input type="hidden" id="imageverify_token" name="imageverify_token" value="' . esc_attr( $token ) . '" />';
 			$output .= '<input type="text" size="5" maxlength="5" id="imageverify" name="imageverify" class="TextField" autocomplete="off" />' . "\n";
 			$output .= '</p>' . "\n";
@@ -527,9 +525,9 @@ class Email_Form {
 			'imageverify'       => isset( $_POST['imageverify'] ) ? sanitize_text_field( wp_unslash( $_POST['imageverify'] ) ) : '',
 			// sanitize_text_field() inline keeps the sniff happy -- it cannot see
 			// through a Class::method() call -- and sanitize_token() then
-			// narrows it to the exact shape Email_Captcha::issue() produces.
+			// narrows it to the exact shape WP_Email_Captcha::issue() produces.
 			'imageverify_token' => isset( $_POST['imageverify_token'] )
-				? Email_Captcha::sanitize_token( sanitize_text_field( wp_unslash( $_POST['imageverify_token'] ) ) )
+				? WP_Email_Captcha::sanitize_token( sanitize_text_field( wp_unslash( $_POST['imageverify_token'] ) ) )
 				: '',
 			'p'                 => isset( $_POST['p'] ) ? absint( $_POST['p'] ) : 0,
 			'page_id'           => isset( $_POST['page_id'] ) ? absint( $_POST['page_id'] ) : 0,
@@ -545,7 +543,7 @@ class Email_Form {
 	 * @return array Error messages.
 	 */
 	private static function validate( array $input ) {
-		$fields = Email_Options::all()['fields'];
+		$fields = WP_Email_Options::all()['fields'];
 		$max    = self::max_recipients();
 		$errors = array();
 
@@ -608,10 +606,10 @@ class Email_Form {
 			$errors[] = __( 'Friend Name(s) count does not tally with Friend Email(s) count', 'wp-email' );
 		}
 
-		if ( Email_Captcha::is_enabled() ) {
+		if ( WP_Email_Captcha::is_enabled() ) {
 			if ( '' === $input['imageverify'] ) {
 				$errors[] = __( 'Image Verification is empty', 'wp-email' );
-			} elseif ( ! Email_Captcha::verify( $input['imageverify_token'], $input['imageverify'] ) ) {
+			} elseif ( ! WP_Email_Captcha::verify( $input['imageverify_token'], $input['imageverify'] ) ) {
 				$errors[] = __( 'Image Verification failed', 'wp-email' );
 			}
 		}
@@ -655,10 +653,10 @@ class Email_Form {
 
 		$message = implode( self::ERROR_SEPARATOR, $errors );
 
-		$output  = Email_Template::expand(
-			Email_Options::template( 'error' ),
+		$output  = WP_Email_Template::expand(
+			WP_Email_Options::template( 'error' ),
 			array_merge(
-				Email_Template::post_vars(),
+				WP_Email_Template::post_vars(),
 				array( 'EMAIL_ERROR_MSG' => $message )
 			)
 		);
@@ -699,9 +697,9 @@ class Email_Form {
 
 		$remarks = '' === $input['yourremarks'] ? __( 'N/A', 'wp-email' ) : $input['yourremarks'];
 
-		$post_vars     = Email_Template::post_vars();
+		$post_vars     = WP_Email_Template::post_vars();
 		$category_alt  = wp_strip_all_tags( $post_vars['EMAIL_POST_CATEGORY'] );
-		$content_type  = (string) Email_Options::get( 'sending', 'contenttype' );
+		$content_type  = (string) WP_Email_Options::get( 'sending', 'contenttype' );
 		$is_plain_text = 'text/plain' === $content_type;
 
 		$sender_vars = array(
@@ -713,8 +711,8 @@ class Email_Form {
 			'EMAIL_POST_EXCERPT' => get_the_excerpt(),
 		);
 
-		$subject = Email_Template::expand(
-			Email_Options::template( 'subject' ),
+		$subject = WP_Email_Template::expand(
+			WP_Email_Options::template( 'subject' ),
 			array_merge( $post_vars, $sender_vars, array( 'EMAIL_POST_CATEGORY' => $category_alt ) )
 		);
 
@@ -722,13 +720,13 @@ class Email_Form {
 			$post_vars,
 			$sender_vars,
 			array(
-				'EMAIL_POST_CONTENT'  => $is_plain_text ? Email_Template::content_alt() : Email_Template::content(),
+				'EMAIL_POST_CONTENT'  => $is_plain_text ? WP_Email_Template::content_alt() : WP_Email_Template::content(),
 				'EMAIL_POST_CATEGORY' => $is_plain_text ? $category_alt : $post_vars['EMAIL_POST_CATEGORY'],
 			)
 		);
 
-		$message = Email_Template::expand(
-			Email_Options::template( $is_plain_text ? 'bodyalt' : 'body' ),
+		$message = WP_Email_Template::expand(
+			WP_Email_Options::template( $is_plain_text ? 'bodyalt' : 'body' ),
 			$body_vars
 		);
 
@@ -751,11 +749,11 @@ class Email_Form {
 
 		$sent = wp_mail( implode( ', ', $to ), wp_specialchars_decode( $subject, ENT_QUOTES ), $message, $headers );
 
-		$status = $sent ? Email_Logs::STATUS_SUCCESS : Email_Logs::STATUS_FAILED;
+		$status = $sent ? WP_Email_Logs::STATUS_SUCCESS : WP_Email_Logs::STATUS_FAILED;
 		$ip     = self::ip_address();
 
 		foreach ( $emails as $index => $email ) {
-			Email_Logs::insert(
+			WP_Email_Logs::insert(
 				array(
 					'yourname'    => $input['yourname'],
 					'youremail'   => $input['youremail'],
@@ -785,8 +783,8 @@ class Email_Form {
 			)
 		);
 
-		$result = Email_Template::expand(
-			Email_Options::template( $sent ? 'sentsuccess' : 'sentfailed' ),
+		$result = WP_Email_Template::expand(
+			WP_Email_Options::template( $sent ? 'sentsuccess' : 'sentfailed' ),
 			$result_vars
 		);
 

@@ -97,7 +97,7 @@ class Test_Email_Uninstall extends WP_UnitTestCase {
 		$this->assertStringContainsString( "'email_db_version'", $source );
 
 		// An install that never reached the migration still has the originals.
-		foreach ( Email_Options::legacy_option_names() as $name ) {
+		foreach ( WP_Email_Options::legacy_option_names() as $name ) {
 			$this->assertStringContainsString( "'{$name}'", $source, "uninstall.php should clear {$name}" );
 		}
 	}
@@ -119,7 +119,7 @@ class Test_Email_Uninstall extends WP_UnitTestCase {
 			$this->markTestSkipped( 'Single-site path only.' );
 		}
 
-		Email_Logs::insert(
+		WP_Email_Logs::insert(
 			array(
 				'yourname'    => 'Alice',
 				'youremail'   => 'a@example.com',
@@ -131,7 +131,7 @@ class Test_Email_Uninstall extends WP_UnitTestCase {
 				'timestamp'   => time(),
 				'ip'          => '198.51.100.1',
 				'host'        => '',
-				'status'      => Email_Logs::STATUS_SUCCESS,
+				'status'      => WP_Email_Logs::STATUS_SUCCESS,
 			)
 		);
 
@@ -146,8 +146,8 @@ class Test_Email_Uninstall extends WP_UnitTestCase {
 
 		require dirname( __DIR__ ) . '/uninstall.php';
 
-		$this->assertFalse( get_option( Email_Options::OPTION ) );
-		$this->assertFalse( get_option( Email_Options::VERSION_OPTION ) );
+		$this->assertFalse( get_option( WP_Email_Options::OPTION ) );
+		$this->assertFalse( get_option( WP_Email_Options::VERSION ) );
 		$this->assertFalse( get_role( 'administrator' )->has_cap( 'manage_email' ) );
 
 		$table = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $wpdb->email ) );
@@ -155,7 +155,7 @@ class Test_Email_Uninstall extends WP_UnitTestCase {
 
 		// Put the schema back for whatever runs next; the transaction rollback
 		// does not cover DROP TABLE.
-		Email_Logs::install();
+		WP_Email_Logs::install();
 		get_role( 'administrator' )->add_cap( 'manage_email' );
 	}
 }

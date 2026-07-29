@@ -8,7 +8,7 @@
 /**
  * The log table.
  *
- * @covers Email_Logs
+ * @covers WP_Email_Logs
  */
 class Test_Email_Logs extends WP_UnitTestCase {
 
@@ -20,7 +20,7 @@ class Test_Email_Logs extends WP_UnitTestCase {
 	 * @return void
 	 */
 	private function log( array $overrides = array() ) {
-		Email_Logs::insert(
+		WP_Email_Logs::insert(
 			array_merge(
 				array(
 					'yourname'    => 'Alice',
@@ -33,7 +33,7 @@ class Test_Email_Logs extends WP_UnitTestCase {
 					'timestamp'   => time(),
 					'ip'          => '198.51.100.1',
 					'host'        => 'host.example.com',
-					'status'      => Email_Logs::STATUS_SUCCESS,
+					'status'      => WP_Email_Logs::STATUS_SUCCESS,
 				),
 				$overrides
 			)
@@ -76,14 +76,14 @@ class Test_Email_Logs extends WP_UnitTestCase {
 	public function test_counts() {
 		$this->log();
 		$this->log();
-		$this->log( array( 'status' => Email_Logs::STATUS_FAILED ) );
+		$this->log( array( 'status' => WP_Email_Logs::STATUS_FAILED ) );
 		$this->log( array( 'postid' => 99 ) );
 
-		$this->assertSame( 4, Email_Logs::count_all() );
-		$this->assertSame( 3, Email_Logs::count_by_status( Email_Logs::STATUS_SUCCESS ) );
-		$this->assertSame( 1, Email_Logs::count_by_status( Email_Logs::STATUS_FAILED ) );
-		$this->assertSame( 3, Email_Logs::count_for_post( 1 ) );
-		$this->assertSame( 1, Email_Logs::count_for_post( 99 ) );
+		$this->assertSame( 4, WP_Email_Logs::count_all() );
+		$this->assertSame( 3, WP_Email_Logs::count_by_status( WP_Email_Logs::STATUS_SUCCESS ) );
+		$this->assertSame( 1, WP_Email_Logs::count_by_status( WP_Email_Logs::STATUS_FAILED ) );
+		$this->assertSame( 3, WP_Email_Logs::count_for_post( 1 ) );
+		$this->assertSame( 1, WP_Email_Logs::count_for_post( 99 ) );
 	}
 
 	/**
@@ -93,22 +93,22 @@ class Test_Email_Logs extends WP_UnitTestCase {
 		$this->log(
 			array(
 				'ip'        => '203.0.113.1',
-				'status'    => Email_Logs::STATUS_FAILED,
+				'status'    => WP_Email_Logs::STATUS_FAILED,
 				'timestamp' => 1000,
 			)
 		);
 
-		$this->assertSame( 0, Email_Logs::last_sent_at( '203.0.113.1' ) );
+		$this->assertSame( 0, WP_Email_Logs::last_sent_at( '203.0.113.1' ) );
 
 		$this->log(
 			array(
 				'ip'        => '203.0.113.1',
-				'status'    => Email_Logs::STATUS_SUCCESS,
+				'status'    => WP_Email_Logs::STATUS_SUCCESS,
 				'timestamp' => 2000,
 			)
 		);
 
-		$this->assertSame( 2000, Email_Logs::last_sent_at( '203.0.113.1' ) );
+		$this->assertSame( 2000, WP_Email_Logs::last_sent_at( '203.0.113.1' ) );
 	}
 
 	/**
@@ -118,7 +118,7 @@ class Test_Email_Logs extends WP_UnitTestCase {
 		$this->log( array( 'yourname' => 'Zoe' ) );
 		$this->log( array( 'yourname' => 'Adam' ) );
 
-		$asc = Email_Logs::query(
+		$asc = WP_Email_Logs::query(
 			array(
 				'orderby' => 'fromname',
 				'order'   => 'ASC',
@@ -126,7 +126,7 @@ class Test_Email_Logs extends WP_UnitTestCase {
 		);
 		$this->assertSame( 'Adam', $asc[0]->email_yourname );
 
-		$desc = Email_Logs::query(
+		$desc = WP_Email_Logs::query(
 			array(
 				'orderby' => 'fromname',
 				'order'   => 'DESC',
@@ -143,7 +143,7 @@ class Test_Email_Logs extends WP_UnitTestCase {
 
 		// An identifier cannot be bound, so the only safe handling is a lookup
 		// against a fixed list; anything else must not reach the query.
-		$rows = Email_Logs::query( array( 'orderby' => 'email_id; DROP TABLE wp_posts' ) );
+		$rows = WP_Email_Logs::query( array( 'orderby' => 'email_id; DROP TABLE wp_posts' ) );
 
 		$this->assertCount( 1, $rows );
 	}
@@ -156,7 +156,7 @@ class Test_Email_Logs extends WP_UnitTestCase {
 			$this->log( array( 'yourname' => 'Name ' . $i ) );
 		}
 
-		$page_one = Email_Logs::query(
+		$page_one = WP_Email_Logs::query(
 			array(
 				'orderby'  => 'id',
 				'order'    => 'ASC',
@@ -164,7 +164,7 @@ class Test_Email_Logs extends WP_UnitTestCase {
 				'paged'    => 1,
 			)
 		);
-		$page_two = Email_Logs::query(
+		$page_two = WP_Email_Logs::query(
 			array(
 				'orderby'  => 'id',
 				'order'    => 'ASC',
@@ -186,9 +186,9 @@ class Test_Email_Logs extends WP_UnitTestCase {
 		$this->log();
 		$this->log();
 
-		Email_Logs::delete_all();
+		WP_Email_Logs::delete_all();
 
-		$this->assertSame( 0, Email_Logs::count_all() );
+		$this->assertSame( 0, WP_Email_Logs::count_all() );
 	}
 
 	/**
@@ -197,7 +197,7 @@ class Test_Email_Logs extends WP_UnitTestCase {
 	public function test_status_is_stored_untranslated() {
 		$this->log();
 
-		$rows = Email_Logs::query();
+		$rows = WP_Email_Logs::query();
 
 		// Storing __( 'Success' ) meant changing site language orphaned every
 		// historical row from its own counters.
@@ -208,8 +208,8 @@ class Test_Email_Logs extends WP_UnitTestCase {
 	 * Status labels are translated on the way out.
 	 */
 	public function test_status_labels_are_translated_on_the_way_out() {
-		$this->assertSame( __( 'Success', 'wp-email' ), Email_Logs::status_label( Email_Logs::STATUS_SUCCESS ) );
-		$this->assertSame( 'Something else', Email_Logs::status_label( 'Something else' ) );
+		$this->assertSame( __( 'Success', 'wp-email' ), WP_Email_Logs::status_label( WP_Email_Logs::STATUS_SUCCESS ) );
+		$this->assertSame( 'Something else', WP_Email_Logs::status_label( 'Something else' ) );
 	}
 
 	/**
@@ -218,9 +218,9 @@ class Test_Email_Logs extends WP_UnitTestCase {
 	public function test_install_is_safe_to_run_twice() {
 		$this->log();
 
-		Email_Logs::install();
+		WP_Email_Logs::install();
 
-		$this->assertSame( 1, Email_Logs::count_all() );
+		$this->assertSame( 1, WP_Email_Logs::count_all() );
 	}
 
 	/**
@@ -248,7 +248,7 @@ class Test_Email_Logs extends WP_UnitTestCase {
 			$this->log( array( 'postid' => $loud ) );
 		}
 
-		$rows = Email_Logs::most_emailed( 'post', 10 );
+		$rows = WP_Email_Logs::most_emailed( 'post', 10 );
 
 		$this->assertSame( $loud, (int) $rows[0]->ID );
 		$this->assertSame( 3, (int) $rows[0]->email_total );
@@ -265,7 +265,7 @@ class Test_Email_Logs extends WP_UnitTestCase {
 			$this->log( array( 'postid' => $id ) );
 		}
 
-		$this->assertCount( 2, Email_Logs::most_emailed( 'post', 2 ) );
+		$this->assertCount( 2, WP_Email_Logs::most_emailed( 'post', 2 ) );
 	}
 
 	/**
@@ -290,7 +290,7 @@ class Test_Email_Logs extends WP_UnitTestCase {
 		$this->log( array( 'postid' => $draft ) );
 		$this->log( array( 'postid' => $protected ) );
 
-		$this->assertSame( array(), Email_Logs::most_emailed( 'post', 10 ) );
+		$this->assertSame( array(), WP_Email_Logs::most_emailed( 'post', 10 ) );
 	}
 
 	/**
@@ -305,18 +305,18 @@ class Test_Email_Logs extends WP_UnitTestCase {
 		$wpdb->update(
 			$wpdb->email,
 			array( 'email_status' => 'Réussi' ),
-			array( 'email_status' => Email_Logs::STATUS_SUCCESS ),
+			array( 'email_status' => WP_Email_Logs::STATUS_SUCCESS ),
 			array( '%s' ),
 			array( '%s' )
 		);
 
-		$this->assertSame( 0, Email_Logs::count_by_status( Email_Logs::STATUS_SUCCESS ) );
+		$this->assertSame( 0, WP_Email_Logs::count_by_status( WP_Email_Logs::STATUS_SUCCESS ) );
 
 		add_filter( 'gettext_wp-email', array( $this, 'translate_success' ), 10, 2 );
-		Email_Logs::normalize_statuses();
+		WP_Email_Logs::normalize_statuses();
 		remove_filter( 'gettext_wp-email', array( $this, 'translate_success' ), 10 );
 
-		$this->assertSame( 1, Email_Logs::count_by_status( Email_Logs::STATUS_SUCCESS ) );
+		$this->assertSame( 1, WP_Email_Logs::count_by_status( WP_Email_Logs::STATUS_SUCCESS ) );
 	}
 
 	/**
@@ -337,9 +337,9 @@ class Test_Email_Logs extends WP_UnitTestCase {
 	public function test_normalize_statuses_is_a_no_op_in_english() {
 		$this->log();
 
-		Email_Logs::normalize_statuses();
+		WP_Email_Logs::normalize_statuses();
 
-		$this->assertSame( 1, Email_Logs::count_by_status( Email_Logs::STATUS_SUCCESS ) );
+		$this->assertSame( 1, WP_Email_Logs::count_by_status( WP_Email_Logs::STATUS_SUCCESS ) );
 	}
 
 	/**
@@ -350,7 +350,7 @@ class Test_Email_Logs extends WP_UnitTestCase {
 
 		$columns = $wpdb->get_col( "SHOW COLUMNS FROM {$wpdb->email}" );
 
-		foreach ( Email_Logs::sortable_columns() as $key => $column ) {
+		foreach ( WP_Email_Logs::sortable_columns() as $key => $column ) {
 			$this->assertContains( $column, $columns, "{$key} maps to a column that does not exist" );
 		}
 	}
@@ -359,9 +359,9 @@ class Test_Email_Logs extends WP_UnitTestCase {
 	 * An empty table reports zero rather than null.
 	 */
 	public function test_counts_are_zero_on_an_empty_table() {
-		$this->assertSame( 0, Email_Logs::count_all() );
-		$this->assertSame( 0, Email_Logs::count_by_status( Email_Logs::STATUS_SUCCESS ) );
-		$this->assertSame( 0, Email_Logs::count_for_post( 1 ) );
-		$this->assertSame( array(), Email_Logs::query() );
+		$this->assertSame( 0, WP_Email_Logs::count_all() );
+		$this->assertSame( 0, WP_Email_Logs::count_by_status( WP_Email_Logs::STATUS_SUCCESS ) );
+		$this->assertSame( 0, WP_Email_Logs::count_for_post( 1 ) );
+		$this->assertSame( array(), WP_Email_Logs::query() );
 	}
 }

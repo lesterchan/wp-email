@@ -53,7 +53,7 @@ class Test_Email_Trust_Proxy extends WP_UnitTestCase {
 
 		$_SERVER['HTTP_X_FORWARDED_FOR'] = '203.0.113.7';
 
-		$this->assertSame( '203.0.113.7', Email_Form::ip_address() );
+		$this->assertSame( '203.0.113.7', WP_Email_Form::ip_address() );
 	}
 
 	/**
@@ -65,7 +65,7 @@ class Test_Email_Trust_Proxy extends WP_UnitTestCase {
 		$_SERVER['HTTP_CF_CONNECTING_IP'] = '203.0.113.8';
 		$_SERVER['HTTP_X_FORWARDED_FOR']  = '203.0.113.9';
 
-		$this->assertSame( '203.0.113.8', Email_Form::ip_address() );
+		$this->assertSame( '203.0.113.8', WP_Email_Form::ip_address() );
 	}
 
 	/**
@@ -76,7 +76,7 @@ class Test_Email_Trust_Proxy extends WP_UnitTestCase {
 
 		$_SERVER['HTTP_X_FORWARDED_FOR'] = '203.0.113.10, 70.41.3.18, 150.172.238.178';
 
-		$this->assertSame( '203.0.113.10', Email_Form::ip_address() );
+		$this->assertSame( '203.0.113.10', WP_Email_Form::ip_address() );
 	}
 
 	/**
@@ -87,7 +87,7 @@ class Test_Email_Trust_Proxy extends WP_UnitTestCase {
 
 		$_SERVER['HTTP_X_FORWARDED_FOR'] = 'not-an-ip, still-not-an-ip';
 
-		$this->assertSame( '198.51.100.200', Email_Form::ip_address() );
+		$this->assertSame( '198.51.100.200', WP_Email_Form::ip_address() );
 	}
 
 	/**
@@ -96,14 +96,14 @@ class Test_Email_Trust_Proxy extends WP_UnitTestCase {
 	public function test_a_named_header_still_wins() {
 		define( 'WP_EMAIL_TRUST_PROXY', true );
 
-		$options                         = Email_Options::all();
+		$options                         = WP_Email_Options::all();
 		$options['sending']['ip_header'] = 'HTTP_X_REAL_IP';
-		Email_Options::update( $options );
+		WP_Email_Options::update( $options );
 
 		$_SERVER['HTTP_X_REAL_IP']       = '203.0.113.20';
 		$_SERVER['HTTP_X_FORWARDED_FOR'] = '203.0.113.21';
 
-		$this->assertSame( '203.0.113.20', Email_Form::ip_address() );
+		$this->assertSame( '203.0.113.20', WP_Email_Form::ip_address() );
 
 		unset( $_SERVER['HTTP_X_REAL_IP'] );
 	}
@@ -120,7 +120,7 @@ class Test_Email_Trust_Proxy extends WP_UnitTestCase {
 
 		// The filter is the last word, so a site can keep the constant in
 		// wp-config.php and still refuse the header for particular requests.
-		$this->assertSame( '198.51.100.200', Email_Form::ip_address() );
+		$this->assertSame( '198.51.100.200', WP_Email_Form::ip_address() );
 
 		remove_filter( 'wp_email_trust_proxy', '__return_false' );
 	}

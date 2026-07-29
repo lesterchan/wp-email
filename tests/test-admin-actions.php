@@ -8,7 +8,7 @@
 /**
  * The destructive action on the logs screen, and the notices it leaves behind.
  *
- * @covers Email_Admin
+ * @covers WP_Email_Admin
  */
 class Test_Email_Admin_Actions extends WP_UnitTestCase {
 
@@ -32,7 +32,7 @@ class Test_Email_Admin_Actions extends WP_UnitTestCase {
 		}
 
 		require_once ABSPATH . 'wp-admin/includes/admin.php';
-		require_once dirname( __DIR__ ) . '/includes/class-email-admin.php';
+		require_once dirname( __DIR__ ) . '/includes/class-wp-email-admin.php';
 
 		// WP_List_Table::__construct() falls back to $GLOBALS['hook_suffix']
 		// when no screen is passed, and WordPress 6.0 reads it unguarded. A real
@@ -74,7 +74,7 @@ class Test_Email_Admin_Actions extends WP_UnitTestCase {
 	 * @return void
 	 */
 	private function log() {
-		Email_Logs::insert(
+		WP_Email_Logs::insert(
 			array(
 				'yourname'    => 'Alice',
 				'youremail'   => 'alice@example.com',
@@ -86,7 +86,7 @@ class Test_Email_Admin_Actions extends WP_UnitTestCase {
 				'timestamp'   => time(),
 				'ip'          => '198.51.100.1',
 				'host'        => '',
-				'status'      => Email_Logs::STATUS_SUCCESS,
+				'status'      => WP_Email_Logs::STATUS_SUCCESS,
 			)
 		);
 	}
@@ -98,7 +98,7 @@ class Test_Email_Admin_Actions extends WP_UnitTestCase {
 	 */
 	private function load() {
 		try {
-			( new Email_Admin() )->load_logs();
+			( new WP_Email_Admin() )->load_logs();
 		} catch ( Exception $e ) {
 			unset( $e );
 			return true;
@@ -125,7 +125,7 @@ class Test_Email_Admin_Actions extends WP_UnitTestCase {
 		$_REQUEST = $_POST;
 
 		$this->assertTrue( $this->load() );
-		$this->assertSame( 0, Email_Logs::count_all() );
+		$this->assertSame( 0, WP_Email_Logs::count_all() );
 
 		// Redirecting rather than re-rendering means a refresh cannot replay
 		// the deletion.
@@ -146,7 +146,7 @@ class Test_Email_Admin_Actions extends WP_UnitTestCase {
 		$_REQUEST = $_POST;
 
 		$this->assertTrue( $this->load() );
-		$this->assertSame( 1, Email_Logs::count_all() );
+		$this->assertSame( 1, WP_Email_Logs::count_all() );
 		$this->assertStringContainsString( 'wp-email-notice=not-confirmed', $this->redirected_to );
 	}
 
@@ -168,7 +168,7 @@ class Test_Email_Admin_Actions extends WP_UnitTestCase {
 		// an exception.
 		$this->expectException( 'WPDieException' );
 
-		( new Email_Admin() )->load_logs();
+		( new WP_Email_Admin() )->load_logs();
 	}
 
 	/**
@@ -178,7 +178,7 @@ class Test_Email_Admin_Actions extends WP_UnitTestCase {
 		$this->log();
 
 		$this->assertFalse( $this->load() );
-		$this->assertSame( 1, Email_Logs::count_all() );
+		$this->assertSame( 1, WP_Email_Logs::count_all() );
 	}
 
 	/**
@@ -198,7 +198,7 @@ class Test_Email_Admin_Actions extends WP_UnitTestCase {
 		$_REQUEST = $_POST;
 
 		$this->assertFalse( $this->load() );
-		$this->assertSame( 1, Email_Logs::count_all() );
+		$this->assertSame( 1, WP_Email_Logs::count_all() );
 	}
 
 	// -------------------------------------------------------- the notices --
@@ -245,7 +245,7 @@ class Test_Email_Admin_Actions extends WP_UnitTestCase {
 	 * @return string
 	 */
 	private function render_logs() {
-		$admin = new Email_Admin();
+		$admin = new WP_Email_Admin();
 
 		ob_start();
 		$admin->render_logs();
@@ -263,15 +263,15 @@ class Test_Email_Admin_Actions extends WP_UnitTestCase {
 		$menu    = array();
 		$submenu = array();
 
-		( new Email_Admin() )->add_menu();
+		( new WP_Email_Admin() )->add_menu();
 
-		$slugs = wp_list_pluck( $submenu[ Email_Admin::LOGS_SLUG ], 2 );
+		$slugs = wp_list_pluck( $submenu[ WP_Email_Admin::LOGS_SLUG ], 2 );
 
-		$this->assertContains( Email_Admin::LOGS_SLUG, $slugs );
-		$this->assertContains( Email_Admin::OPTIONS_SLUG, $slugs );
+		$this->assertContains( WP_Email_Admin::LOGS_SLUG, $slugs );
+		$this->assertContains( WP_Email_Admin::OPTIONS_SLUG, $slugs );
 
-		foreach ( $submenu[ Email_Admin::LOGS_SLUG ] as $entry ) {
-			$this->assertSame( Email_Admin::CAPABILITY, $entry[1] );
+		foreach ( $submenu[ WP_Email_Admin::LOGS_SLUG ] as $entry ) {
+			$this->assertSame( WP_Email_Admin::CAPABILITY, $entry[1] );
 		}
 	}
 
@@ -283,19 +283,19 @@ class Test_Email_Admin_Actions extends WP_UnitTestCase {
 
 		$this->expectException( 'WPDieException' );
 
-		( new Email_Admin() )->render_logs();
+		( new WP_Email_Admin() )->render_logs();
 	}
 
 	/**
 	 * The options screen is refused too.
 	 */
 	public function test_the_options_screen_is_refused_without_the_capability() {
-		require_once dirname( __DIR__ ) . '/includes/class-email-settings.php';
+		require_once dirname( __DIR__ ) . '/includes/class-wp-email-settings.php';
 
 		wp_set_current_user( self::factory()->user->create( array( 'role' => 'subscriber' ) ) );
 
 		$this->expectException( 'WPDieException' );
 
-		Email_Settings::render();
+		WP_Email_Settings::render();
 	}
 }

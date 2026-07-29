@@ -1,40 +1,37 @@
 <?php
 /**
- * WP-EMail class-email-admin.php
+ * WP-EMail class-wp-email-admin.php
  *
  * @package WP-EMail
  */
 
-if ( ! defined( 'ABSPATH' ) ) {
-	exit;
-}
+defined( 'ABSPATH' ) || exit;
 
 /**
  * The admin menu and the e-mail logs screen.
  *
  * @since 3.0.0
  */
-class Email_Admin {
+class WP_Email_Admin {
 
 	/**
-	 * Menu slug for the logs screen.
+	 * Menu and page slug for the logs screen.
 	 */
-	const LOGS_SLUG = 'wp-email';
+	const PAGE = 'wp-email';
 
 	/**
-	 * Menu slug for the options screen.
-	 */
-	const OPTIONS_SLUG = 'wp-email-options';
-
-	/**
-	 * Capability required for both screens.
+	 * Capability required for the logs screen.
+	 *
+	 * A data screen, so it keeps the plugin's own capability rather than
+	 * falling back to manage_options. The settings screen is a settings screen
+	 * and takes manage_options, per STANDARDS.md 2.7.
 	 */
 	const CAPABILITY = 'manage_email';
 
 	/**
 	 * The logs list table, once the screen is loaded.
 	 *
-	 * @var Email_Logs_Table|null
+	 * @var WP_Email_Logs_Table|null
 	 */
 	private $table;
 
@@ -46,18 +43,40 @@ class Email_Admin {
 	}
 
 	/**
+	 * The capability the logs screen is gated on.
+	 *
+	 * Read through one filter so a site can hand the screen to a role of its
+	 * own without redefining the capability everywhere it is checked.
+	 *
+	 * @param string $context Where the check is being made.
+	 *
+	 * @return string
+	 */
+	public static function capability( $context = 'logs' ) {
+		/**
+		 * Filters the capability a WP-EMail screen is gated on.
+		 *
+		 * @since 3.0.0
+		 *
+		 * @param string $capability Capability required.
+		 * @param string $context    Screen being gated: 'logs' or 'settings'.
+		 */
+		return (string) apply_filters( 'wp_email_capability', self::CAPABILITY, $context );
+	}
+
+	/**
 	 * Build the logs list table.
 	 *
 	 * Loads WP_List_Table's subclass on demand rather than at plugin boot,
 	 * since it is only ever needed on this one screen.
 	 *
-	 * @return Email_Logs_Table
+	 * @return WP_Email_Logs_Table
 	 */
 	private function table() {
 		if ( ! $this->table ) {
-			require_once __DIR__ . '/class-email-logs-table.php';
+			require_once WP_EMAIL_DIR . 'includes/class-wp-email-logs-table.php';
 
-			$this->table = new Email_Logs_Table();
+			$this->table = new WP_Email_Logs_Table();
 		}
 
 		return $this->table;
@@ -72,28 +91,28 @@ class Email_Admin {
 		$logs = add_menu_page(
 			__( 'E-Mail', 'wp-email' ),
 			__( 'E-Mail', 'wp-email' ),
-			self::CAPABILITY,
-			self::LOGS_SLUG,
+			self::capability(),
+			self::PAGE,
 			array( $this, 'render_logs' ),
 			'dashicons-email-alt'
 		);
 
 		add_submenu_page(
-			self::LOGS_SLUG,
+			self::PAGE,
 			__( 'Manage E-Mail', 'wp-email' ),
 			__( 'Manage E-Mail', 'wp-email' ),
-			self::CAPABILITY,
-			self::LOGS_SLUG,
+			self::capability(),
+			self::PAGE,
 			array( $this, 'render_logs' )
 		);
 
 		add_submenu_page(
-			self::LOGS_SLUG,
-			__( 'E-Mail Options', 'wp-email' ),
-			__( 'E-Mail Options', 'wp-email' ),
-			self::CAPABILITY,
-			self::OPTIONS_SLUG,
-			array( 'Email_Settings', 'render' )
+			self::PAGE,
+			__( 'Settings', 'wp-email' ),
+			__( 'Settings', 'wp-email' ),
+			WP_Email_Settings::capability(),
+			WP_Email_Settings::PAGE,
+			array( 'WP_Email_Settings', 'render' )
 		);
 
 		add_action( 'load-' . $logs, array( $this, 'load_logs' ) );
@@ -107,7 +126,7 @@ class Email_Admin {
 	 * @return void
 	 */
 	public function load_logs() {
-		if ( ! current_user_can( self::CAPABILITY ) ) {
+		if ( ! current_user_can( self::capability() ) ) {
 			return;
 		}
 
@@ -143,7 +162,7 @@ class Email_Admin {
 			$this->redirect_with_notice( 'not-confirmed' );
 		}
 
-		Email_Logs::delete_all();
+		WP_Email_Logs::delete_all();
 
 		$this->redirect_with_notice( 'deleted' );
 	}
@@ -159,7 +178,7 @@ class Email_Admin {
 		wp_safe_redirect(
 			add_query_arg(
 				array(
-					'page'            => self::LOGS_SLUG,
+					'page'            => self::PAGE,
 					'wp-email-notice' => $notice,
 				),
 				admin_url( 'admin.php' )
@@ -174,16 +193,16 @@ class Email_Admin {
 	 * @return void
 	 */
 	public function render_logs() {
-		if ( ! current_user_can( self::CAPABILITY ) ) {
+		if ( ! current_user_can( self::capability() ) ) {
 			wp_die( esc_html__( 'You do not have permission to manage e-mail.', 'wp-email' ) );
 		}
 
 		$table = $this->table();
 		$table->prepare_items();
 
-		$total   = Email_Logs::count_all();
-		$success = Email_Logs::count_by_status( Email_Logs::STATUS_SUCCESS );
-		$failed  = Email_Logs::count_by_status( Email_Logs::STATUS_FAILED );
+		$total   = WP_Email_Logs::count_all();
+		$success = WP_Email_Logs::count_by_status( WP_Email_Logs::STATUS_SUCCESS );
+		$failed  = WP_Email_Logs::count_by_status( WP_Email_Logs::STATUS_FAILED );
 		?>
 		<div class="wrap">
 			<h1><?php esc_html_e( 'Manage E-Mail', 'wp-email' ); ?></h1>
@@ -193,7 +212,7 @@ class Email_Admin {
 			<h2><?php esc_html_e( 'E-Mail Logs', 'wp-email' ); ?></h2>
 
 			<form method="get">
-				<input type="hidden" name="page" value="<?php echo esc_attr( self::LOGS_SLUG ); ?>" />
+				<input type="hidden" name="page" value="<?php echo esc_attr( self::PAGE ); ?>" />
 				<?php $table->display(); ?>
 			</form>
 
@@ -216,7 +235,7 @@ class Email_Admin {
 			</table>
 
 			<h2><?php esc_html_e( 'Delete E-Mail Logs', 'wp-email' ); ?></h2>
-			<form method="post" action="<?php echo esc_url( admin_url( 'admin.php?page=' . self::LOGS_SLUG ) ); ?>">
+			<form method="post" action="<?php echo esc_url( admin_url( 'admin.php?page=' . self::PAGE ) ); ?>">
 				<?php wp_nonce_field( 'wp-email_delete-logs' ); ?>
 				<p><strong><?php esc_html_e( 'Are You Sure You Want To Delete All E-Mail Logs?', 'wp-email' ); ?></strong></p>
 				<p>

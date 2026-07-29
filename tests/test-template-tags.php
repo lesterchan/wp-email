@@ -67,15 +67,15 @@ class Test_Email_Template_Tags extends WP_UnitTestCase {
 	 */
 	private function seed_logs() {
 		$rows = array(
-			array( 'Alice', $this->post_id, 'Harness Post', Email_Logs::STATUS_SUCCESS ),
-			array( 'Bob', $this->post_id, 'Harness Post', Email_Logs::STATUS_SUCCESS ),
-			array( 'Cara', $this->post_id, 'Harness Post', Email_Logs::STATUS_SUCCESS ),
-			array( 'Carol', $this->post_id, 'Harness Post', Email_Logs::STATUS_FAILED ),
-			array( 'Dave', $this->page_id, 'Harness Page', Email_Logs::STATUS_SUCCESS ),
+			array( 'Alice', $this->post_id, 'Harness Post', WP_Email_Logs::STATUS_SUCCESS ),
+			array( 'Bob', $this->post_id, 'Harness Post', WP_Email_Logs::STATUS_SUCCESS ),
+			array( 'Cara', $this->post_id, 'Harness Post', WP_Email_Logs::STATUS_SUCCESS ),
+			array( 'Carol', $this->post_id, 'Harness Post', WP_Email_Logs::STATUS_FAILED ),
+			array( 'Dave', $this->page_id, 'Harness Page', WP_Email_Logs::STATUS_SUCCESS ),
 		);
 
 		foreach ( $rows as $i => $row ) {
-			Email_Logs::insert(
+			WP_Email_Logs::insert(
 				array(
 					'yourname'    => $row[0],
 					'youremail'   => strtolower( $row[0] ) . '@example.com',
@@ -144,7 +144,7 @@ class Test_Email_Template_Tags extends WP_UnitTestCase {
 			)
 		);
 
-		Email_Logs::insert(
+		WP_Email_Logs::insert(
 			array(
 				'yourname'    => 'X',
 				'youremail'   => 'x@example.com',
@@ -156,7 +156,7 @@ class Test_Email_Template_Tags extends WP_UnitTestCase {
 				'timestamp'   => time() - DAY_IN_SECONDS,
 				'ip'          => '198.51.100.99',
 				'host'        => '',
-				'status'      => Email_Logs::STATUS_SUCCESS,
+				'status'      => WP_Email_Logs::STATUS_SUCCESS,
 			)
 		);
 
@@ -186,11 +186,11 @@ class Test_Email_Template_Tags extends WP_UnitTestCase {
 		$this->go_to( get_permalink( $this->post_id ) );
 		the_post();
 
-		$options = Email_Options::all();
+		$options = WP_Email_Options::all();
 
 		$options['link']['style'] = 1;
 		$options['link']['type']  = 1;
-		Email_Options::update( $options );
+		WP_Email_Options::update( $options );
 
 		$link = email_link( '', '', false );
 		$this->assertStringContainsString( 'WP-EmailIcon', $link );
@@ -198,11 +198,11 @@ class Test_Email_Template_Tags extends WP_UnitTestCase {
 		$this->assertStringContainsString( 'rel="nofollow"', $link );
 
 		$options['link']['style'] = 2;
-		Email_Options::update( $options );
+		WP_Email_Options::update( $options );
 		$this->assertStringContainsString( 'WP-EmailIcon', email_link( '', '', false ) );
 
 		$options['link']['style'] = 3;
-		Email_Options::update( $options );
+		WP_Email_Options::update( $options );
 		$this->assertStringNotContainsString( 'WP-EmailIcon', email_link( '', '', false ) );
 	}
 
@@ -213,10 +213,10 @@ class Test_Email_Template_Tags extends WP_UnitTestCase {
 		$this->go_to( get_permalink( $this->post_id ) );
 		the_post();
 
-		$options                  = Email_Options::all();
+		$options                  = WP_Email_Options::all();
 		$options['link']['style'] = 4;
 		$options['link']['html']  = '<a href="%EMAIL_URL%" title="%EMAIL_TEXT%">%EMAIL_TEXT% @ %EMAIL_ICON_URL%</a>';
-		Email_Options::update( $options );
+		WP_Email_Options::update( $options );
 
 		$link = email_link( '', '', false );
 
@@ -232,9 +232,9 @@ class Test_Email_Template_Tags extends WP_UnitTestCase {
 		$this->go_to( get_permalink( $this->post_id ) );
 		the_post();
 
-		$options                 = Email_Options::all();
+		$options                 = WP_Email_Options::all();
 		$options['link']['type'] = 2;
-		Email_Options::update( $options );
+		WP_Email_Options::update( $options );
 
 		$link = email_link( '', '', false );
 
@@ -259,9 +259,9 @@ class Test_Email_Template_Tags extends WP_UnitTestCase {
 		$this->go_to( get_permalink( $this->post_id ) );
 		the_post();
 
-		$options                       = Email_Options::all();
+		$options                       = WP_Email_Options::all();
 		$options['templates']['title'] = 'T: %EMAIL_POST_TITLE% / %EMAIL_BLOG_NAME%';
-		Email_Options::update( $options );
+		WP_Email_Options::update( $options );
 
 		$title = email_title( 'ignored' );
 
@@ -283,9 +283,9 @@ class Test_Email_Template_Tags extends WP_UnitTestCase {
 		$this->go_to( get_permalink( $this->post_id ) );
 		the_post();
 
-		$options                       = Email_Options::all();
+		$options                       = WP_Email_Options::all();
 		$options['sending']['snippet'] = 3;
-		Email_Options::update( $options );
+		WP_Email_Options::update( $options );
 
 		$content = email_content();
 
@@ -325,14 +325,14 @@ class Test_Email_Template_Tags extends WP_UnitTestCase {
 		global $wp_rewrite;
 
 		$this->assertNotFalse(
-			has_action( 'init', array( Email::get_instance(), 'register_endpoints' ) )
+			has_action( 'init', array( WP_Email::get_instance(), 'register_endpoints' ) )
 		);
 
 		// Any earlier set_permalink_structure() call in the run has already
 		// re-init'd $wp_rewrite, which empties the endpoint list, so register
 		// from a known-clean slate rather than depending on test order.
 		$wp_rewrite->init();
-		Email::get_instance()->register_endpoints();
+		WP_Email::get_instance()->register_endpoints();
 
 		$names = wp_list_pluck( $wp_rewrite->endpoints, 1 );
 

@@ -1,13 +1,11 @@
 <?php
 /**
- * WP-EMail class-email-widget.php
+ * WP-EMail class-wp-email-widget.php
  *
  * @package WP-EMail
  */
 
-if ( ! defined( 'ABSPATH' ) ) {
-	exit;
-}
+defined( 'ABSPATH' ) || exit;
 
 /**
  * The most-emailed widget.
@@ -17,7 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 3.0.0
  */
-class Email_Widget extends WP_Widget {
+class WP_Email_Widget extends WP_Widget {
 
 	/**
 	 * Register the widget.

@@ -34,19 +34,22 @@
 	Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-if ( ! defined( 'ABSPATH' ) ) {
-	exit;
-}
+defined( 'ABSPATH' ) || exit;
 
 /**
- * WP-EMail version.
+ * WP-EMail version. The last-run value is kept in the wp_email_version row.
  */
 define( 'WP_EMAIL_VERSION', '3.0.0' );
 
 /**
- * Data version. Bump when the table definition or the option layout changes.
+ * Schema counter. Bumped only when the stored rows or the table need reshaping.
  */
 define( 'WP_EMAIL_DB_VERSION', '1' );
+
+/**
+ * WP-EMail slug, which is also the text domain.
+ */
+define( 'WP_EMAIL_SLUG', 'wp-email' );
 
 /**
  * WP-EMail main file.
@@ -54,22 +57,38 @@ define( 'WP_EMAIL_DB_VERSION', '1' );
 define( 'WP_EMAIL_MAIN_FILE', __FILE__ );
 
 /**
+ * WP-EMail directory, with a trailing slash.
+ */
+define( 'WP_EMAIL_DIR', plugin_dir_path( __FILE__ ) );
+
+/**
+ * WP-EMail URL, with a trailing slash.
+ */
+define( 'WP_EMAIL_URL', plugin_dir_url( __FILE__ ) );
+
+/**
  * Whether the logs screen shows the sender's remarks.
  *
  * Guarded so it can be overridden from wp-config.php.
  */
-if ( ! defined( 'EMAIL_SHOW_REMARKS' ) ) {
-	define( 'EMAIL_SHOW_REMARKS', true );
+if ( ! defined( 'WP_EMAIL_SHOW_REMARKS' ) ) {
+	define( 'WP_EMAIL_SHOW_REMARKS', true );
 }
 
-require_once __DIR__ . '/includes/class-email-options.php';
-require_once __DIR__ . '/includes/class-email-template.php';
-require_once __DIR__ . '/includes/class-email-logs.php';
-require_once __DIR__ . '/includes/class-email-captcha.php';
-require_once __DIR__ . '/includes/class-email-link.php';
-require_once __DIR__ . '/includes/class-email-form.php';
-require_once __DIR__ . '/includes/class-email.php';
-require_once __DIR__ . '/includes/template-tags.php';
-require_once __DIR__ . '/includes/deprecated.php';
+/*
+ * Required at file load rather than from a hook: the activation hook, the
+ * template tags and the deprecated shims are all reached before any action
+ * fires.
+ */
+require_once WP_EMAIL_DIR . 'includes/class-wp-email-options.php';
+require_once WP_EMAIL_DIR . 'includes/class-wp-email-template.php';
+require_once WP_EMAIL_DIR . 'includes/class-wp-email-logs.php';
+require_once WP_EMAIL_DIR . 'includes/class-wp-email-captcha.php';
+require_once WP_EMAIL_DIR . 'includes/class-wp-email-link.php';
+require_once WP_EMAIL_DIR . 'includes/class-wp-email-form.php';
+require_once WP_EMAIL_DIR . 'includes/class-wp-email-wpstats.php';
+require_once WP_EMAIL_DIR . 'includes/class-wp-email.php';
+require_once WP_EMAIL_DIR . 'includes/template-tags.php';
+require_once WP_EMAIL_DIR . 'includes/deprecated.php';
 
-Email::get_instance();
+WP_Email::get_instance();

@@ -8,14 +8,14 @@
 /**
  * Tests for the four filters WP-Stats calls.
  *
- * @covers Email_WpStats
+ * @covers WP_Email_WPStats
  */
 class Test_Email_WpStats extends WP_UnitTestCase {
 
 	/**
 	 * The integration under test.
 	 *
-	 * @var Email_WpStats
+	 * @var WP_Email_WPStats
 	 */
 	private $stats;
 
@@ -41,9 +41,9 @@ class Test_Email_WpStats extends WP_UnitTestCase {
 	public function set_up() {
 		parent::set_up();
 
-		require_once dirname( __DIR__ ) . '/includes/class-email-wpstats.php';
+		require_once dirname( __DIR__ ) . '/includes/class-wp-email-wpstats.php';
 
-		$this->stats = new Email_WpStats();
+		$this->stats = new WP_Email_WPStats();
 
 		$past = gmdate( 'Y-m-d H:i:s', time() - HOUR_IN_SECONDS );
 
@@ -73,8 +73,8 @@ class Test_Email_WpStats extends WP_UnitTestCase {
 	 *
 	 * @return void
 	 */
-	private function log( $post_id, $status = Email_Logs::STATUS_SUCCESS ) {
-		Email_Logs::insert(
+	private function log( $post_id, $status = WP_Email_Logs::STATUS_SUCCESS ) {
+		WP_Email_Logs::insert(
 			array(
 				'yourname'    => 'Alice',
 				'youremail'   => 'alice@example.com',
@@ -172,7 +172,7 @@ class Test_Email_WpStats extends WP_UnitTestCase {
 
 		$this->log( $this->post_id );
 		$this->log( $this->post_id );
-		$this->log( $this->post_id, Email_Logs::STATUS_FAILED );
+		$this->log( $this->post_id, WP_Email_Logs::STATUS_FAILED );
 
 		$out = $this->stats->general( '' );
 
@@ -264,7 +264,7 @@ class Test_Email_WpStats extends WP_UnitTestCase {
 	 * Constructing the class registers all four WP-Stats filters.
 	 */
 	public function test_the_constructor_registers_its_filters() {
-		$stats = new Email_WpStats();
+		$stats = new WP_Email_WPStats();
 
 		$this->assertNotFalse( has_filter( 'wp_stats_page_admin_plugins', array( $stats, 'admin_general' ) ) );
 		$this->assertNotFalse( has_filter( 'wp_stats_page_admin_most', array( $stats, 'admin_most' ) ) );

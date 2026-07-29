@@ -1,13 +1,11 @@
 <?php
 /**
- * WP-EMail class-email-captcha.php
+ * WP-EMail class-wp-email-captcha.php
  *
  * @package WP-EMail
  */
 
-if ( ! defined( 'ABSPATH' ) ) {
-	exit;
-}
+defined( 'ABSPATH' ) || exit;
 
 /**
  * The image verification challenge.
@@ -28,7 +26,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 3.0.0
  */
-class Email_Captcha {
+class WP_Email_Captcha {
 
 	/**
 	 * Prefix for the transient holding an issued answer.
@@ -66,7 +64,7 @@ class Email_Captcha {
 	 * @return bool
 	 */
 	public static function is_enabled() {
-		return (int) Email_Options::get( 'sending', 'imageverify' ) === 1 && self::is_available();
+		return (int) WP_Email_Options::get( 'sending', 'imageverify' ) === 1 && self::is_available();
 	}
 
 	/**

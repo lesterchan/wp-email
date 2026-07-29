@@ -1,20 +1,18 @@
 <?php
 /**
- * WP-EMail class-email-logs.php
+ * WP-EMail class-wp-email-logs.php
  *
  * @package WP-EMail
  */
 
-if ( ! defined( 'ABSPATH' ) ) {
-	exit;
-}
+defined( 'ABSPATH' ) || exit;
 
 /**
  * Every read and write against the plugin's own table.
  *
  * @since 3.0.0
  */
-class Email_Logs {
+class WP_Email_Logs {
 
 	/**
 	 * Status stored for a message that was handed to wp_mail() successfully.

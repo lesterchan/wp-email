@@ -1,13 +1,11 @@
 <?php
 /**
- * WP-EMail class-email-wpstats.php
+ * WP-EMail class-wp-email-wpstats.php
  *
  * @package WP-EMail
  */
 
-if ( ! defined( 'ABSPATH' ) ) {
-	exit;
-}
+defined( 'ABSPATH' ) || exit;
 
 /**
  * Contributes WP-EMail's numbers to the WP-Stats page.
@@ -16,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 3.0.0
  */
-class Email_WpStats {
+class WP_Email_WPStats {
 
 	/**
 	 * Hook into WP-Stats.
@@ -163,9 +161,9 @@ class Email_WpStats {
 			return $content;
 		}
 
-		$success = Email_Logs::count_by_status( Email_Logs::STATUS_SUCCESS );
-		$failed  = Email_Logs::count_by_status( Email_Logs::STATUS_FAILED );
-		$total   = Email_Logs::count_all();
+		$success = WP_Email_Logs::count_by_status( WP_Email_Logs::STATUS_SUCCESS );
+		$failed  = WP_Email_Logs::count_by_status( WP_Email_Logs::STATUS_FAILED );
+		$total   = WP_Email_Logs::count_all();
 
 		$content .= '<p><strong>' . esc_html__( 'WP-EMail', 'wp-email' ) . '</strong></p>' . "\n";
 		$content .= '<ul>' . "\n";

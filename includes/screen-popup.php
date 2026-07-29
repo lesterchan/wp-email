@@ -2,18 +2,16 @@
 /**
  * WP-EMail popup e-mail page.
  *
- * Loaded by Email::maybe_render_email_page() when the /emailpopup/ endpoint is
+ * Loaded by WP_Email::maybe_render_email_page() when the /emailpopup/ endpoint is
  * hit. Deliberately standalone rather than themed: it renders inside a small
  * window.open() popup.
  *
  * @package WP-EMail
  */
 
-if ( ! defined( 'ABSPATH' ) ) {
-	exit;
-}
+defined( 'ABSPATH' ) || exit;
 
-add_filter( 'the_title', array( 'Email', 'filter_title' ) );
+add_filter( 'the_title', array( 'WP_Email', 'filter_title' ) );
 
 // The popup is not themed, but it does borrow the theme's stylesheet so the
 // form does not look foreign. Enqueued rather than hand-written into <head> so
@@ -32,7 +30,7 @@ wp_enqueue_style( 'wp-email-popup-theme', get_stylesheet_uri(), array(), WP_EMAI
 </head>
 <body class="wp-email-popup-body" data-wp-email-reposition="1">
 	<div id="wp-email-popup">
-		<?php Email_Form::render(); ?>
+		<?php WP_Email_Form::render(); ?>
 		<p style="text-align: center; padding-top: 20px;">
 			<a href="#" data-wp-email-close="1"><?php esc_html_e( 'Close This Window', 'wp-email' ); ?></a>
 		</p>

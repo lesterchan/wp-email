@@ -1,20 +1,18 @@
 <?php
 /**
- * WP-EMail class-email-link.php
+ * WP-EMail class-wp-email-link.php
  *
  * @package WP-EMail
  */
 
-if ( ! defined( 'ABSPATH' ) ) {
-	exit;
-}
+defined( 'ABSPATH' ) || exit;
 
 /**
  * The "Email This Post" link, in each of its four styles.
  *
  * @since 3.0.0
  */
-class Email_Link {
+class WP_Email_Link {
 
 	/**
 	 * Attribute that marks a link as opening the popup.
@@ -34,7 +32,7 @@ class Email_Link {
 	 * @return string
 	 */
 	public static function render( $post_text = '', $page_text = '' ) {
-		$link  = Email_Options::all()['link'];
+		$link  = WP_Email_Options::all()['link'];
 		$style = (int) $link['style'];
 		$type  = (int) $link['type'];
 
@@ -56,7 +54,7 @@ class Email_Link {
 				return self::open_tag( $url, $text, $popup ) . esc_html( $text ) . '</a>';
 
 			case 4:
-				return Email_Template::expand(
+				return WP_Email_Template::expand(
 					$link['html'],
 					array(
 						'EMAIL_URL'      => esc_url( $url ),

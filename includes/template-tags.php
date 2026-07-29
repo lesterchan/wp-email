@@ -9,9 +9,7 @@
  * @package WP-EMail
  */
 
-if ( ! defined( 'ABSPATH' ) ) {
-	exit;
-}
+defined( 'ABSPATH' ) || exit;
 
 /**
  * Display the "Email This Post" link.
@@ -23,10 +21,10 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @return string
  */
 function email_link( $email_post_text = '', $email_page_text = '', $echo_output = true ) {
-	$output = Email_Link::render( $email_post_text, $email_page_text );
+	$output = WP_Email_Link::render( $email_post_text, $email_page_text );
 
 	if ( $echo_output ) {
-		echo $output . "\n"; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped at each sink in Email_Link.
+		echo $output . "\n"; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped at each sink in WP_Email_Link.
 		return '';
 	}
 
@@ -45,7 +43,7 @@ function email_link( $email_post_text = '', $email_page_text = '', $echo_output 
  * @return string
  */
 function email_form( $content = '', $echo_output = true, $subtitle = true, $div = true, $error_field = array() ) {
-	return Email_Form::render( $content, $echo_output, $subtitle, $div, (array) $error_field );
+	return WP_Email_Form::render( $content, $echo_output, $subtitle, $div, (array) $error_field );
 }
 
 /**
@@ -57,10 +55,10 @@ function email_form( $content = '', $echo_output = true, $subtitle = true, $div 
  * @return string
  */
 function email_form_header( $temp_id = 0, $echo_output = true ) {
-	$output = Email_Form::header( $temp_id, false );
+	$output = WP_Email_Form::header( $temp_id, false );
 
 	if ( $echo_output ) {
-		echo $output; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped at each sink in Email_Form.
+		echo $output; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped at each sink in WP_Email_Form.
 		return '';
 	}
 
@@ -76,10 +74,10 @@ function email_form_header( $temp_id = 0, $echo_output = true ) {
  * @return string
  */
 function email_popup_form_header( $echo_output = true, $temp_id = 0 ) {
-	$output = Email_Form::header( $temp_id, true );
+	$output = WP_Email_Form::header( $temp_id, true );
 
 	if ( $echo_output ) {
-		echo $output; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped at each sink in Email_Form.
+		echo $output; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped at each sink in WP_Email_Form.
 		return '';
 	}
 
@@ -94,7 +92,7 @@ function email_popup_form_header( $echo_output = true, $temp_id = 0 ) {
  * @return int
  */
 function email_flood_interval( $echo_output = true ) {
-	$interval = Email_Form::flood_interval();
+	$interval = WP_Email_Form::flood_interval();
 
 	if ( $echo_output ) {
 		echo esc_html( $interval );
@@ -112,10 +110,10 @@ function email_flood_interval( $echo_output = true ) {
  * @return string
  */
 function email_multiple( $echo_output = true ) {
-	$output = Email_Form::multiple_hint();
+	$output = WP_Email_Form::multiple_hint();
 
 	if ( $echo_output ) {
-		echo $output; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped in Email_Form::multiple_hint().
+		echo $output; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped in WP_Email_Form::multiple_hint().
 		return '';
 	}
 
@@ -128,7 +126,7 @@ function email_multiple( $echo_output = true ) {
  * @return string
  */
 function email_get_ipaddress() {
-	return Email_Form::ip_address();
+	return WP_Email_Form::ip_address();
 }
 
 /**
@@ -137,7 +135,7 @@ function email_get_ipaddress() {
  * @return bool
  */
 function not_spamming() {
-	return Email_Form::not_spamming();
+	return WP_Email_Form::not_spamming();
 }
 
 /**
@@ -146,7 +144,7 @@ function not_spamming() {
  * @return string
  */
 function email_get_title() {
-	return Email_Template::title();
+	return WP_Email_Template::title();
 }
 
 /**
@@ -155,7 +153,7 @@ function email_get_title() {
  * @return string
  */
 function email_get_remark() {
-	return Email_Template::remark();
+	return WP_Email_Template::remark();
 }
 
 /**
@@ -167,7 +165,7 @@ function email_get_remark() {
  * @return string
  */
 function email_category( $separator = ', ', $parents = '' ) {
-	return Email_Template::category( $separator, $parents );
+	return WP_Email_Template::category( $separator, $parents );
 }
 
 /**
@@ -176,7 +174,7 @@ function email_category( $separator = ', ', $parents = '' ) {
  * @return string
  */
 function email_content() {
-	return Email_Template::content();
+	return WP_Email_Template::content();
 }
 
 /**
@@ -185,7 +183,7 @@ function email_content() {
  * @return string
  */
 function email_content_alt() {
-	return Email_Template::content_alt();
+	return WP_Email_Template::content_alt();
 }
 
 /**
@@ -194,7 +192,7 @@ function email_content_alt() {
  * @return string
  */
 function get_email_content() {
-	return Email_Template::raw_content();
+	return WP_Email_Template::raw_content();
 }
 
 /**
@@ -205,7 +203,7 @@ function get_email_content() {
  * @return string
  */
 function email_pagetitle( $page_title ) {
-	return Email::filter_page_title( $page_title );
+	return WP_Email::filter_page_title( $page_title );
 }
 
 /**
@@ -216,7 +214,7 @@ function email_pagetitle( $page_title ) {
  * @return string
  */
 function email_title( $page_title ) {
-	return Email::filter_title( $page_title );
+	return WP_Email::filter_title( $page_title );
 }
 
 /**
@@ -227,7 +225,7 @@ function email_title( $page_title ) {
  * @return string
  */
 function get_emails( $echo_output = true ) {
-	$total = number_format_i18n( Email_Logs::count_all() );
+	$total = number_format_i18n( WP_Email_Logs::count_all() );
 
 	if ( $echo_output ) {
 		echo esc_html( $total );
@@ -245,7 +243,7 @@ function get_emails( $echo_output = true ) {
  * @return string
  */
 function get_emails_success( $echo_output = true ) {
-	$total = number_format_i18n( Email_Logs::count_by_status( Email_Logs::STATUS_SUCCESS ) );
+	$total = number_format_i18n( WP_Email_Logs::count_by_status( WP_Email_Logs::STATUS_SUCCESS ) );
 
 	if ( $echo_output ) {
 		echo esc_html( $total );
@@ -263,7 +261,7 @@ function get_emails_success( $echo_output = true ) {
  * @return string
  */
 function get_emails_failed( $echo_output = true ) {
-	$total = number_format_i18n( Email_Logs::count_by_status( Email_Logs::STATUS_FAILED ) );
+	$total = number_format_i18n( WP_Email_Logs::count_by_status( WP_Email_Logs::STATUS_FAILED ) );
 
 	if ( $echo_output ) {
 		echo esc_html( $total );
@@ -288,7 +286,7 @@ function get_email_count( $post_id = 0, $echo_output = true ) {
 		$post_id = (int) get_the_ID();
 	}
 
-	$total = number_format_i18n( Email_Logs::count_for_post( $post_id ) );
+	$total = number_format_i18n( WP_Email_Logs::count_for_post( $post_id ) );
 
 	if ( $echo_output ) {
 		echo esc_html( $total );
@@ -309,7 +307,7 @@ function get_email_count( $post_id = 0, $echo_output = true ) {
  * @return string
  */
 function get_mostemailed( $mode = '', $limit = 10, $chars = 0, $echo_output = true ) {
-	$rows   = Email_Logs::most_emailed( $mode, $limit );
+	$rows   = WP_Email_Logs::most_emailed( $mode, $limit );
 	$output = '';
 
 	if ( empty( $rows ) ) {
@@ -320,7 +318,7 @@ function get_mostemailed( $mode = '', $limit = 10, $chars = 0, $echo_output = tr
 			$title = get_the_title( $row->ID );
 
 			if ( $chars > 0 ) {
-				$title = Email_Template::characters( $title, $chars );
+				$title = WP_Email_Template::characters( $title, $chars );
 			} else {
 				$title = esc_html( $title );
 			}

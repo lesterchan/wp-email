@@ -14,9 +14,7 @@
  * @package WP-EMail
  */
 
-if ( ! defined( 'ABSPATH' ) ) {
-	exit;
-}
+defined( 'ABSPATH' ) || exit;
 
 if ( ! function_exists( 'get_ipaddress' ) ) {
 	/**
@@ -25,7 +23,7 @@ if ( ! function_exists( 'get_ipaddress' ) ) {
 	 * @return string
 	 */
 	function get_ipaddress() {
-		return Email_Form::ip_address();
+		return WP_Email_Form::ip_address();
 	}
 }
 
@@ -38,7 +36,7 @@ if ( ! function_exists( 'is_valid_name' ) ) {
 	 * @return bool
 	 */
 	function is_valid_name( $name ) {
-		return Email_Form::is_valid_name( $name );
+		return WP_Email_Form::is_valid_name( $name );
 	}
 }
 
@@ -51,7 +49,7 @@ if ( ! function_exists( 'is_valid_email' ) ) {
 	 * @return bool
 	 */
 	function is_valid_email( $email ) {
-		return Email_Form::is_valid_email( $email );
+		return WP_Email_Form::is_valid_email( $email );
 	}
 }
 
@@ -64,7 +62,7 @@ if ( ! function_exists( 'is_valid_remarks' ) ) {
 	 * @return bool
 	 */
 	function is_valid_remarks( $content ) {
-		return Email_Form::is_valid_remarks( $content );
+		return WP_Email_Form::is_valid_remarks( $content );
 	}
 }
 
@@ -78,7 +76,7 @@ if ( ! function_exists( 'snippet_words' ) ) {
 	 * @return string
 	 */
 	function snippet_words( $text, $length = 0 ) {
-		return Email_Template::words( $text, $length );
+		return WP_Email_Template::words( $text, $length );
 	}
 }
 
@@ -92,14 +90,14 @@ if ( ! function_exists( 'snippet_text' ) ) {
 	 * @return string
 	 */
 	function snippet_text( $text, $length = 0 ) {
-		return Email_Template::characters( $text, $length );
+		return WP_Email_Template::characters( $text, $length );
 	}
 }
 
 /**
  * Handle a submitted e-mail form.
  *
- * The AJAX callback is registered as Email_Form::process() now. This wrapper
+ * The AJAX callback is registered as WP_Email_Form::process() now. This wrapper
  * only helps code that called the function directly -- anything doing
  * remove_action( 'wp_ajax_email', 'process_email_form' ) needs the
  * wp_email_template_redirect filter or its own unhook of the new callback.
@@ -107,7 +105,7 @@ if ( ! function_exists( 'snippet_text' ) ) {
  * @return void
  */
 function process_email_form() {
-	Email_Form::process();
+	WP_Email_Form::process();
 }
 
 /**
@@ -118,7 +116,7 @@ function process_email_form() {
  * @return void
  */
 function email_addfilters( $query = null ) {
-	Email::add_filters( $query );
+	WP_Email::add_filters( $query );
 }
 
 /**
@@ -127,7 +125,7 @@ function email_addfilters( $query = null ) {
  * @return void
  */
 function email_removefilters() {
-	Email::remove_filters();
+	WP_Email::remove_filters();
 }
 
 /**
@@ -136,21 +134,21 @@ function email_removefilters() {
  * @return void
  */
 function email_meta_nofollow() {
-	Email::noindex();
+	WP_Email::noindex();
 }
 
 /**
  * The WP-Stats integration, instantiated on demand.
  *
- * @return Email_WpStats
+ * @return WP_Email_WPStats
  */
 function email_wpstats_instance() {
 	static $instance = null;
 
 	if ( null === $instance ) {
-		require_once __DIR__ . '/class-email-wpstats.php';
+		require_once WP_EMAIL_DIR . 'includes/class-wp-email-wpstats.php';
 
-		$instance = new Email_WpStats();
+		$instance = new WP_Email_WPStats();
 	}
 
 	return $instance;

@@ -1,13 +1,11 @@
 <?php
 /**
- * WP-EMail class-email-logs-table.php
+ * WP-EMail class-wp-email-logs-table.php
  *
  * @package WP-EMail
  */
 
-if ( ! defined( 'ABSPATH' ) ) {
-	exit;
-}
+defined( 'ABSPATH' ) || exit;
 
 if ( ! class_exists( 'WP_List_Table' ) ) {
 	require_once ABSPATH . 'wp-admin/includes/class-wp-list-table.php';
@@ -22,7 +20,7 @@ if ( ! class_exists( 'WP_List_Table' ) ) {
  *
  * @since 3.0.0
  */
-class Email_Logs_Table extends WP_List_Table {
+class WP_Email_Logs_Table extends WP_List_Table {
 
 	/**
 	 * Constructor.
@@ -43,7 +41,7 @@ class Email_Logs_Table extends WP_List_Table {
 	 * @return bool
 	 */
 	private function show_remarks() {
-		return defined( 'EMAIL_SHOW_REMARKS' ) && EMAIL_SHOW_REMARKS;
+		return defined( 'WP_EMAIL_SHOW_REMARKS' ) && WP_EMAIL_SHOW_REMARKS;
 	}
 
 	/**
@@ -100,9 +98,9 @@ class Email_Logs_Table extends WP_List_Table {
 		$order   = isset( $_GET['order'] ) ? sanitize_key( wp_unslash( $_GET['order'] ) ) : 'desc';
 		// phpcs:enable WordPress.Security.NonceVerification.Recommended
 
-		$total = Email_Logs::count_all();
+		$total = WP_Email_Logs::count_all();
 
-		$this->items = Email_Logs::query(
+		$this->items = WP_Email_Logs::query(
 			array(
 				'orderby'  => $orderby,
 				'order'    => $order,
@@ -167,7 +165,7 @@ class Email_Logs_Table extends WP_List_Table {
 				return esc_html( $item->email_ip ) . '<br />' . esc_html( $item->email_host );
 
 			case 'email_status':
-				return esc_html( Email_Logs::status_label( $item->email_status ) );
+				return esc_html( WP_Email_Logs::status_label( $item->email_status ) );
 
 			default:
 				return isset( $item->$column_name ) ? esc_html( $item->$column_name ) : '';

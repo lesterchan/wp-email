@@ -125,7 +125,7 @@ class Test_Email_Deprecated extends WP_UnitTestCase {
 	 * Get_ipaddress() reaches the same code as the class.
 	 */
 	public function test_get_ipaddress_delegates() {
-		$this->assertSame( Email_Form::ip_address(), get_ipaddress() );
+		$this->assertSame( WP_Email_Form::ip_address(), get_ipaddress() );
 		$this->assertSame( '198.51.100.5', get_ipaddress() );
 	}
 
@@ -158,10 +158,10 @@ class Test_Email_Deprecated extends WP_UnitTestCase {
 		$this->go_to( get_permalink( $this->post_id ) );
 
 		email_addfilters( $GLOBALS['wp_query'] );
-		$this->assertNotFalse( has_filter( 'the_title', array( 'Email', 'filter_title' ) ) );
+		$this->assertNotFalse( has_filter( 'the_title', array( 'WP_Email', 'filter_title' ) ) );
 
 		email_removefilters();
-		$this->assertFalse( has_filter( 'the_title', array( 'Email', 'filter_title' ) ) );
+		$this->assertFalse( has_filter( 'the_title', array( 'WP_Email', 'filter_title' ) ) );
 	}
 
 	/**
@@ -179,7 +179,7 @@ class Test_Email_Deprecated extends WP_UnitTestCase {
 	 * The WP-Stats instance is created once and reused.
 	 */
 	public function test_the_wpstats_instance_is_shared() {
-		$this->assertInstanceOf( 'Email_WpStats', email_wpstats_instance() );
+		$this->assertInstanceOf( 'WP_Email_WPStats', email_wpstats_instance() );
 		$this->assertSame( email_wpstats_instance(), email_wpstats_instance() );
 	}
 
@@ -198,7 +198,7 @@ class Test_Email_Deprecated extends WP_UnitTestCase {
 	 * Get_email_count() falls back to the post in the loop.
 	 */
 	public function test_get_email_count_defaults_to_the_current_post() {
-		Email_Logs::insert(
+		WP_Email_Logs::insert(
 			array(
 				'yourname'    => 'Alice',
 				'youremail'   => 'a@example.com',
@@ -210,7 +210,7 @@ class Test_Email_Deprecated extends WP_UnitTestCase {
 				'timestamp'   => time(),
 				'ip'          => '198.51.100.5',
 				'host'        => '',
-				'status'      => Email_Logs::STATUS_SUCCESS,
+				'status'      => WP_Email_Logs::STATUS_SUCCESS,
 			)
 		);
 
@@ -265,9 +265,9 @@ class Test_Email_Deprecated extends WP_UnitTestCase {
 	 * The interval tag returns the configured minutes.
 	 */
 	public function test_the_interval_tag_delegates() {
-		$options                        = Email_Options::all();
+		$options                        = WP_Email_Options::all();
 		$options['sending']['interval'] = 7;
-		Email_Options::update( $options );
+		WP_Email_Options::update( $options );
 
 		$this->assertSame( 7, email_flood_interval( false ) );
 	}
@@ -283,15 +283,15 @@ class Test_Email_Deprecated extends WP_UnitTestCase {
 	 * The multiple-entries hint delegates and respects the cap.
 	 */
 	public function test_the_multiple_hint_delegates() {
-		$options                        = Email_Options::all();
+		$options                        = WP_Email_Options::all();
 		$options['sending']['multiple'] = 5;
-		Email_Options::update( $options );
+		WP_Email_Options::update( $options );
 
 		$this->assertStringContainsString( 'Maximum 5 entries', email_multiple( false ) );
 
 		// A cap of one means there is nothing to explain.
 		$options['sending']['multiple'] = 1;
-		Email_Options::update( $options );
+		WP_Email_Options::update( $options );
 
 		$this->assertSame( '', email_multiple( false ) );
 	}

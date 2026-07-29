@@ -1,20 +1,18 @@
 <?php
 /**
- * WP-EMail class-email-template.php
+ * WP-EMail class-wp-email-template.php
  *
  * @package WP-EMail
  */
 
-if ( ! defined( 'ABSPATH' ) ) {
-	exit;
-}
+defined( 'ABSPATH' ) || exit;
 
 /**
  * Expands the %VARIABLE% templates and builds the values they are fed.
  *
  * @since 3.0.0
  */
-class Email_Template {
+class WP_Email_Template {
 
 	/**
 	 * Replace %VARIABLE% tokens in a template.
@@ -146,7 +144,7 @@ class Email_Template {
 	 * @return string
 	 */
 	private static function maybe_snippet( $content ) {
-		$snippet = (int) Email_Options::get( 'sending', 'snippet' );
+		$snippet = (int) WP_Email_Options::get( 'sending', 'snippet' );
 
 		return $snippet > 0 ? self::words( $content, $snippet ) : $content;
 	}

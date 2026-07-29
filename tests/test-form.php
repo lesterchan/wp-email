@@ -8,7 +8,7 @@
 /**
  * The e-mail form and its endpoint.
  *
- * @covers Email_Form
+ * @covers WP_Email_Form
  */
 class Test_Email_Form extends WP_Ajax_UnitTestCase {
 
@@ -67,13 +67,13 @@ class Test_Email_Form extends WP_Ajax_UnitTestCase {
 			2
 		);
 
-		$options                             = Email_Options::all();
+		$options                             = WP_Email_Options::all();
 		$options['sending']['imageverify']   = 0;
 		$options['templates']['subject']     = 'S: %EMAIL_YOUR_NAME% -> %EMAIL_POST_TITLE%';
 		$options['templates']['body']        = 'B: %EMAIL_FRIEND_NAME% | %EMAIL_YOUR_REMARKS% | %EMAIL_POST_CONTENT%';
 		$options['templates']['sentsuccess'] = 'OK: %EMAIL_POST_TITLE% -> %EMAIL_FRIEND_NAME%';
 		$options['templates']['error']       = 'ERR: %EMAIL_ERROR_MSG%';
-		Email_Options::update( $options );
+		WP_Email_Options::update( $options );
 	}
 
 	/**
@@ -97,9 +97,9 @@ class Test_Email_Form extends WP_Ajax_UnitTestCase {
 	private function submit( array $post ) {
 		$_POST = array_merge(
 			array(
-				'action'               => 'email',
-				'p'                    => $this->post_id,
-				Email_Form::NONCE_NAME => wp_create_nonce( Email_Form::NONCE_ACTION ),
+				'action'                  => 'email',
+				'p'                       => $this->post_id,
+				WP_Email_Form::NONCE_NAME => wp_create_nonce( WP_Email_Form::NONCE_ACTION ),
 			),
 			$post
 		);
@@ -126,14 +126,14 @@ class Test_Email_Form extends WP_Ajax_UnitTestCase {
 		$this->go_to( get_permalink( $this->post_id ) );
 		the_post();
 
-		$form = Email_Form::render( '', false );
+		$form = WP_Email_Form::render( '', false );
 
 		$this->assertStringContainsString( 'id="wp-email-content"', $form );
 		$this->assertStringContainsString( 'name="friendemail"', $form );
 		$this->assertStringContainsString( 'name="yourname"', $form );
 		$this->assertStringContainsString( 'id="wp-email-submit"', $form );
 		$this->assertStringContainsString( 'id="wp-email-loading"', $form );
-		$this->assertStringContainsString( Email_Form::NONCE_NAME, $form );
+		$this->assertStringContainsString( WP_Email_Form::NONCE_NAME, $form );
 	}
 
 	/**
@@ -143,7 +143,7 @@ class Test_Email_Form extends WP_Ajax_UnitTestCase {
 		$this->go_to( get_permalink( $this->post_id ) );
 		the_post();
 
-		$form = Email_Form::render( '', false );
+		$form = WP_Email_Form::render( '', false );
 
 		$this->assertStringNotContainsString( 'onclick', $form );
 		$this->assertStringNotContainsString( 'onkeypress', $form );
@@ -156,11 +156,11 @@ class Test_Email_Form extends WP_Ajax_UnitTestCase {
 		$this->go_to( get_permalink( $this->post_id ) );
 		the_post();
 
-		$options                          = Email_Options::all();
+		$options                          = WP_Email_Options::all();
 		$options['fields']['yourremarks'] = 0;
-		Email_Options::update( $options );
+		WP_Email_Options::update( $options );
 
-		$this->assertStringNotContainsString( 'name="yourremarks"', Email_Form::render( '', false ) );
+		$this->assertStringNotContainsString( 'name="yourremarks"', WP_Email_Form::render( '', false ) );
 	}
 
 	/**
@@ -175,13 +175,13 @@ class Test_Email_Form extends WP_Ajax_UnitTestCase {
 		$this->go_to( get_permalink( $page_id ) );
 		the_post();
 
-		$header = Email_Form::header( $page_id, false );
+		$header = WP_Email_Form::header( $page_id, false );
 
 		// 'emailpage/' was never registered as an endpoint.
 		$this->assertStringNotContainsString( 'emailpage/', $header );
 		$this->assertStringContainsString( 'email/', $header );
 
-		$popup = Email_Form::header( $page_id, true );
+		$popup = WP_Email_Form::header( $page_id, true );
 
 		$this->assertStringNotContainsString( 'emailpopuppage/', $popup );
 		$this->assertStringContainsString( 'emailpopup/', $popup );
@@ -193,7 +193,7 @@ class Test_Email_Form extends WP_Ajax_UnitTestCase {
 	 * Remote addr is used by default.
 	 */
 	public function test_remote_addr_is_used_by_default() {
-		$this->assertSame( '198.51.100.200', Email_Form::ip_address() );
+		$this->assertSame( '198.51.100.200', WP_Email_Form::ip_address() );
 	}
 
 	/**
@@ -204,7 +204,7 @@ class Test_Email_Form extends WP_Ajax_UnitTestCase {
 
 		// Trusting this by default let anyone bypass the flood interval by
 		// sending a different value on each request.
-		$this->assertSame( '198.51.100.200', Email_Form::ip_address() );
+		$this->assertSame( '198.51.100.200', WP_Email_Form::ip_address() );
 	}
 
 	/**
@@ -213,11 +213,11 @@ class Test_Email_Form extends WP_Ajax_UnitTestCase {
 	public function test_a_configured_header_is_honoured() {
 		$_SERVER['HTTP_X_REAL_IP'] = '10.9.9.9';
 
-		$options                         = Email_Options::all();
+		$options                         = WP_Email_Options::all();
 		$options['sending']['ip_header'] = 'HTTP_X_REAL_IP';
-		Email_Options::update( $options );
+		WP_Email_Options::update( $options );
 
-		$this->assertSame( '10.9.9.9', Email_Form::ip_address() );
+		$this->assertSame( '10.9.9.9', WP_Email_Form::ip_address() );
 
 		unset( $_SERVER['HTTP_X_REAL_IP'] );
 	}
@@ -228,11 +228,11 @@ class Test_Email_Form extends WP_Ajax_UnitTestCase {
 	public function test_a_garbage_header_value_falls_back_to_remote_addr() {
 		$_SERVER['HTTP_X_REAL_IP'] = 'not-an-ip';
 
-		$options                         = Email_Options::all();
+		$options                         = WP_Email_Options::all();
 		$options['sending']['ip_header'] = 'HTTP_X_REAL_IP';
-		Email_Options::update( $options );
+		WP_Email_Options::update( $options );
 
-		$this->assertSame( '198.51.100.200', Email_Form::ip_address() );
+		$this->assertSame( '198.51.100.200', WP_Email_Form::ip_address() );
 
 		unset( $_SERVER['HTTP_X_REAL_IP'] );
 	}
@@ -243,7 +243,7 @@ class Test_Email_Form extends WP_Ajax_UnitTestCase {
 	public function test_the_ip_filter_wins() {
 		add_filter( 'wp_email_ipaddress', static fn() => '1.2.3.4' );
 
-		$this->assertSame( '1.2.3.4', Email_Form::ip_address() );
+		$this->assertSame( '1.2.3.4', WP_Email_Form::ip_address() );
 	}
 
 	// ------------------------------------------------------ flood interval --
@@ -252,9 +252,9 @@ class Test_Email_Form extends WP_Ajax_UnitTestCase {
 	 * Flood interval blocks a repeat from the same ip.
 	 */
 	public function test_flood_interval_blocks_a_repeat_from_the_same_ip() {
-		$this->assertTrue( Email_Form::not_spamming() );
+		$this->assertTrue( WP_Email_Form::not_spamming() );
 
-		Email_Logs::insert(
+		WP_Email_Logs::insert(
 			array(
 				'yourname'    => 'Recent',
 				'youremail'   => 'r@example.com',
@@ -266,22 +266,22 @@ class Test_Email_Form extends WP_Ajax_UnitTestCase {
 				'timestamp'   => current_time( 'timestamp' ),
 				'ip'          => '198.51.100.200',
 				'host'        => '',
-				'status'      => Email_Logs::STATUS_SUCCESS,
+				'status'      => WP_Email_Logs::STATUS_SUCCESS,
 			)
 		);
 
-		$this->assertFalse( Email_Form::not_spamming() );
+		$this->assertFalse( WP_Email_Form::not_spamming() );
 	}
 
 	/**
 	 * A zero interval disables the check.
 	 */
 	public function test_a_zero_interval_disables_the_check() {
-		$options                        = Email_Options::all();
+		$options                        = WP_Email_Options::all();
 		$options['sending']['interval'] = 0;
-		Email_Options::update( $options );
+		WP_Email_Options::update( $options );
 
-		Email_Logs::insert(
+		WP_Email_Logs::insert(
 			array(
 				'yourname'    => 'Recent',
 				'youremail'   => 'r@example.com',
@@ -293,11 +293,11 @@ class Test_Email_Form extends WP_Ajax_UnitTestCase {
 				'timestamp'   => current_time( 'timestamp' ),
 				'ip'          => '198.51.100.200',
 				'host'        => '',
-				'status'      => Email_Logs::STATUS_SUCCESS,
+				'status'      => WP_Email_Logs::STATUS_SUCCESS,
 			)
 		);
 
-		$this->assertTrue( Email_Form::not_spamming() );
+		$this->assertTrue( WP_Email_Form::not_spamming() );
 	}
 
 	// --------------------------------------------------------- validation ---
@@ -306,17 +306,17 @@ class Test_Email_Form extends WP_Ajax_UnitTestCase {
 	 * Valid name rejects markup characters.
 	 */
 	public function test_valid_name_rejects_markup_characters() {
-		$this->assertTrue( Email_Form::is_valid_name( 'Mary Jane' ) );
-		$this->assertFalse( Email_Form::is_valid_name( 'Mary <b>' ) );
-		$this->assertFalse( Email_Form::is_valid_name( 'Bad #Name$' ) );
+		$this->assertTrue( WP_Email_Form::is_valid_name( 'Mary Jane' ) );
+		$this->assertFalse( WP_Email_Form::is_valid_name( 'Mary <b>' ) );
+		$this->assertFalse( WP_Email_Form::is_valid_name( 'Bad #Name$' ) );
 	}
 
 	/**
 	 * Valid remarks rejects header injection.
 	 */
 	public function test_valid_remarks_rejects_header_injection() {
-		$this->assertTrue( Email_Form::is_valid_remarks( 'Hello there' ) );
-		$this->assertFalse( Email_Form::is_valid_remarks( "hi\nbcc: x@y.com\ncontent-type: text/html" ) );
+		$this->assertTrue( WP_Email_Form::is_valid_remarks( 'Hello there' ) );
+		$this->assertFalse( WP_Email_Form::is_valid_remarks( "hi\nbcc: x@y.com\ncontent-type: text/html" ) );
 	}
 
 	// -------------------------------------------------------- the send flow --
@@ -367,9 +367,9 @@ class Test_Email_Form extends WP_Ajax_UnitTestCase {
 			)
 		);
 
-		$this->assertSame( 2, Email_Logs::count_all() );
+		$this->assertSame( 2, WP_Email_Logs::count_all() );
 
-		$rows = Email_Logs::query(
+		$rows = WP_Email_Logs::query(
 			array(
 				'orderby' => 'id',
 				'order'   => 'ASC',
@@ -379,7 +379,7 @@ class Test_Email_Form extends WP_Ajax_UnitTestCase {
 		$this->assertSame( 'Sender Name', $rows[0]->email_yourname );
 		$this->assertSame( 'Friend One', $rows[0]->email_friendname );
 		$this->assertSame( 'Friend Two', $rows[1]->email_friendname );
-		$this->assertSame( Email_Logs::STATUS_SUCCESS, $rows[0]->email_status );
+		$this->assertSame( WP_Email_Logs::STATUS_SUCCESS, $rows[0]->email_status );
 		$this->assertSame( (string) $this->post_id, (string) $rows[0]->email_postid );
 	}
 
@@ -399,7 +399,7 @@ class Test_Email_Form extends WP_Ajax_UnitTestCase {
 			)
 		);
 
-		$rows = Email_Logs::query();
+		$rows = WP_Email_Logs::query();
 
 		$this->assertCount( 1, $rows );
 
@@ -430,7 +430,7 @@ class Test_Email_Form extends WP_Ajax_UnitTestCase {
 		$this->assertStringContainsString( 'Friend Email is invalid', $response );
 
 		$this->assertNull( $this->mail );
-		$this->assertSame( 0, Email_Logs::count_all() );
+		$this->assertSame( 0, WP_Email_Logs::count_all() );
 	}
 
 	/**
@@ -477,13 +477,13 @@ class Test_Email_Form extends WP_Ajax_UnitTestCase {
 	 */
 	public function test_a_bad_nonce_stops_the_handler() {
 		$_POST = array(
-			'action'               => 'email',
-			'p'                    => $this->post_id,
-			'yourname'             => 'Sender Name',
-			'youremail'            => 'sender@example.com',
-			'friendname'           => 'Friend One',
-			'friendemail'          => 'one@example.com',
-			Email_Form::NONCE_NAME => 'not-a-valid-nonce',
+			'action'                  => 'email',
+			'p'                       => $this->post_id,
+			'yourname'                => 'Sender Name',
+			'youremail'               => 'sender@example.com',
+			'friendname'              => 'Friend One',
+			'friendemail'             => 'one@example.com',
+			WP_Email_Form::NONCE_NAME => 'not-a-valid-nonce',
 		);
 
 		$_REQUEST = $_POST;
@@ -498,16 +498,16 @@ class Test_Email_Form extends WP_Ajax_UnitTestCase {
 
 		$this->assertStringContainsString( 'Failed To Verify Referrer', $this->_last_response );
 		$this->assertNull( $this->mail );
-		$this->assertSame( 0, Email_Logs::count_all() );
+		$this->assertSame( 0, WP_Email_Logs::count_all() );
 	}
 
 	/**
 	 * Recipients beyond the maximum are rejected.
 	 */
 	public function test_recipients_beyond_the_maximum_are_rejected() {
-		$options                        = Email_Options::all();
+		$options                        = WP_Email_Options::all();
 		$options['sending']['multiple'] = 2;
-		Email_Options::update( $options );
+		WP_Email_Options::update( $options );
 
 		$response = $this->submit(
 			array(
@@ -540,17 +540,17 @@ class Test_Email_Form extends WP_Ajax_UnitTestCase {
 
 		$this->assertStringContainsString( 'Invalid post', $response );
 		$this->assertNull( $this->mail );
-		$this->assertSame( 0, Email_Logs::count_all() );
+		$this->assertSame( 0, WP_Email_Logs::count_all() );
 	}
 
 	/**
 	 * A plain-text send uses the alternate body and strips markup.
 	 */
 	public function test_a_plain_text_send_uses_the_alternate_body() {
-		$options                           = Email_Options::all();
+		$options                           = WP_Email_Options::all();
 		$options['sending']['contenttype'] = 'text/plain';
 		$options['templates']['bodyalt']   = 'ALT: %EMAIL_POST_CONTENT%';
-		Email_Options::update( $options );
+		WP_Email_Options::update( $options );
 
 		$this->submit(
 			array(
@@ -596,9 +596,9 @@ class Test_Email_Form extends WP_Ajax_UnitTestCase {
 	 * A plain-text send is never wrapped in a div, RTL or not.
 	 */
 	public function test_a_plain_text_send_is_never_wrapped() {
-		$options                           = Email_Options::all();
+		$options                           = WP_Email_Options::all();
 		$options['sending']['contenttype'] = 'text/plain';
-		Email_Options::update( $options );
+		WP_Email_Options::update( $options );
 
 		// is_rtl() reads $wp_locale->text_direction directly; core has no
 		// filter for it.
@@ -625,9 +625,9 @@ class Test_Email_Form extends WP_Ajax_UnitTestCase {
 		remove_all_filters( 'pre_wp_mail' );
 		add_filter( 'pre_wp_mail', '__return_false' );
 
-		$options                            = Email_Options::all();
+		$options                            = WP_Email_Options::all();
 		$options['templates']['sentfailed'] = 'FAILED: %EMAIL_FRIEND_NAME%';
-		Email_Options::update( $options );
+		WP_Email_Options::update( $options );
 
 		$response = $this->submit(
 			array(
@@ -640,17 +640,17 @@ class Test_Email_Form extends WP_Ajax_UnitTestCase {
 
 		$this->assertStringContainsString( 'FAILED: Friend One', $response );
 
-		$rows = Email_Logs::query();
-		$this->assertSame( Email_Logs::STATUS_FAILED, $rows[0]->email_status );
+		$rows = WP_Email_Logs::query();
+		$this->assertSame( WP_Email_Logs::STATUS_FAILED, $rows[0]->email_status );
 	}
 
 	/**
 	 * Recipients without a matching name are still addressed.
 	 */
 	public function test_a_send_without_friend_names_still_addresses_everyone() {
-		$options                         = Email_Options::all();
+		$options                         = WP_Email_Options::all();
 		$options['fields']['friendname'] = 0;
-		Email_Options::update( $options );
+		WP_Email_Options::update( $options );
 
 		$this->submit(
 			array(
@@ -666,16 +666,16 @@ class Test_Email_Form extends WP_Ajax_UnitTestCase {
 
 		$this->assertStringContainsString( 'one@example.com', $to );
 		$this->assertStringContainsString( 'two@example.com', $to );
-		$this->assertSame( 2, Email_Logs::count_all() );
+		$this->assertSame( 2, WP_Email_Logs::count_all() );
 	}
 
 	/**
 	 * An empty remark is recorded as N/A rather than blank.
 	 */
 	public function test_an_empty_remark_becomes_not_applicable() {
-		$options                      = Email_Options::all();
+		$options                      = WP_Email_Options::all();
 		$options['templates']['body'] = 'R: %EMAIL_YOUR_REMARKS%';
-		Email_Options::update( $options );
+		WP_Email_Options::update( $options );
 
 		$this->submit(
 			array(
@@ -693,9 +693,9 @@ class Test_Email_Form extends WP_Ajax_UnitTestCase {
 	 * The subject never carries markup into the mail header.
 	 */
 	public function test_the_subject_is_decoded_for_the_header() {
-		$options                         = Email_Options::all();
+		$options                         = WP_Email_Options::all();
 		$options['templates']['subject'] = 'Read &amp; enjoy: %EMAIL_POST_TITLE%';
-		Email_Options::update( $options );
+		WP_Email_Options::update( $options );
 
 		$this->submit(
 			array(
@@ -715,7 +715,7 @@ class Test_Email_Form extends WP_Ajax_UnitTestCase {
 	 * Blocked by the interval, the form explains the wait instead of the fields.
 	 */
 	public function test_a_blocked_visitor_is_told_to_wait() {
-		Email_Logs::insert(
+		WP_Email_Logs::insert(
 			array(
 				'yourname'    => 'Recent',
 				'youremail'   => 'r@example.com',
@@ -727,14 +727,14 @@ class Test_Email_Form extends WP_Ajax_UnitTestCase {
 				'timestamp'   => current_time( 'timestamp' ),
 				'ip'          => '198.51.100.200',
 				'host'        => '',
-				'status'      => Email_Logs::STATUS_SUCCESS,
+				'status'      => WP_Email_Logs::STATUS_SUCCESS,
 			)
 		);
 
 		$this->go_to( get_permalink( $this->post_id ) );
 		the_post();
 
-		$form = Email_Form::render( '', false );
+		$form = WP_Email_Form::render( '', false );
 
 		$this->assertStringContainsString( 'Please wait', $form );
 		$this->assertStringNotContainsString( 'name="friendemail"', $form );
@@ -751,7 +751,7 @@ class Test_Email_Form extends WP_Ajax_UnitTestCase {
 		$this->go_to( get_permalink( $protected ) );
 		the_post();
 
-		$form = Email_Form::render( '', false );
+		$form = WP_Email_Form::render( '', false );
 
 		$this->assertStringNotContainsString( 'name="friendemail"', $form );
 		$this->assertStringContainsString( 'post_password', $form );
@@ -766,8 +766,8 @@ class Test_Email_Form extends WP_Ajax_UnitTestCase {
 		$this->go_to( get_permalink( $this->post_id ) );
 		the_post();
 
-		$this->assertStringContainsString( 'wp_email=1', Email_Form::header( $this->post_id, false ) );
-		$this->assertStringContainsString( 'wp_email_popup=1', Email_Form::header( $this->post_id, true ) );
+		$this->assertStringContainsString( 'wp_email=1', WP_Email_Form::header( $this->post_id, false ) );
+		$this->assertStringContainsString( 'wp_email_popup=1', WP_Email_Form::header( $this->post_id, true ) );
 	}
 
 	/**
@@ -777,40 +777,40 @@ class Test_Email_Form extends WP_Ajax_UnitTestCase {
 		$this->go_to( get_permalink( $this->post_id ) );
 		the_post();
 
-		$this->assertStringContainsString( 'name="p"', Email_Form::header( $this->post_id, false ) );
+		$this->assertStringContainsString( 'name="p"', WP_Email_Form::header( $this->post_id, false ) );
 
 		$page_id = self::factory()->post->create( array( 'post_type' => 'page' ) );
 		$this->go_to( get_permalink( $page_id ) );
 		the_post();
 
-		$this->assertStringContainsString( 'name="page_id"', Email_Form::header( $page_id, false ) );
+		$this->assertStringContainsString( 'name="page_id"', WP_Email_Form::header( $page_id, false ) );
 	}
 
 	/**
 	 * The recipient cap never drops below one however it is configured.
 	 */
 	public function test_the_recipient_cap_has_a_floor() {
-		$options                        = Email_Options::all();
+		$options                        = WP_Email_Options::all();
 		$options['sending']['multiple'] = 0;
-		Email_Options::update( $options );
+		WP_Email_Options::update( $options );
 
-		$this->assertSame( 1, Email_Form::max_recipients() );
+		$this->assertSame( 1, WP_Email_Form::max_recipients() );
 	}
 
 	/**
 	 * The multiple-entries hint appears only when more than one is allowed.
 	 */
 	public function test_the_multiple_hint_appears_only_when_useful() {
-		$options                        = Email_Options::all();
+		$options                        = WP_Email_Options::all();
 		$options['sending']['multiple'] = 1;
-		Email_Options::update( $options );
+		WP_Email_Options::update( $options );
 
-		$this->assertSame( '', Email_Form::multiple_hint() );
+		$this->assertSame( '', WP_Email_Form::multiple_hint() );
 
 		$options['sending']['multiple'] = 4;
-		Email_Options::update( $options );
+		WP_Email_Options::update( $options );
 
-		$this->assertStringContainsString( 'Maximum 4 entries', Email_Form::multiple_hint() );
+		$this->assertStringContainsString( 'Maximum 4 entries', WP_Email_Form::multiple_hint() );
 	}
 
 	/**
@@ -826,7 +826,7 @@ class Test_Email_Form extends WP_Ajax_UnitTestCase {
 			)
 		);
 
-		$this->assertSame( 2, Email_Logs::count_all() );
+		$this->assertSame( 2, WP_Email_Logs::count_all() );
 	}
 
 	/**
@@ -842,7 +842,7 @@ class Test_Email_Form extends WP_Ajax_UnitTestCase {
 			)
 		);
 
-		$this->assertSame( 1, Email_Logs::count_all() );
+		$this->assertSame( 1, WP_Email_Logs::count_all() );
 	}
 
 	/**
@@ -851,11 +851,11 @@ class Test_Email_Form extends WP_Ajax_UnitTestCase {
 	public function test_the_trust_proxy_filter_opts_in() {
 		$_SERVER['HTTP_X_FORWARDED_FOR'] = '203.0.113.7';
 
-		$this->assertSame( '198.51.100.200', Email_Form::ip_address() );
+		$this->assertSame( '198.51.100.200', WP_Email_Form::ip_address() );
 
 		add_filter( 'wp_email_trust_proxy', '__return_true' );
 
-		$this->assertSame( '203.0.113.7', Email_Form::ip_address() );
+		$this->assertSame( '203.0.113.7', WP_Email_Form::ip_address() );
 
 		remove_filter( 'wp_email_trust_proxy', '__return_true' );
 	}
@@ -874,11 +874,11 @@ class Test_Email_Form extends WP_Ajax_UnitTestCase {
 
 		add_filter( 'wp_email_trust_proxy', $only_from_balancer );
 
-		$this->assertSame( '198.51.100.200', Email_Form::ip_address() );
+		$this->assertSame( '198.51.100.200', WP_Email_Form::ip_address() );
 
 		$_SERVER['REMOTE_ADDR'] = '10.0.0.1';
 
-		$this->assertSame( '203.0.113.7', Email_Form::ip_address() );
+		$this->assertSame( '203.0.113.7', WP_Email_Form::ip_address() );
 
 		remove_filter( 'wp_email_trust_proxy', $only_from_balancer );
 	}
@@ -887,16 +887,16 @@ class Test_Email_Form extends WP_Ajax_UnitTestCase {
 	 * A named header still wins over the filter.
 	 */
 	public function test_a_named_header_wins_over_the_filter() {
-		$options                         = Email_Options::all();
+		$options                         = WP_Email_Options::all();
 		$options['sending']['ip_header'] = 'HTTP_X_REAL_IP';
-		Email_Options::update( $options );
+		WP_Email_Options::update( $options );
 
 		$_SERVER['HTTP_X_REAL_IP']       = '203.0.113.20';
 		$_SERVER['HTTP_X_FORWARDED_FOR'] = '203.0.113.21';
 
 		add_filter( 'wp_email_trust_proxy', '__return_true' );
 
-		$this->assertSame( '203.0.113.20', Email_Form::ip_address() );
+		$this->assertSame( '203.0.113.20', WP_Email_Form::ip_address() );
 
 		remove_filter( 'wp_email_trust_proxy', '__return_true' );
 		unset( $_SERVER['HTTP_X_REAL_IP'] );
@@ -916,7 +916,7 @@ class Test_Email_Form extends WP_Ajax_UnitTestCase {
 			}
 		);
 
-		Email_Form::ip_address();
+		WP_Email_Form::ip_address();
 
 		remove_all_filters( 'wp_email_trust_proxy' );
 

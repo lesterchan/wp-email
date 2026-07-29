@@ -2,21 +2,19 @@
 /**
  * WP-EMail standalone e-mail page.
  *
- * Loaded by Email::maybe_render_email_page() when the /email/ endpoint is hit.
+ * Loaded by WP_Email::maybe_render_email_page() when the /email/ endpoint is hit.
  * Renders through the theme so the page inherits the site's header, footer and
  * styling.
  *
  * @package WP-EMail
  */
 
-if ( ! defined( 'ABSPATH' ) ) {
-	exit;
-}
+defined( 'ABSPATH' ) || exit;
 
-add_action( 'wp_head', array( 'Email', 'noindex' ) );
-add_filter( 'wp_title', array( 'Email', 'filter_page_title' ) );
+add_action( 'wp_head', array( 'WP_Email', 'noindex' ) );
+add_filter( 'wp_title', array( 'WP_Email', 'filter_page_title' ) );
 add_filter( 'document_title_parts', 'email_document_title_parts' );
-add_action( 'loop_start', array( 'Email', 'add_filters' ) );
+add_action( 'loop_start', array( 'WP_Email', 'add_filters' ) );
 add_filter( 'comments_open', '__return_false' );
 
 /**

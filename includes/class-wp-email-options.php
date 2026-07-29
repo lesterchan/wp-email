@@ -1,13 +1,11 @@
 <?php
 /**
- * WP-EMail class-email-options.php
+ * WP-EMail class-wp-email-options.php
  *
  * @package WP-EMail
  */
 
-if ( ! defined( 'ABSPATH' ) ) {
-	exit;
-}
+defined( 'ABSPATH' ) || exit;
 
 /**
  * Reads, writes and sanitizes the plugin's settings.
@@ -19,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 3.0.0
  */
-class Email_Options {
+class WP_Email_Options {
 
 	/**
 	 * Option holding every plugin setting.
@@ -35,7 +33,7 @@ class Email_Options {
 	 * of the registered sanitize_callback, which would otherwise have to carry
 	 * it across every save by hand.
 	 */
-	const VERSION_OPTION = 'email_db_version';
+	const VERSION = 'email_db_version';
 
 	/**
 	 * Settings rows the plugin used before 3.0.0, folded into self::OPTION.

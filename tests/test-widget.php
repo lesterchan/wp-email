@@ -8,7 +8,7 @@
 /**
  * The most-emailed widget.
  *
- * @covers Email_Widget
+ * @covers WP_Email_Widget
  */
 class Test_Email_Widget extends WP_UnitTestCase {
 
@@ -34,7 +34,7 @@ class Test_Email_Widget extends WP_UnitTestCase {
 	 * @return string
 	 */
 	private function render( array $instance ) {
-		$widget = new Email_Widget();
+		$widget = new WP_Email_Widget();
 
 		ob_start();
 		$widget->widget( $this->args(), $instance );
@@ -45,35 +45,35 @@ class Test_Email_Widget extends WP_UnitTestCase {
 	 * The widget is registered under its new name.
 	 */
 	public function test_the_widget_is_registered_under_its_new_name() {
-		$this->assertTrue( class_exists( 'Email_Widget' ) );
+		$this->assertTrue( class_exists( 'WP_Email_Widget' ) );
 
 		$this->assertNotFalse(
-			has_action( 'widgets_init', array( Email::get_instance(), 'register_widget' ) )
+			has_action( 'widgets_init', array( WP_Email::get_instance(), 'register_widget' ) )
 		);
 
 		// Invoked directly: widgets_init has already fired by the time a test
 		// runs, and the test case resets the widget factory between tests.
-		Email::get_instance()->register_widget();
+		WP_Email::get_instance()->register_widget();
 
 		// Keyed by class name for a string registration and by object hash for
 		// an instance, so look for the instance rather than guessing the key.
 		$registered = false;
 
 		foreach ( $GLOBALS['wp_widget_factory']->widgets as $widget ) {
-			if ( $widget instanceof Email_Widget ) {
+			if ( $widget instanceof WP_Email_Widget ) {
 				$registered = true;
 				$this->assertSame( 'email', $widget->id_base );
 			}
 		}
 
-		$this->assertTrue( $registered, 'Email_Widget was not registered' );
+		$this->assertTrue( $registered, 'WP_Email_Widget was not registered' );
 	}
 
 	/**
 	 * The widget supports selective refresh.
 	 */
 	public function test_the_widget_supports_selective_refresh() {
-		$widget = new Email_Widget();
+		$widget = new WP_Email_Widget();
 
 		$this->assertTrue( $widget->widget_options['customize_selective_refresh'] );
 	}
@@ -89,7 +89,7 @@ class Test_Email_Widget extends WP_UnitTestCase {
 			)
 		);
 
-		Email_Logs::insert(
+		WP_Email_Logs::insert(
 			array(
 				'yourname'    => 'Alice',
 				'youremail'   => 'a@example.com',
@@ -101,7 +101,7 @@ class Test_Email_Widget extends WP_UnitTestCase {
 				'timestamp'   => time(),
 				'ip'          => '198.51.100.1',
 				'host'        => '',
-				'status'      => Email_Logs::STATUS_SUCCESS,
+				'status'      => WP_Email_Logs::STATUS_SUCCESS,
 			)
 		);
 
@@ -142,7 +142,7 @@ class Test_Email_Widget extends WP_UnitTestCase {
 	 * Update sanitizes its input.
 	 */
 	public function test_update_sanitizes_its_input() {
-		$widget = new Email_Widget();
+		$widget = new WP_Email_Widget();
 
 		$instance = $widget->update(
 			array(
@@ -164,7 +164,7 @@ class Test_Email_Widget extends WP_UnitTestCase {
 	 * The old update() returned false unless a hidden field was posted.
 	 */
 	public function test_update_saves_without_the_legacy_submit_marker() {
-		$widget = new Email_Widget();
+		$widget = new WP_Email_Widget();
 
 		// The old update() returned false unless a hidden 'submit' field was
 		// posted, which the block widget editor never sends.
@@ -178,7 +178,7 @@ class Test_Email_Widget extends WP_UnitTestCase {
 	 * The form renders its controls.
 	 */
 	public function test_the_form_renders_its_controls() {
-		$widget = new Email_Widget();
+		$widget = new WP_Email_Widget();
 		$widget->_set( 1 );
 
 		ob_start();

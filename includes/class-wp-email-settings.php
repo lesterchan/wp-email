@@ -1,30 +1,51 @@
 <?php
 /**
- * WP-EMail class-email-settings.php
+ * WP-EMail class-wp-email-settings.php
  *
  * @package WP-EMail
  */
 
-if ( ! defined( 'ABSPATH' ) ) {
-	exit;
-}
+defined( 'ABSPATH' ) || exit;
 
 /**
  * The options screen, on the Settings API.
  *
  * Replaces the hand-rolled <form> and its per-field $_POST handling. The
  * Settings API owns the nonce, the capability check and the save, and
- * Email_Options::sanitize() is registered as the sanitize_callback so it runs
+ * WP_Email_Options::sanitize() is registered as the sanitize_callback so it runs
  * on every write.
  *
  * @since 3.0.0
  */
-class Email_Settings {
+class WP_Email_Settings {
 
 	/**
-	 * Settings group and page slug.
+	 * Settings group, which is the settings row's name.
 	 */
-	const GROUP = 'wp-email';
+	const GROUP = 'wp_email_options';
+
+	/**
+	 * Page slug for the settings screen.
+	 */
+	const PAGE = 'wp-email-settings';
+
+	/**
+	 * Capability required for the settings screen.
+	 *
+	 * A settings screen, so manage_options rather than the plugin's own
+	 * manage_email, per STANDARDS.md 2.7. Administrators hold both.
+	 */
+	const CAPABILITY = 'manage_options';
+
+	/**
+	 * The capability the settings screen is gated on.
+	 *
+	 * @return string
+	 */
+	public static function capability() {
+		/** This filter is documented in includes/class-wp-email-admin.php */
+		return (string) apply_filters( 'wp_email_capability', self::CAPABILITY, 'settings' );
+	}
 
 	/**
 	 * Hook the settings up.
@@ -48,7 +69,7 @@ class Email_Settings {
 
 		wp_enqueue_script(
 			'wp-email-admin',
-			plugins_url( 'js/wp-email-admin.js', WP_EMAIL_MAIN_FILE ),
+			WP_EMAIL_URL . 'js/wp-email-admin.js',
 			array(),
 			WP_EMAIL_VERSION,
 			true
@@ -63,11 +84,11 @@ class Email_Settings {
 	public function register() {
 		register_setting(
 			self::GROUP,
-			Email_Options::OPTION,
+			WP_Email_Options::OPTION,
 			array(
 				'type'              => 'array',
-				'sanitize_callback' => array( 'Email_Options', 'sanitize' ),
-				'default'           => Email_Options::defaults(),
+				'sanitize_callback' => array( 'WP_Email_Options', 'sanitize' ),
+				'default'           => WP_Email_Options::defaults(),
 			)
 		);
 
@@ -243,7 +264,7 @@ class Email_Settings {
 	 * @return string
 	 */
 	private static function name( $group, $key ) {
-		return Email_Options::OPTION . '[' . $group . '][' . $key . ']';
+		return WP_Email_Options::OPTION . '[' . $group . '][' . $key . ']';
 	}
 
 	/**
@@ -255,7 +276,7 @@ class Email_Settings {
 	 */
 	public function render_link_field( $args ) {
 		$key   = $args['key'];
-		$link  = Email_Options::all()['link'];
+		$link  = WP_Email_Options::all()['link'];
 		$name  = self::name( 'link', $key );
 		$id    = 'email_link_' . $key;
 		$value = $link[ $key ];
@@ -272,7 +293,7 @@ class Email_Settings {
 				break;
 
 			case 'icon':
-				foreach ( Email_Options::available_icons() as $icon ) {
+				foreach ( WP_Email_Options::available_icons() as $icon ) {
 					printf(
 						'<p><label><input type="radio" name="%1$s" value="%2$s" %3$s /> <img src="%4$s" alt="%2$s" /> <code>%2$s</code></label></p>',
 						esc_attr( $name ),
@@ -340,7 +361,7 @@ class Email_Settings {
 				<br />
 				<code dir="ltr">&lt;a href="%EMAIL_URL%" %EMAIL_POPUP% rel="nofollow" title="%EMAIL_TEXT%"&gt;%EMAIL_TEXT%&lt;/a&gt;</code>
 			</p>
-			<?php $this->render_restore_button( 'email_link_html', Email_Options::defaults()['link']['html'] ); ?>
+			<?php $this->render_restore_button( 'email_link_html', WP_Email_Options::defaults()['link']['html'] ); ?>
 		</div>
 		<?php
 	}
@@ -351,7 +372,7 @@ class Email_Settings {
 	 * @return void
 	 */
 	public function render_fields_field() {
-		$fields = Email_Options::all()['fields'];
+		$fields = WP_Email_Options::all()['fields'];
 
 		$labels = array(
 			'yourname'    => __( 'Your Name', 'wp-email' ),
@@ -384,7 +405,7 @@ class Email_Settings {
 	 */
 	public function render_sending_field( $args ) {
 		$key     = $args['key'];
-		$sending = Email_Options::all()['sending'];
+		$sending = WP_Email_Options::all()['sending'];
 		$name    = self::name( 'sending', $key );
 		$id      = 'email_sending_' . $key;
 		$value   = $sending[ $key ];
@@ -438,7 +459,7 @@ class Email_Settings {
 				break;
 
 			case 'imageverify':
-				$available = Email_Captcha::is_available();
+				$available = WP_Email_Captcha::is_available();
 
 				printf(
 					'<label><input type="checkbox" id="%1$s" name="%2$s" value="1" %3$s %4$s /> %5$s</label>',
@@ -469,8 +490,8 @@ class Email_Settings {
 		$meta     = $meta[ $key ];
 		$name     = self::name( 'templates', $key );
 		$id       = 'email_template_' . $key;
-		$value    = Email_Options::template( $key );
-		$defaults = Email_Options::defaults();
+		$value    = WP_Email_Options::template( $key );
+		$defaults = WP_Email_Options::defaults();
 
 		if ( $meta['rows'] > 0 ) {
 			printf(
@@ -619,7 +640,7 @@ class Email_Settings {
 	 * @return void
 	 */
 	public static function render() {
-		if ( ! current_user_can( Email_Admin::CAPABILITY ) ) {
+		if ( ! current_user_can( self::capability() ) ) {
 			wp_die( esc_html__( 'You do not have permission to manage e-mail.', 'wp-email' ) );
 		}
 		?>

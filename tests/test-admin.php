@@ -8,9 +8,9 @@
 /**
  * The admin screens.
  *
- * @covers Email_Admin
- * @covers Email_Settings
- * @covers Email_Logs_Table
+ * @covers WP_Email_Admin
+ * @covers WP_Email_Settings
+ * @covers WP_Email_Logs_Table
  */
 class Test_Email_Admin extends WP_UnitTestCase {
 
@@ -34,8 +34,8 @@ class Test_Email_Admin extends WP_UnitTestCase {
 		}
 
 		require_once ABSPATH . 'wp-admin/includes/admin.php';
-		require_once dirname( __DIR__ ) . '/includes/class-email-admin.php';
-		require_once dirname( __DIR__ ) . '/includes/class-email-settings.php';
+		require_once dirname( __DIR__ ) . '/includes/class-wp-email-admin.php';
+		require_once dirname( __DIR__ ) . '/includes/class-wp-email-settings.php';
 
 		// WP_List_Table::__construct() falls back to $GLOBALS['hook_suffix']
 		// when no screen is passed, and WordPress 6.0 reads it unguarded. A real
@@ -54,7 +54,7 @@ class Test_Email_Admin extends WP_UnitTestCase {
 	 * @return void
 	 */
 	private function log( array $overrides = array() ) {
-		Email_Logs::insert(
+		WP_Email_Logs::insert(
 			array_merge(
 				array(
 					'yourname'    => 'Alice',
@@ -67,7 +67,7 @@ class Test_Email_Admin extends WP_UnitTestCase {
 					'timestamp'   => time(),
 					'ip'          => '198.51.100.1',
 					'host'        => 'host.example.com',
-					'status'      => Email_Logs::STATUS_SUCCESS,
+					'status'      => WP_Email_Logs::STATUS_SUCCESS,
 				),
 				$overrides
 			)
@@ -77,7 +77,7 @@ class Test_Email_Admin extends WP_UnitTestCase {
 	/**
 	 * Render the logs screen.
 	 *
-	 * Deliberately does not require class-email-logs-table.php: loading it here
+	 * Deliberately does not require class-wp-email-logs-table.php: loading it here
 	 * Would hide the plugin failing to load it itself, which is exactly the
 	 * Fatal this masked once already.
 	 *
@@ -86,7 +86,7 @@ class Test_Email_Admin extends WP_UnitTestCase {
 	private function render_logs() {
 		set_current_screen( 'toplevel_page_wp-email' );
 
-		$admin = new Email_Admin();
+		$admin = new WP_Email_Admin();
 
 		ob_start();
 		$admin->render_logs();
@@ -101,7 +101,7 @@ class Test_Email_Admin extends WP_UnitTestCase {
 	private function render_options() {
 		set_current_screen( 'e-mail_page_wp-email-options' );
 
-		$settings = new Email_Settings();
+		$settings = new WP_Email_Settings();
 		$settings->register();
 
 		ob_start();
@@ -178,12 +178,12 @@ class Test_Email_Admin extends WP_UnitTestCase {
 	 * The logs table sorts only on known columns.
 	 */
 	public function test_the_logs_table_sorts_only_on_known_columns() {
-		require_once dirname( __DIR__ ) . '/includes/class-email-logs-table.php';
+		require_once dirname( __DIR__ ) . '/includes/class-wp-email-logs-table.php';
 
-		$table = new Email_Logs_Table();
+		$table = new WP_Email_Logs_Table();
 
 		foreach ( array_values( $table->get_sortable_columns() ) as $sortable ) {
-			$this->assertArrayHasKey( $sortable[0], Email_Logs::sortable_columns() );
+			$this->assertArrayHasKey( $sortable[0], WP_Email_Logs::sortable_columns() );
 		}
 	}
 
@@ -283,15 +283,15 @@ class Test_Email_Admin extends WP_UnitTestCase {
 	 * The setting is registered with its sanitizer.
 	 */
 	public function test_the_setting_is_registered_with_its_sanitizer() {
-		$settings = new Email_Settings();
+		$settings = new WP_Email_Settings();
 		$settings->register();
 
 		$registered = get_registered_settings();
 
-		$this->assertArrayHasKey( Email_Options::OPTION, $registered );
+		$this->assertArrayHasKey( WP_Email_Options::OPTION, $registered );
 		$this->assertSame(
-			array( 'Email_Options', 'sanitize' ),
-			$registered[ Email_Options::OPTION ]['sanitize_callback']
+			array( 'WP_Email_Options', 'sanitize' ),
+			$registered[ WP_Email_Options::OPTION ]['sanitize_callback']
 		);
 	}
 
@@ -299,7 +299,7 @@ class Test_Email_Admin extends WP_UnitTestCase {
 	 * The admin script is only enqueued on plugin screens.
 	 */
 	public function test_the_admin_script_is_only_enqueued_on_plugin_screens() {
-		$settings = new Email_Settings();
+		$settings = new WP_Email_Settings();
 
 		$settings->enqueue( 'index.php' );
 		$this->assertFalse( wp_script_is( 'wp-email-admin', 'enqueued' ) );

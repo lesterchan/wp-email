@@ -34,4 +34,4 @@ require $_tests_dir . '/includes/bootstrap.php';
 
 // The activation hook does not fire under the test bootstrap, so create the
 // table and seed the options the way a real install would.
-Email::get_instance()->install();
+WP_Email::get_instance()->install();

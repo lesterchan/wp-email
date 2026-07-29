@@ -8,7 +8,7 @@
 /**
  * Tests for the %VARIABLE% expander and the values it is fed.
  *
- * @covers Email_Template
+ * @covers WP_Email_Template
  */
 class Test_Email_Template extends WP_UnitTestCase {
 
@@ -56,7 +56,7 @@ class Test_Email_Template extends WP_UnitTestCase {
 	public function test_expand_replaces_tokens() {
 		$this->assertSame(
 			'Hi Bob, from Site',
-			Email_Template::expand(
+			WP_Email_Template::expand(
 				'Hi %NAME%, from %SITE%',
 				array(
 					'NAME' => 'Bob',
@@ -72,7 +72,7 @@ class Test_Email_Template extends WP_UnitTestCase {
 	public function test_expand_replaces_every_occurrence() {
 		$this->assertSame(
 			'Bob and Bob',
-			Email_Template::expand( '%NAME% and %NAME%', array( 'NAME' => 'Bob' ) )
+			WP_Email_Template::expand( '%NAME% and %NAME%', array( 'NAME' => 'Bob' ) )
 		);
 	}
 
@@ -84,7 +84,7 @@ class Test_Email_Template extends WP_UnitTestCase {
 		// silently swallowed.
 		$this->assertSame(
 			'%NOPE% Bob',
-			Email_Template::expand( '%NOPE% %NAME%', array( 'NAME' => 'Bob' ) )
+			WP_Email_Template::expand( '%NOPE% %NAME%', array( 'NAME' => 'Bob' ) )
 		);
 	}
 
@@ -92,7 +92,7 @@ class Test_Email_Template extends WP_UnitTestCase {
 	 * Replacement values are never themselves scanned for tokens.
 	 */
 	public function test_expand_does_not_rescan_replacements() {
-		$out = Email_Template::expand(
+		$out = WP_Email_Template::expand(
 			'%A%',
 			array(
 				'A' => '%B%',
@@ -107,14 +107,14 @@ class Test_Email_Template extends WP_UnitTestCase {
 	 * Non-string values are cast rather than fatalling.
 	 */
 	public function test_expand_casts_non_strings() {
-		$this->assertSame( '42', Email_Template::expand( '%N%', array( 'N' => 42 ) ) );
+		$this->assertSame( '42', WP_Email_Template::expand( '%N%', array( 'N' => 42 ) ) );
 	}
 
 	/**
 	 * An empty template stays empty.
 	 */
 	public function test_expand_handles_an_empty_template() {
-		$this->assertSame( '', Email_Template::expand( '', array( 'A' => 'b' ) ) );
+		$this->assertSame( '', WP_Email_Template::expand( '', array( 'A' => 'b' ) ) );
 	}
 
 	// ---------------------------------------------------------- post_vars ---
@@ -125,7 +125,7 @@ class Test_Email_Template extends WP_UnitTestCase {
 	public function test_post_vars_describes_the_current_post() {
 		$this->loop();
 
-		$vars = Email_Template::post_vars();
+		$vars = WP_Email_Template::post_vars();
 
 		$this->assertSame( 'Harness Post', $vars['EMAIL_POST_TITLE'] );
 		$this->assertSame( get_bloginfo( 'name' ), $vars['EMAIL_BLOG_NAME'] );
@@ -140,7 +140,7 @@ class Test_Email_Template extends WP_UnitTestCase {
 	public function test_post_vars_supplies_everything_the_screen_advertises() {
 		$this->loop();
 
-		$supplied = array_keys( Email_Template::post_vars() );
+		$supplied = array_keys( WP_Email_Template::post_vars() );
 
 		// The sender/friend variables come from the submission, not from here.
 		$from_submission = array(
@@ -154,7 +154,7 @@ class Test_Email_Template extends WP_UnitTestCase {
 			'EMAIL_ERROR_MSG',
 		);
 
-		foreach ( Email_Settings::template_meta() as $key => $meta ) {
+		foreach ( WP_Email_Settings::template_meta() as $key => $meta ) {
 			foreach ( $meta['vars'] as $var ) {
 				$this->assertTrue(
 					in_array( $var, $supplied, true ) || in_array( $var, $from_submission, true ),
@@ -172,7 +172,7 @@ class Test_Email_Template extends WP_UnitTestCase {
 	public function test_title_uses_the_post_title() {
 		$this->loop();
 
-		$this->assertSame( 'Harness Post', Email_Template::title() );
+		$this->assertSame( 'Harness Post', WP_Email_Template::title() );
 	}
 
 	/**
@@ -183,7 +183,7 @@ class Test_Email_Template extends WP_UnitTestCase {
 
 		$this->loop();
 
-		$this->assertSame( 'Override Title', Email_Template::title() );
+		$this->assertSame( 'Override Title', WP_Email_Template::title() );
 	}
 
 	/**
@@ -199,8 +199,8 @@ class Test_Email_Template extends WP_UnitTestCase {
 
 		$this->loop( $protected );
 
-		$this->assertStringContainsString( 'Protected:', Email_Template::title() );
-		$this->assertStringContainsString( 'Secret', Email_Template::title() );
+		$this->assertStringContainsString( 'Protected:', WP_Email_Template::title() );
+		$this->assertStringContainsString( 'Secret', WP_Email_Template::title() );
 	}
 
 	/**
@@ -216,7 +216,7 @@ class Test_Email_Template extends WP_UnitTestCase {
 
 		$GLOBALS['post'] = get_post( $private );
 
-		$this->assertStringContainsString( 'Private:', Email_Template::title() );
+		$this->assertStringContainsString( 'Private:', WP_Email_Template::title() );
 	}
 
 	/**
@@ -225,7 +225,7 @@ class Test_Email_Template extends WP_UnitTestCase {
 	public function test_title_without_a_post_is_empty() {
 		$GLOBALS['post'] = null;
 
-		$this->assertSame( '', Email_Template::title() );
+		$this->assertSame( '', WP_Email_Template::title() );
 	}
 
 	// ------------------------------------------------------------- remark ---
@@ -238,7 +238,7 @@ class Test_Email_Template extends WP_UnitTestCase {
 
 		$this->loop();
 
-		$this->assertSame( 'Worth a read', Email_Template::remark() );
+		$this->assertSame( 'Worth a read', WP_Email_Template::remark() );
 	}
 
 	/**
@@ -247,7 +247,7 @@ class Test_Email_Template extends WP_UnitTestCase {
 	public function test_remark_is_empty_when_unset() {
 		$this->loop();
 
-		$this->assertSame( '', Email_Template::remark() );
+		$this->assertSame( '', WP_Email_Template::remark() );
 	}
 
 	// ----------------------------------------------------------- category ---
@@ -261,8 +261,8 @@ class Test_Email_Template extends WP_UnitTestCase {
 
 		$this->loop();
 
-		$this->assertStringContainsString( 'Reviews', Email_Template::category() );
-		$this->assertStringContainsString( '<a href=', Email_Template::category() );
+		$this->assertStringContainsString( 'Reviews', WP_Email_Template::category() );
+		$this->assertStringContainsString( '<a href=', WP_Email_Template::category() );
 	}
 
 	/**
@@ -275,7 +275,7 @@ class Test_Email_Template extends WP_UnitTestCase {
 
 		$this->loop();
 
-		$this->assertStringContainsString( ' | ', Email_Template::category( ' | ' ) );
+		$this->assertStringContainsString( ' | ', WP_Email_Template::category( ' | ' ) );
 	}
 
 	// ------------------------------------------------------------ content ---
@@ -286,21 +286,21 @@ class Test_Email_Template extends WP_UnitTestCase {
 	public function test_content_returns_the_whole_body() {
 		$this->loop();
 
-		$this->assertStringContainsString( 'One two three', Email_Template::content() );
-		$this->assertStringContainsString( 'ten', Email_Template::content() );
+		$this->assertStringContainsString( 'One two three', WP_Email_Template::content() );
+		$this->assertStringContainsString( 'ten', WP_Email_Template::content() );
 	}
 
 	/**
 	 * A snippet setting truncates to that many words.
 	 */
 	public function test_content_respects_the_snippet_setting() {
-		$options                       = Email_Options::all();
+		$options                       = WP_Email_Options::all();
 		$options['sending']['snippet'] = 3;
-		Email_Options::update( $options );
+		WP_Email_Options::update( $options );
 
 		$this->loop();
 
-		$content = Email_Template::content();
+		$content = WP_Email_Template::content();
 
 		$this->assertStringContainsString( 'One two three ...', $content );
 		$this->assertStringNotContainsString( 'ten', $content );
@@ -310,7 +310,7 @@ class Test_Email_Template extends WP_UnitTestCase {
 	 * The alternate body carries no markup.
 	 */
 	public function test_content_alt_strips_markup() {
-		$this->assertStringNotContainsString( '<p>', Email_Template::content_alt() );
+		$this->assertStringNotContainsString( '<p>', WP_Email_Template::content_alt() );
 	}
 
 	/**
@@ -326,7 +326,7 @@ class Test_Email_Template extends WP_UnitTestCase {
 
 		$this->loop( $protected );
 
-		$content = Email_Template::raw_content();
+		$content = WP_Email_Template::raw_content();
 
 		$this->assertStringNotContainsString( 'Secret body text', $content );
 		$this->assertStringContainsString( 'Password Protected Post', $content );
@@ -342,7 +342,7 @@ class Test_Email_Template extends WP_UnitTestCase {
 
 		$this->loop( $paged );
 
-		$content = Email_Template::raw_content();
+		$content = WP_Email_Template::raw_content();
 
 		// The e-mail carries the whole article, never a single <!--nextpage-->
 		// slice.
@@ -360,7 +360,7 @@ class Test_Email_Template extends WP_UnitTestCase {
 
 		$this->loop( $with_link );
 
-		$content = Email_Template::raw_content();
+		$content = WP_Email_Template::raw_content();
 
 		// An e-mail must not carry the "email this" link that produced it, nor
 		// content the author marked as not-for-email.
@@ -375,7 +375,7 @@ class Test_Email_Template extends WP_UnitTestCase {
 	public function test_raw_content_restores_the_shortcodes() {
 		$this->loop();
 
-		Email_Template::raw_content();
+		WP_Email_Template::raw_content();
 
 		$this->assertSame( 'kept', do_shortcode( '[donotemail]kept[/donotemail]' ) );
 		$this->assertStringContainsString( '<a href=', do_shortcode( '[email_link]' ) );
@@ -388,7 +388,7 @@ class Test_Email_Template extends WP_UnitTestCase {
 		add_shortcode( 'harness_other', static fn() => 'OTHER' );
 
 		$this->loop();
-		Email_Template::raw_content();
+		WP_Email_Template::raw_content();
 
 		$this->assertSame( 'OTHER', do_shortcode( '[harness_other]' ) );
 
@@ -401,14 +401,14 @@ class Test_Email_Template extends WP_UnitTestCase {
 	 * Words trims to the requested count.
 	 */
 	public function test_words_trims_to_the_word_count() {
-		$this->assertSame( 'one two three ...', Email_Template::words( 'one two three four five', 3 ) );
+		$this->assertSame( 'one two three ...', WP_Email_Template::words( 'one two three four five', 3 ) );
 	}
 
 	/**
 	 * Asking for more words than exist returns them all.
 	 */
 	public function test_words_handles_a_length_beyond_the_text() {
-		$this->assertSame( 'one two ...', Email_Template::words( 'one two', 10 ) );
+		$this->assertSame( 'one two ...', WP_Email_Template::words( 'one two', 10 ) );
 	}
 
 	// --------------------------------------------------------- characters ---
@@ -417,21 +417,21 @@ class Test_Email_Template extends WP_UnitTestCase {
 	 * Characters trims and marks the truncation.
 	 */
 	public function test_characters_trims_to_the_character_count() {
-		$this->assertSame( 'abcde...', Email_Template::characters( 'abcdefghij', 5 ) );
+		$this->assertSame( 'abcde...', WP_Email_Template::characters( 'abcdefghij', 5 ) );
 	}
 
 	/**
 	 * Text shorter than the limit comes back whole and unmarked.
 	 */
 	public function test_characters_leaves_short_text_alone() {
-		$this->assertSame( 'abc', Email_Template::characters( 'abc', 10 ) );
+		$this->assertSame( 'abc', WP_Email_Template::characters( 'abc', 10 ) );
 	}
 
 	/**
 	 * Markup in a title is entity-encoded, not passed through.
 	 */
 	public function test_characters_encodes_markup() {
-		$out = Email_Template::characters( 'Bad <script>alert(1)</script>', 100 );
+		$out = WP_Email_Template::characters( 'Bad <script>alert(1)</script>', 100 );
 
 		$this->assertStringNotContainsString( '<script>', $out );
 		$this->assertStringContainsString( '&lt;script&gt;', $out );

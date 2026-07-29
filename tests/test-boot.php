@@ -8,7 +8,7 @@
 /**
  * Tests for the hooks, endpoints, shortcodes, assets and install routine.
  *
- * @covers Email
+ * @covers WP_Email
  */
 class Test_Email_Boot extends WP_UnitTestCase {
 
@@ -36,27 +36,27 @@ class Test_Email_Boot extends WP_UnitTestCase {
 	 * Get_instance() is a singleton.
 	 */
 	public function test_get_instance_returns_one_object() {
-		$this->assertSame( Email::get_instance(), Email::get_instance() );
+		$this->assertSame( WP_Email::get_instance(), WP_Email::get_instance() );
 	}
 
 	/**
 	 * The AJAX endpoints answer logged-out visitors as well as logged-in ones.
 	 */
 	public function test_the_ajax_endpoints_are_registered_for_both_audiences() {
-		$this->assertNotFalse( has_action( 'wp_ajax_email', array( 'Email_Form', 'process' ) ) );
-		$this->assertNotFalse( has_action( 'wp_ajax_nopriv_email', array( 'Email_Form', 'process' ) ) );
+		$this->assertNotFalse( has_action( 'wp_ajax_email', array( 'WP_Email_Form', 'process' ) ) );
+		$this->assertNotFalse( has_action( 'wp_ajax_nopriv_email', array( 'WP_Email_Form', 'process' ) ) );
 
 		// The form is used by visitors who are not logged in, so the captcha
 		// image has to be reachable by them too.
-		$this->assertNotFalse( has_action( 'wp_ajax_wp_email_captcha', array( 'Email_Captcha', 'serve' ) ) );
-		$this->assertNotFalse( has_action( 'wp_ajax_nopriv_wp_email_captcha', array( 'Email_Captcha', 'serve' ) ) );
+		$this->assertNotFalse( has_action( 'wp_ajax_wp_email_captcha', array( 'WP_Email_Captcha', 'serve' ) ) );
+		$this->assertNotFalse( has_action( 'wp_ajax_nopriv_wp_email_captcha', array( 'WP_Email_Captcha', 'serve' ) ) );
 	}
 
 	/**
 	 * The query vars the endpoints resolve to are declared.
 	 */
 	public function test_query_vars_are_declared() {
-		$vars = Email::get_instance()->register_query_vars( array( 'existing' ) );
+		$vars = WP_Email::get_instance()->register_query_vars( array( 'existing' ) );
 
 		$this->assertContains( 'existing', $vars );
 		$this->assertContains( 'wp_email', $vars );
@@ -70,7 +70,7 @@ class Test_Email_Boot extends WP_UnitTestCase {
 		global $wp_rewrite;
 
 		$wp_rewrite->init();
-		Email::get_instance()->register_endpoints();
+		WP_Email::get_instance()->register_endpoints();
 
 		$found = array();
 
@@ -99,7 +99,7 @@ class Test_Email_Boot extends WP_UnitTestCase {
 
 		// Returns instead of require-ing the page and exiting, which is the
 		// documented way for a theme to render the form itself.
-		$this->assertNull( Email::get_instance()->maybe_render_email_page() );
+		$this->assertNull( WP_Email::get_instance()->maybe_render_email_page() );
 
 		remove_filter( 'wp_email_template_redirect', '__return_false' );
 	}
@@ -130,7 +130,7 @@ class Test_Email_Boot extends WP_UnitTestCase {
 	public function test_the_link_shortcode_explains_itself_in_a_feed() {
 		$this->go_to( '/?feed=rss2' );
 
-		$out = Email::get_instance()->link_shortcode();
+		$out = WP_Email::get_instance()->link_shortcode();
 
 		// A feed reader cannot run the form, so a bare link would be a dead end.
 		$this->assertStringNotContainsString( '<a href=', $out );
@@ -163,23 +163,23 @@ class Test_Email_Boot extends WP_UnitTestCase {
 	public function test_add_filters_installs_the_pair() {
 		$this->go_to( get_permalink( $this->post_id ) );
 
-		Email::add_filters();
+		WP_Email::add_filters();
 
-		$this->assertNotFalse( has_filter( 'the_title', array( 'Email', 'filter_title' ) ) );
-		$this->assertNotFalse( has_filter( 'the_content', array( 'Email_Form', 'render' ) ) );
+		$this->assertNotFalse( has_filter( 'the_title', array( 'WP_Email', 'filter_title' ) ) );
+		$this->assertNotFalse( has_filter( 'the_content', array( 'WP_Email_Form', 'render' ) ) );
 
-		Email::remove_filters();
+		WP_Email::remove_filters();
 	}
 
 	/**
 	 * Remove_filters() takes them back off.
 	 */
 	public function test_remove_filters_takes_them_off_again() {
-		Email::add_filters();
-		Email::remove_filters();
+		WP_Email::add_filters();
+		WP_Email::remove_filters();
 
-		$this->assertFalse( has_filter( 'the_title', array( 'Email', 'filter_title' ) ) );
-		$this->assertFalse( has_filter( 'the_content', array( 'Email_Form', 'render' ) ) );
+		$this->assertFalse( has_filter( 'the_title', array( 'WP_Email', 'filter_title' ) ) );
+		$this->assertFalse( has_filter( 'the_content', array( 'WP_Email_Form', 'render' ) ) );
 	}
 
 	/**
@@ -191,10 +191,10 @@ class Test_Email_Boot extends WP_UnitTestCase {
 		// loop_start hands over the query it is starting; judging the global
 		// is_main_query() instead would install the filters for a widget or a
 		// related-posts loop running on the e-mail page.
-		Email::add_filters( $secondary );
+		WP_Email::add_filters( $secondary );
 
-		$this->assertFalse( has_filter( 'the_title', array( 'Email', 'filter_title' ) ) );
-		$this->assertFalse( has_filter( 'the_content', array( 'Email_Form', 'render' ) ) );
+		$this->assertFalse( has_filter( 'the_title', array( 'WP_Email', 'filter_title' ) ) );
+		$this->assertFalse( has_filter( 'the_content', array( 'WP_Email_Form', 'render' ) ) );
 
 		wp_reset_postdata();
 	}
@@ -207,11 +207,11 @@ class Test_Email_Boot extends WP_UnitTestCase {
 
 		// Read through $GLOBALS after go_to(): it unsets wp_query, which breaks
 		// any binding an earlier `global` statement made.
-		Email::add_filters( $GLOBALS['wp_query'] );
+		WP_Email::add_filters( $GLOBALS['wp_query'] );
 
-		$this->assertNotFalse( has_filter( 'the_title', array( 'Email', 'filter_title' ) ) );
+		$this->assertNotFalse( has_filter( 'the_title', array( 'WP_Email', 'filter_title' ) ) );
 
-		Email::remove_filters();
+		WP_Email::remove_filters();
 	}
 
 	/**
@@ -221,19 +221,19 @@ class Test_Email_Boot extends WP_UnitTestCase {
 		$this->go_to( get_permalink( $this->post_id ) );
 
 		// The pre-3.0.0 email_addfilters() was called bare in some themes.
-		Email::add_filters();
+		WP_Email::add_filters();
 
-		$this->assertNotFalse( has_filter( 'the_title', array( 'Email', 'filter_title' ) ) );
+		$this->assertNotFalse( has_filter( 'the_title', array( 'WP_Email', 'filter_title' ) ) );
 
-		Email::remove_filters();
+		WP_Email::remove_filters();
 	}
 
 	/**
 	 * The document title is marked as the e-mail page.
 	 */
 	public function test_the_page_title_is_marked() {
-		$this->assertStringContainsString( 'E-Mail', Email::filter_page_title( 'Harness Post' ) );
-		$this->assertStringStartsWith( 'Harness Post', Email::filter_page_title( 'Harness Post' ) );
+		$this->assertStringContainsString( 'E-Mail', WP_Email::filter_page_title( 'Harness Post' ) );
+		$this->assertStringStartsWith( 'Harness Post', WP_Email::filter_page_title( 'Harness Post' ) );
 	}
 
 	/**
@@ -241,7 +241,7 @@ class Test_Email_Boot extends WP_UnitTestCase {
 	 */
 	public function test_the_page_is_noindexed() {
 		ob_start();
-		Email::noindex();
+		WP_Email::noindex();
 		$out = ob_get_clean();
 
 		$this->assertStringContainsString( 'noindex', $out );
@@ -263,7 +263,7 @@ class Test_Email_Boot extends WP_UnitTestCase {
 
 		wp_set_current_user( $user->ID );
 
-		$values = Email::get_instance()->prefill_for_logged_in_user( array() );
+		$values = WP_Email::get_instance()->prefill_for_logged_in_user( array() );
 
 		$this->assertSame( 'Lester Chan', $values['yourname'] );
 		$this->assertSame( 'lester@example.com', $values['youremail'] );
@@ -275,7 +275,7 @@ class Test_Email_Boot extends WP_UnitTestCase {
 	public function test_a_logged_out_visitor_is_not_prefilled() {
 		wp_set_current_user( 0 );
 
-		$this->assertSame( array(), Email::get_instance()->prefill_for_logged_in_user( array() ) );
+		$this->assertSame( array(), WP_Email::get_instance()->prefill_for_logged_in_user( array() ) );
 	}
 
 	/**
@@ -323,9 +323,9 @@ class Test_Email_Boot extends WP_UnitTestCase {
 	 * The localised recipient cap tracks the setting.
 	 */
 	public function test_the_localised_cap_tracks_the_setting() {
-		$options                        = Email_Options::all();
+		$options                        = WP_Email_Options::all();
 		$options['sending']['multiple'] = 3;
-		Email_Options::update( $options );
+		WP_Email_Options::update( $options );
 
 		do_action( 'wp_enqueue_scripts' );
 
@@ -353,7 +353,7 @@ class Test_Email_Boot extends WP_UnitTestCase {
 	public function test_install_grants_the_capability() {
 		get_role( 'administrator' )->remove_cap( 'manage_email' );
 
-		Email::get_instance()->install();
+		WP_Email::get_instance()->install();
 
 		$this->assertTrue( get_role( 'administrator' )->has_cap( 'manage_email' ) );
 	}
@@ -362,7 +362,7 @@ class Test_Email_Boot extends WP_UnitTestCase {
 	 * Installing does not hand the capability to everyone.
 	 */
 	public function test_install_does_not_grant_the_capability_to_subscribers() {
-		Email::get_instance()->install();
+		WP_Email::get_instance()->install();
 
 		$this->assertFalse( get_role( 'subscriber' )->has_cap( 'manage_email' ) );
 	}
@@ -371,33 +371,33 @@ class Test_Email_Boot extends WP_UnitTestCase {
 	 * Installing records the data version.
 	 */
 	public function test_install_records_the_data_version() {
-		delete_option( Email_Options::VERSION_OPTION );
+		delete_option( WP_Email_Options::VERSION );
 
-		Email::get_instance()->install();
+		WP_Email::get_instance()->install();
 
-		$this->assertSame( (string) WP_EMAIL_DB_VERSION, (string) get_option( Email_Options::VERSION_OPTION ) );
+		$this->assertSame( (string) WP_EMAIL_DB_VERSION, (string) get_option( WP_Email_Options::VERSION ) );
 	}
 
 	/**
 	 * The upgrade check does nothing once the version matches.
 	 */
 	public function test_maybe_upgrade_is_a_no_op_when_current() {
-		Email::get_instance()->install();
+		WP_Email::get_instance()->install();
 
-		$options                      = Email_Options::all();
+		$options                      = WP_Email_Options::all();
 		$options['link']['post_text'] = 'Untouched';
-		Email_Options::update( $options );
+		WP_Email_Options::update( $options );
 
-		Email::get_instance()->maybe_upgrade();
+		WP_Email::get_instance()->maybe_upgrade();
 
-		$this->assertSame( 'Untouched', Email_Options::get( 'link', 'post_text' ) );
+		$this->assertSame( 'Untouched', WP_Email_Options::get( 'link', 'post_text' ) );
 	}
 
 	/**
 	 * The upgrade runs on admin_init, because activation misses plugin updates.
 	 */
 	public function test_the_upgrade_is_hooked_where_an_update_will_reach_it() {
-		$source = file_get_contents( dirname( __DIR__ ) . '/includes/class-email.php' );
+		$source = file_get_contents( dirname( __DIR__ ) . '/includes/class-wp-email.php' );
 
 		$this->assertMatchesRegularExpression(
 			"/add_action\(\s*'admin_init',\s*array\(\s*\\\$this,\s*'maybe_upgrade'\s*\)/",
@@ -489,12 +489,12 @@ class Test_Email_Boot extends WP_UnitTestCase {
 	public function test_activation_installs_on_a_single_site() {
 		global $wpdb;
 
-		delete_option( Email_Options::VERSION_OPTION );
+		delete_option( WP_Email_Options::VERSION );
 		get_role( 'administrator' )->remove_cap( 'manage_email' );
 
-		Email::get_instance()->activate( false );
+		WP_Email::get_instance()->activate( false );
 
-		$this->assertSame( (string) WP_EMAIL_DB_VERSION, (string) get_option( Email_Options::VERSION_OPTION ) );
+		$this->assertSame( (string) WP_EMAIL_DB_VERSION, (string) get_option( WP_Email_Options::VERSION ) );
 		$this->assertTrue( get_role( 'administrator' )->has_cap( 'manage_email' ) );
 		$this->assertNotNull( $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->email}" ) );
 	}
@@ -506,7 +506,7 @@ class Test_Email_Boot extends WP_UnitTestCase {
 		// register_activation_hook() has to run while the main file is loading,
 		// which is why the constructor does it rather than a later hook.
 		$this->assertNotFalse(
-			has_action( 'activate_' . plugin_basename( WP_EMAIL_MAIN_FILE ), array( Email::get_instance(), 'activate' ) )
+			has_action( 'activate_' . plugin_basename( WP_EMAIL_MAIN_FILE ), array( WP_Email::get_instance(), 'activate' ) )
 		);
 	}
 
@@ -517,7 +517,7 @@ class Test_Email_Boot extends WP_UnitTestCase {
 		$this->go_to( get_permalink( $this->post_id ) );
 		the_post();
 
-		$bare = Email_Form::render( '', false, false, false );
+		$bare = WP_Email_Form::render( '', false, false, false );
 
 		$this->assertStringNotContainsString( 'id="wp-email-content"', $bare );
 		$this->assertStringContainsString( 'name="friendemail"', $bare );
@@ -531,7 +531,7 @@ class Test_Email_Boot extends WP_UnitTestCase {
 		the_post();
 
 		ob_start();
-		$returned = Email_Form::render( '', true );
+		$returned = WP_Email_Form::render( '', true );
 		$printed  = ob_get_clean();
 
 		$this->assertSame( '', $returned );
@@ -545,7 +545,7 @@ class Test_Email_Boot extends WP_UnitTestCase {
 	 * 101-site network, and the default cap only bites past the hundredth.
 	 */
 	public function test_network_activation_lifts_the_site_query_cap() {
-		$source = file_get_contents( dirname( __DIR__ ) . '/includes/class-email.php' );
+		$source = file_get_contents( dirname( __DIR__ ) . '/includes/class-wp-email.php' );
 
 		$this->assertMatchesRegularExpression( "/'number'\s*=>\s*0/", $source );
 		$this->assertMatchesRegularExpression( "/'fields'\s*=>\s*'ids'/", $source );
@@ -555,7 +555,7 @@ class Test_Email_Boot extends WP_UnitTestCase {
 	 * It restores the blog inside the loop, not once at the end.
 	 */
 	public function test_network_activation_restores_inside_the_loop() {
-		$source = file_get_contents( dirname( __DIR__ ) . '/includes/class-email.php' );
+		$source = file_get_contents( dirname( __DIR__ ) . '/includes/class-wp-email.php' );
 
 		$start = strpos( $source, 'foreach ( $site_ids' );
 		$body  = substr( $source, $start, strpos( $source, 'return;', $start ) - $start );

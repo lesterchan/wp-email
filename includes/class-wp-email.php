@@ -1,25 +1,23 @@
 <?php
 /**
- * WP-EMail class-email.php
+ * WP-EMail class-wp-email.php
  *
  * @package WP-EMail
  */
 
-if ( ! defined( 'ABSPATH' ) ) {
-	exit;
-}
+defined( 'ABSPATH' ) || exit;
 
 /**
  * Plugin bootstrap: registers the table, the endpoints and every hook.
  *
  * @since 3.0.0
  */
-class Email {
+class WP_Email {
 
 	/**
 	 * Static instance.
 	 *
-	 * @var Email|null
+	 * @var WP_Email|null
 	 */
 	private static $instance;
 
@@ -41,7 +39,7 @@ class Email {
 	/**
 	 * Initialize the plugin object and return its instance.
 	 *
-	 * @return Email
+	 * @return WP_Email
 	 */
 	public static function get_instance() {
 		if ( ! isset( self::$instance ) ) {
@@ -81,30 +79,29 @@ class Email {
 		add_shortcode( 'email_link', array( $this, 'link_shortcode' ) );
 		add_shortcode( 'donotemail', array( $this, 'donotemail_shortcode' ) );
 
-		add_action( 'wp_ajax_email', array( 'Email_Form', 'process' ) );
-		add_action( 'wp_ajax_nopriv_email', array( 'Email_Form', 'process' ) );
+		add_action( 'wp_ajax_email', array( 'WP_Email_Form', 'process' ) );
+		add_action( 'wp_ajax_nopriv_email', array( 'WP_Email_Form', 'process' ) );
 
-		add_action( 'wp_ajax_wp_email_captcha', array( 'Email_Captcha', 'serve' ) );
-		add_action( 'wp_ajax_nopriv_wp_email_captcha', array( 'Email_Captcha', 'serve' ) );
+		add_action( 'wp_ajax_wp_email_captcha', array( 'WP_Email_Captcha', 'serve' ) );
+		add_action( 'wp_ajax_nopriv_wp_email_captcha', array( 'WP_Email_Captcha', 'serve' ) );
 
 		add_action( 'widgets_init', array( $this, 'register_widget' ) );
 
 		add_filter( 'email_form-fieldvalues', array( $this, 'prefill_for_logged_in_user' ) );
 
+		// Loaded unconditionally and inert without WP-Stats: the class hooks one
+		// filter WP-Stats fires and nothing else, so there is nothing to probe
+		// for. See STANDARDS.md 13.
+		new WP_Email_WPStats();
+
 		if ( is_admin() ) {
 			add_action( 'admin_init', array( $this, 'maybe_upgrade' ) );
 
-			require_once __DIR__ . '/class-email-admin.php';
-			require_once __DIR__ . '/class-email-settings.php';
+			require_once WP_EMAIL_DIR . 'includes/class-wp-email-admin.php';
+			require_once WP_EMAIL_DIR . 'includes/class-wp-email-settings.php';
 
-			new Email_Admin();
-			new Email_Settings();
-		}
-
-		if ( function_exists( 'stats_page' ) ) {
-			require_once __DIR__ . '/class-email-wpstats.php';
-
-			new Email_WpStats();
+			new WP_Email_Admin();
+			new WP_Email_Settings();
 		}
 	}
 
@@ -151,17 +148,17 @@ class Email {
 		// separate minified copy only drifts out of sync with this one.
 		wp_enqueue_script(
 			'wp-email',
-			plugins_url( 'js/wp-email.js', WP_EMAIL_MAIN_FILE ),
+			WP_EMAIL_URL . 'js/wp-email.js',
 			array(),
 			WP_EMAIL_VERSION,
 			true
 		);
 
-		$max = Email_Form::max_recipients();
+		$max = WP_Email_Form::max_recipients();
 
 		wp_localize_script(
 			'wp-email',
-			'emailL10n',
+			'wpEmailL10n',
 			array(
 				'ajax_url'                       => admin_url( 'admin-ajax.php' ),
 				'max_allowed'                    => $max,
@@ -201,7 +198,7 @@ class Email {
 		if ( file_exists( get_stylesheet_directory() . '/' . $file ) ) {
 			$src = get_stylesheet_directory_uri() . '/' . $file;
 		} else {
-			$src = plugins_url( $file, WP_EMAIL_MAIN_FILE );
+			$src = WP_EMAIL_URL . $file;
 		}
 
 		wp_enqueue_style( $handle, $src, array(), WP_EMAIL_VERSION, 'all' );
@@ -225,12 +222,12 @@ class Email {
 		}
 
 		if ( array_key_exists( 'wp_email', $wp_query->query_vars ) ) {
-			require __DIR__ . '/screen-standalone.php';
+			require WP_EMAIL_DIR . 'includes/screen-standalone.php';
 			exit;
 		}
 
 		if ( array_key_exists( 'wp_email_popup', $wp_query->query_vars ) ) {
-			require __DIR__ . '/screen-popup.php';
+			require WP_EMAIL_DIR . 'includes/screen-popup.php';
 			exit;
 		}
 	}
@@ -255,8 +252,8 @@ class Email {
 			return;
 		}
 
-		add_filter( 'the_title', array( 'Email', 'filter_title' ) );
-		add_filter( 'the_content', array( 'Email_Form', 'render' ) );
+		add_filter( 'the_title', array( 'WP_Email', 'filter_title' ) );
+		add_filter( 'the_content', array( 'WP_Email_Form', 'render' ) );
 	}
 
 	/**
@@ -265,9 +262,9 @@ class Email {
 	 * @return void
 	 */
 	public static function remove_filters() {
-		remove_action( 'loop_start', array( 'Email', 'add_filters' ) );
-		remove_filter( 'the_title', array( 'Email', 'filter_title' ) );
-		remove_filter( 'the_content', array( 'Email_Form', 'render' ) );
+		remove_action( 'loop_start', array( 'WP_Email', 'add_filters' ) );
+		remove_filter( 'the_title', array( 'WP_Email', 'filter_title' ) );
+		remove_filter( 'the_content', array( 'WP_Email_Form', 'render' ) );
 	}
 
 	/**
@@ -282,7 +279,7 @@ class Email {
 			return $title;
 		}
 
-		return Email_Template::expand( Email_Options::template( 'title' ), Email_Template::post_vars() );
+		return WP_Email_Template::expand( WP_Email_Options::template( 'title' ), WP_Email_Template::post_vars() );
 	}
 
 	/**
@@ -315,7 +312,7 @@ class Email {
 			return __( 'Note: There is an email link embedded within this post, please visit this post to email it.', 'wp-email' );
 		}
 
-		return Email_Link::render();
+		return WP_Email_Link::render();
 	}
 
 	/**
@@ -356,9 +353,9 @@ class Email {
 	 * @return void
 	 */
 	public function register_widget() {
-		require_once __DIR__ . '/class-email-widget.php';
+		require_once WP_EMAIL_DIR . 'includes/class-wp-email-widget.php';
 
-		register_widget( 'Email_Widget' );
+		register_widget( 'WP_Email_Widget' );
 	}
 
 	/**
@@ -399,7 +396,7 @@ class Email {
 	 * @return void
 	 */
 	public function maybe_upgrade() {
-		if ( (string) get_option( Email_Options::VERSION_OPTION ) === (string) WP_EMAIL_DB_VERSION ) {
+		if ( (string) get_option( WP_Email_Options::VERSION ) === (string) WP_EMAIL_DB_VERSION ) {
 			return;
 		}
 
@@ -412,9 +409,9 @@ class Email {
 	 * @return void
 	 */
 	public function install() {
-		Email_Logs::install();
-		Email_Logs::normalize_statuses();
-		Email_Options::migrate();
+		WP_Email_Logs::install();
+		WP_Email_Logs::normalize_statuses();
+		WP_Email_Options::migrate();
 
 		$role = get_role( 'administrator' );
 
@@ -422,7 +419,7 @@ class Email {
 			$role->add_cap( 'manage_email' );
 		}
 
-		update_option( Email_Options::VERSION_OPTION, WP_EMAIL_DB_VERSION );
+		update_option( WP_Email_Options::VERSION, WP_EMAIL_DB_VERSION );
 
 		// The endpoints are registered on init, which has already run by the
 		// time activation fires, so the rules are there to be written out.

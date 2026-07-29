@@ -8,7 +8,7 @@
 /**
  * Tests for the link renderer and its URL construction.
  *
- * @covers Email_Link
+ * @covers WP_Email_Link
  */
 class Test_Email_Link extends WP_UnitTestCase {
 
@@ -51,9 +51,9 @@ class Test_Email_Link extends WP_UnitTestCase {
 	 * @return void
 	 */
 	private function set_link( array $link ) {
-		$options         = Email_Options::all();
+		$options         = WP_Email_Options::all();
 		$options['link'] = array_merge( $options['link'], $link );
-		Email_Options::update( $options );
+		WP_Email_Options::update( $options );
 	}
 
 	/**
@@ -77,8 +77,8 @@ class Test_Email_Link extends WP_UnitTestCase {
 		$this->set_permalink_structure( '/%postname%/' );
 		$this->loop( $this->post_id );
 
-		$this->assertStringEndsWith( '/email/', Email_Link::url( 1 ) );
-		$this->assertStringEndsWith( '/emailpopup/', Email_Link::url( 2 ) );
+		$this->assertStringEndsWith( '/email/', WP_Email_Link::url( 1 ) );
+		$this->assertStringEndsWith( '/emailpopup/', WP_Email_Link::url( 2 ) );
 	}
 
 	/**
@@ -90,8 +90,8 @@ class Test_Email_Link extends WP_UnitTestCase {
 
 		// 'wp_email_popup' is the registered query var; an earlier version
 		// emitted 'emailpopup', which nothing ever answered to.
-		$this->assertStringContainsString( 'wp_email=1', Email_Link::url( 1 ) );
-		$this->assertStringContainsString( 'wp_email_popup=1', Email_Link::url( 2 ) );
+		$this->assertStringContainsString( 'wp_email=1', WP_Email_Link::url( 1 ) );
+		$this->assertStringContainsString( 'wp_email_popup=1', WP_Email_Link::url( 2 ) );
 	}
 
 	/**
@@ -101,7 +101,7 @@ class Test_Email_Link extends WP_UnitTestCase {
 		$this->set_permalink_structure( '' );
 		$this->loop( $this->post_id );
 
-		$this->assertStringContainsString( 'p=' . $this->post_id, Email_Link::url( 1 ) );
+		$this->assertStringContainsString( 'p=' . $this->post_id, WP_Email_Link::url( 1 ) );
 	}
 
 	// -------------------------------------------------------------- styles --
@@ -119,7 +119,7 @@ class Test_Email_Link extends WP_UnitTestCase {
 		);
 		$this->loop( $this->post_id );
 
-		$link = Email_Link::render();
+		$link = WP_Email_Link::render();
 
 		$this->assertSame( 2, substr_count( $link, '<a href=' ) );
 		$this->assertStringContainsString( 'WP-EmailIcon', $link );
@@ -134,7 +134,7 @@ class Test_Email_Link extends WP_UnitTestCase {
 		$this->set_link( array( 'style' => 2 ) );
 		$this->loop( $this->post_id );
 
-		$link = Email_Link::render();
+		$link = WP_Email_Link::render();
 
 		$this->assertSame( 1, substr_count( $link, '<a href=' ) );
 		$this->assertStringContainsString( 'WP-EmailIcon', $link );
@@ -147,7 +147,7 @@ class Test_Email_Link extends WP_UnitTestCase {
 		$this->set_link( array( 'style' => 3 ) );
 		$this->loop( $this->post_id );
 
-		$link = Email_Link::render();
+		$link = WP_Email_Link::render();
 
 		$this->assertStringNotContainsString( 'WP-EmailIcon', $link );
 		$this->assertStringContainsString( 'Email This Post', $link );
@@ -166,7 +166,7 @@ class Test_Email_Link extends WP_UnitTestCase {
 		);
 		$this->loop( $this->post_id );
 
-		$link = Email_Link::render();
+		$link = WP_Email_Link::render();
 
 		$this->assertStringContainsString( '/email/', $link );
 		$this->assertStringContainsString( 'Email This Post', $link );
@@ -181,7 +181,7 @@ class Test_Email_Link extends WP_UnitTestCase {
 		$this->set_link( array( 'style' => 99 ) );
 		$this->loop( $this->post_id );
 
-		$this->assertStringContainsString( 'WP-EmailIcon', Email_Link::render() );
+		$this->assertStringContainsString( 'WP-EmailIcon', WP_Email_Link::render() );
 	}
 
 	// --------------------------------------------------------------- popup --
@@ -198,7 +198,7 @@ class Test_Email_Link extends WP_UnitTestCase {
 		);
 		$this->loop( $this->post_id );
 
-		$link = Email_Link::render();
+		$link = WP_Email_Link::render();
 
 		// The pre-3.0.0 markup was onclick="email_popup(this.href); return false;".
 		$this->assertStringContainsString( 'data-wp-email-popup', $link );
@@ -217,7 +217,7 @@ class Test_Email_Link extends WP_UnitTestCase {
 		);
 		$this->loop( $this->post_id );
 
-		$this->assertStringNotContainsString( 'data-wp-email-popup', Email_Link::render() );
+		$this->assertStringNotContainsString( 'data-wp-email-popup', WP_Email_Link::render() );
 	}
 
 	/**
@@ -233,7 +233,7 @@ class Test_Email_Link extends WP_UnitTestCase {
 		);
 		$this->loop( $this->post_id );
 
-		$this->assertStringContainsString( 'data-wp-email-popup', Email_Link::render() );
+		$this->assertStringContainsString( 'data-wp-email-popup', WP_Email_Link::render() );
 	}
 
 	// ---------------------------------------------------------------- text --
@@ -245,10 +245,10 @@ class Test_Email_Link extends WP_UnitTestCase {
 		$this->set_link( array( 'style' => 3 ) );
 
 		$this->loop( $this->post_id );
-		$this->assertStringContainsString( 'Email This Post', Email_Link::render() );
+		$this->assertStringContainsString( 'Email This Post', WP_Email_Link::render() );
 
 		$this->loop( $this->page_id );
-		$this->assertStringContainsString( 'Email This Page', Email_Link::render() );
+		$this->assertStringContainsString( 'Email This Page', WP_Email_Link::render() );
 	}
 
 	/**
@@ -258,10 +258,10 @@ class Test_Email_Link extends WP_UnitTestCase {
 		$this->set_link( array( 'style' => 3 ) );
 
 		$this->loop( $this->post_id );
-		$this->assertStringContainsString( 'Send this along', Email_Link::render( 'Send this along' ) );
+		$this->assertStringContainsString( 'Send this along', WP_Email_Link::render( 'Send this along' ) );
 
 		$this->loop( $this->page_id );
-		$this->assertStringContainsString( 'Share this page', Email_Link::render( '', 'Share this page' ) );
+		$this->assertStringContainsString( 'Share this page', WP_Email_Link::render( '', 'Share this page' ) );
 	}
 
 	/**
@@ -271,7 +271,7 @@ class Test_Email_Link extends WP_UnitTestCase {
 		$this->set_link( array( 'style' => 3 ) );
 		$this->loop( $this->page_id );
 
-		$this->assertStringNotContainsString( 'Post Only Text', Email_Link::render( 'Post Only Text' ) );
+		$this->assertStringNotContainsString( 'Post Only Text', WP_Email_Link::render( 'Post Only Text' ) );
 	}
 
 	// ------------------------------------------------------------ escaping --
@@ -282,14 +282,14 @@ class Test_Email_Link extends WP_UnitTestCase {
 	public function test_hostile_link_text_is_escaped() {
 		// wp_kses_post() on save would normally have caught this; the option
 		// could still have been written directly, so the sink escapes too.
-		$options                      = Email_Options::all();
+		$options                      = WP_Email_Options::all();
 		$options['link']['post_text'] = 'Bad <script>alert(1)</script>';
-		Email_Options::update( $options );
+		WP_Email_Options::update( $options );
 
 		$this->set_link( array( 'style' => 1 ) );
 		$this->loop( $this->post_id );
 
-		$link = Email_Link::render();
+		$link = WP_Email_Link::render();
 
 		$this->assertStringNotContainsString( '<script>alert(1)</script>', $link );
 	}
@@ -301,7 +301,7 @@ class Test_Email_Link extends WP_UnitTestCase {
 		$this->set_link( array( 'style' => 1 ) );
 		$this->loop( $this->post_id );
 
-		$link = Email_Link::render( 'Say "hi" now' );
+		$link = WP_Email_Link::render( 'Say "hi" now' );
 
 		$this->assertStringNotContainsString( 'title="Say "hi" now"', $link );
 		$this->assertStringContainsString( '&quot;', $link );
