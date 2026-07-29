@@ -348,8 +348,11 @@ class WP_Email_Form {
 			$output .= self::render_fields( $fields, $submitted );
 		}
 
+		// A CSS-only spinner rather than the animated GIF the plugin shipped
+		// until 3.0.0: it takes the theme's colour through currentColor and
+		// stands still for a visitor who asked for reduced motion.
 		$output .= '<div id="wp-email-loading" class="wp-email-loading">';
-		$output .= '<img src="' . esc_url( plugins_url( 'images/loading.gif', WP_EMAIL_MAIN_FILE ) ) . '" width="16" height="16" alt="' . esc_attr__( 'Loading', 'wp-email' ) . ' ..." class="wp-email-image" />&nbsp;';
+		$output .= '<span class="wp-email-spinner" aria-hidden="true"></span>&nbsp;';
 		$output .= esc_html__( 'Loading', 'wp-email' ) . ' ...';
 		$output .= '</div>' . "\n";
 

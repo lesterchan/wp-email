@@ -27,7 +27,6 @@ class Test_Email_Options extends WP_UnitTestCase {
 			array(
 				'post_text'   => 'Legacy Post Text',
 				'page_text'   => 'Legacy Page Text',
-				'email_icon'  => 'email.gif',
 				'email_type'  => 2,
 				'email_style' => 3,
 				'email_html'  => '<a href="%EMAIL_URL%">legacy</a>',
@@ -76,7 +75,7 @@ class Test_Email_Options extends WP_UnitTestCase {
 
 		$this->assertSame( 'Mine', WP_Email_Options::get( 'link', 'post_text' ) );
 		// Untouched keys in the same group still resolve.
-		$this->assertSame( 'email_famfamfam.png', WP_Email_Options::get( 'link', 'icon' ) );
+		$this->assertSame( 1, WP_Email_Options::get( 'link', 'type' ) );
 		// So do whole groups the stored value never mentioned.
 		$this->assertSame( 10, WP_Email_Options::get( 'sending', 'interval' ) );
 	}
@@ -99,12 +98,12 @@ class Test_Email_Options extends WP_UnitTestCase {
 	}
 
 	/**
-	 * Sanitize rejects an icon that does not ship.
+	 * The icon setting went with the image files it chose between.
 	 */
-	public function test_sanitize_rejects_an_icon_that_does_not_ship() {
+	public function test_sanitize_drops_the_retired_icon_setting() {
 		$clean = WP_Email_Options::sanitize( array( 'link' => array( 'icon' => '../../../wp-config.php' ) ) );
 
-		$this->assertContains( $clean['link']['icon'], WP_Email_Options::available_icons() );
+		$this->assertArrayNotHasKey( 'icon', $clean['link'] );
 	}
 
 	/**
@@ -175,7 +174,6 @@ class Test_Email_Options extends WP_UnitTestCase {
 
 		$this->assertSame( 'Legacy Post Text', WP_Email_Options::get( 'link', 'post_text' ) );
 		$this->assertSame( 'Legacy Page Text', WP_Email_Options::get( 'link', 'page_text' ) );
-		$this->assertSame( 'email.gif', WP_Email_Options::get( 'link', 'icon' ) );
 		$this->assertSame( 2, WP_Email_Options::get( 'link', 'type' ) );
 		$this->assertSame( 3, WP_Email_Options::get( 'link', 'style' ) );
 

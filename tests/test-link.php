@@ -122,7 +122,7 @@ class Test_Email_Link extends WP_UnitTestCase {
 		$link = WP_Email_Link::render();
 
 		$this->assertSame( 2, substr_count( $link, '<a href=' ) );
-		$this->assertStringContainsString( 'WP-EmailIcon', $link );
+		$this->assertStringContainsString( 'wp-email-icon', $link );
 		$this->assertStringContainsString( 'Email This Post', $link );
 		$this->assertStringContainsString( 'rel="nofollow"', $link );
 	}
@@ -137,7 +137,7 @@ class Test_Email_Link extends WP_UnitTestCase {
 		$link = WP_Email_Link::render();
 
 		$this->assertSame( 1, substr_count( $link, '<a href=' ) );
-		$this->assertStringContainsString( 'WP-EmailIcon', $link );
+		$this->assertStringContainsString( 'wp-email-icon', $link );
 	}
 
 	/**
@@ -149,7 +149,7 @@ class Test_Email_Link extends WP_UnitTestCase {
 
 		$link = WP_Email_Link::render();
 
-		$this->assertStringNotContainsString( 'WP-EmailIcon', $link );
+		$this->assertStringNotContainsString( 'wp-email-icon', $link );
 		$this->assertStringContainsString( 'Email This Post', $link );
 	}
 
@@ -161,7 +161,7 @@ class Test_Email_Link extends WP_UnitTestCase {
 		$this->set_link(
 			array(
 				'style' => 4,
-				'html'  => '<a href="%EMAIL_URL%" title="%EMAIL_TEXT%">%EMAIL_TEXT% @ %EMAIL_ICON_URL%</a>',
+				'html'  => '<a href="%EMAIL_URL%" title="%EMAIL_TEXT%">%EMAIL_ICON% %EMAIL_TEXT%</a>',
 			)
 		);
 		$this->loop( $this->post_id );
@@ -170,7 +170,7 @@ class Test_Email_Link extends WP_UnitTestCase {
 
 		$this->assertStringContainsString( '/email/', $link );
 		$this->assertStringContainsString( 'Email This Post', $link );
-		$this->assertStringContainsString( 'email_famfamfam.png', $link );
+		$this->assertStringContainsString( '<svg class="wp-email-icon"', $link );
 		$this->assertStringNotContainsString( '%EMAIL_', $link );
 	}
 
@@ -181,7 +181,7 @@ class Test_Email_Link extends WP_UnitTestCase {
 		$this->set_link( array( 'style' => 99 ) );
 		$this->loop( $this->post_id );
 
-		$this->assertStringContainsString( 'WP-EmailIcon', WP_Email_Link::render() );
+		$this->assertStringContainsString( 'wp-email-icon', WP_Email_Link::render() );
 	}
 
 	// --------------------------------------------------------------- popup --

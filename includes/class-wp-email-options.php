@@ -92,7 +92,6 @@ class WP_Email_Options {
 			'link'             => array(
 				'post_text' => __( 'Email This Post', 'wp-email' ),
 				'page_text' => __( 'Email This Page', 'wp-email' ),
-				'icon'      => 'email_famfamfam.png',
 				'type'      => 1,
 				'style'     => 1,
 				'html'      => '<a href="%EMAIL_URL%" rel="nofollow" title="%EMAIL_TEXT%">%EMAIL_TEXT%</a>',
@@ -347,7 +346,6 @@ class WP_Email_Options {
 		$clean['link'] = array(
 			'post_text' => isset( $link['post_text'] ) ? trim( wp_kses_post( (string) $link['post_text'] ) ) : $defaults['link']['post_text'],
 			'page_text' => isset( $link['page_text'] ) ? trim( wp_kses_post( (string) $link['page_text'] ) ) : $defaults['link']['page_text'],
-			'icon'      => self::sanitize_icon( isset( $link['icon'] ) ? $link['icon'] : '' ),
 			'type'      => in_array( $type, array( 1, 2 ), true ) ? $type : $defaults['link']['type'],
 			'style'     => in_array( $style, array( 1, 2, 3, 4 ), true ) ? $style : $defaults['link']['style'],
 			'html'      => isset( $link['html'] ) ? trim( wp_kses_post( (string) $link['html'] ) ) : $defaults['link']['html'],
@@ -401,54 +399,6 @@ class WP_Email_Options {
 			: $defaults['stats_most_limit'];
 
 		return $clean;
-	}
-
-	/**
-	 * Restrict the icon to a file that actually ships in the images directory.
-	 *
-	 * @param mixed $icon Submitted file name.
-	 *
-	 * @return string
-	 */
-	public static function sanitize_icon( $icon ) {
-		$icon      = basename( sanitize_file_name( (string) $icon ) );
-		$available = self::available_icons();
-
-		if ( in_array( $icon, $available, true ) ) {
-			return $icon;
-		}
-
-		$defaults = self::defaults();
-
-		return in_array( $defaults['link']['icon'], $available, true ) || empty( $available )
-			? $defaults['link']['icon']
-			: $available[0];
-	}
-
-	/**
-	 * The icon files shipped with the plugin.
-	 *
-	 * @return array
-	 */
-	public static function available_icons() {
-		$icons = array();
-		$dir   = WP_EMAIL_DIR . 'images';
-
-		if ( ! is_dir( $dir ) ) {
-			return $icons;
-		}
-
-		foreach ( (array) scandir( $dir ) as $file ) {
-			if ( '.' === $file[0] || 'loading.gif' === $file || 'index.php' === $file || ! is_file( $dir . '/' . $file ) ) {
-				continue;
-			}
-
-			$icons[] = $file;
-		}
-
-		sort( $icons );
-
-		return $icons;
 	}
 
 	/**
@@ -540,10 +490,11 @@ class WP_Email_Options {
 				}
 			}
 		} else {
+			// email_icon is deliberately absent: 3.0.0 draws one inline SVG
+			// envelope, so there is no longer a file to choose between.
 			$map = array(
 				'post_text'  => 'post_text',
 				'page_text'  => 'page_text',
-				'email_icon' => 'icon',
 				'email_type' => 'type',
 				'email_html' => 'html',
 			);

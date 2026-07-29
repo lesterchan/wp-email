@@ -138,7 +138,6 @@ class WP_Email_Settings {
 			self::SECTION_STYLES    => array(
 				'post_text'  => array( __( 'E-Mail Text Link For Post', 'wp-email' ), 'wp_email_link_post_text' ),
 				'page_text'  => array( __( 'E-Mail Text Link For Page', 'wp-email' ), 'wp_email_link_page_text' ),
-				'icon'       => array( __( 'E-Mail Icon', 'wp-email' ), '' ),
 				'link_type'  => array( __( 'E-Mail Link Type', 'wp-email' ), 'wp_email_link_type' ),
 				'link_style' => array( __( 'E-Mail Text Link Style', 'wp-email' ), 'wp_email_link_style' ),
 			),
@@ -255,25 +254,6 @@ class WP_Email_Settings {
 	}
 
 	/**
-	 * The icon that goes beside the link text.
-	 *
-	 * @return void
-	 */
-	public function field_icon() {
-		$current = WP_Email_Options::get( 'link', 'icon' );
-
-		foreach ( WP_Email_Options::available_icons() as $icon ) {
-			printf(
-				'<p><label><input type="radio" name="%1$s" value="%2$s" %3$s /> <img src="%4$s" alt="%2$s" /> <code>%2$s</code></label></p>',
-				esc_attr( $this->name( 'link', 'icon' ) ),
-				esc_attr( $icon ),
-				checked( $icon, $current, false ),
-				esc_url( WP_EMAIL_URL . 'images/' . $icon )
-			);
-		}
-	}
-
-	/**
 	 * Whether the link opens the standalone page or the popup.
 	 *
 	 * @return void
@@ -333,7 +313,7 @@ class WP_Email_Settings {
 				<li><code>%EMAIL_URL%</code> &mdash; <?php esc_html_e( 'URL to the email post/page.', 'wp-email' ); ?></li>
 				<li><code>%EMAIL_POPUP%</code> &mdash; <?php esc_html_e( 'Marks the link as opening the popup.', 'wp-email' ); ?></li>
 				<li><code>%EMAIL_TEXT%</code> &mdash; <?php esc_html_e( 'The link text you typed above.', 'wp-email' ); ?></li>
-				<li><code>%EMAIL_ICON_URL%</code> &mdash; <?php esc_html_e( 'URL to the icon you chose above.', 'wp-email' ); ?></li>
+				<li><code>%EMAIL_ICON%</code> &mdash; <?php esc_html_e( 'The envelope glyph, drawn inline.', 'wp-email' ); ?></li>
 			</ul>
 			<p class="description">
 				<?php esc_html_e( 'Example popup template:', 'wp-email' ); ?>

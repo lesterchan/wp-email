@@ -193,17 +193,17 @@ class Test_Email_Template_Tags extends WP_UnitTestCase {
 		WP_Email_Options::update( $options );
 
 		$link = email_link( '', '', false );
-		$this->assertStringContainsString( 'WP-EmailIcon', $link );
+		$this->assertStringContainsString( 'wp-email-icon', $link );
 		$this->assertStringContainsString( 'Email This Post', $link );
 		$this->assertStringContainsString( 'rel="nofollow"', $link );
 
 		$options['link']['style'] = 2;
 		WP_Email_Options::update( $options );
-		$this->assertStringContainsString( 'WP-EmailIcon', email_link( '', '', false ) );
+		$this->assertStringContainsString( 'wp-email-icon', email_link( '', '', false ) );
 
 		$options['link']['style'] = 3;
 		WP_Email_Options::update( $options );
-		$this->assertStringNotContainsString( 'WP-EmailIcon', email_link( '', '', false ) );
+		$this->assertStringNotContainsString( 'wp-email-icon', email_link( '', '', false ) );
 	}
 
 	/**
@@ -215,13 +215,13 @@ class Test_Email_Template_Tags extends WP_UnitTestCase {
 
 		$options                  = WP_Email_Options::all();
 		$options['link']['style'] = 4;
-		$options['link']['html']  = '<a href="%EMAIL_URL%" title="%EMAIL_TEXT%">%EMAIL_TEXT% @ %EMAIL_ICON_URL%</a>';
+		$options['link']['html']  = '<a href="%EMAIL_URL%" title="%EMAIL_TEXT%">%EMAIL_ICON% %EMAIL_TEXT%</a>';
 		WP_Email_Options::update( $options );
 
 		$link = email_link( '', '', false );
 
 		$this->assertStringContainsString( 'Email This Post', $link );
-		$this->assertStringContainsString( 'email_famfamfam.png', $link );
+		$this->assertStringContainsString( '<svg class="wp-email-icon"', $link );
 		$this->assertStringNotContainsString( '%EMAIL_', $link );
 	}
 

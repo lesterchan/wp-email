@@ -25,3 +25,33 @@
 #wp-email-popup {
 	padding: 1em 1em 0;
 }
+
+/* The envelope glyph, drawn inline by WP_Email_Link::icon(). */
+.wp-email-icon {
+	vertical-align: text-bottom;
+}
+
+/* Replaces images/loading.gif: no request, and it takes the theme's colour. */
+.wp-email-spinner {
+	display: inline-block;
+	width: 1em;
+	height: 1em;
+	vertical-align: -0.125em;
+	border: 2px solid currentColor;
+	border-block-start-color: transparent;
+	border-radius: 50%;
+	animation: wp-email-spin 0.8s linear infinite;
+}
+
+@keyframes wp-email-spin {
+	to {
+		transform: rotate(360deg);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.wp-email-spinner {
+		animation: none;
+		opacity: 0.6;
+	}
+}

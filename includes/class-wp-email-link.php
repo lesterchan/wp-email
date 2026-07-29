@@ -41,13 +41,12 @@ class WP_Email_Link {
 			: ( '' !== $post_text ? $post_text : $link['post_text'] );
 
 		$url   = self::url( $type );
-		$icon  = plugins_url( 'images/' . $link['icon'], WP_EMAIL_MAIN_FILE );
 		$popup = 2 === $type ? ' ' . self::POPUP_ATTRIBUTE . ' ' : '';
 
 		switch ( $style ) {
 			case 2:
 				return self::open_tag( $url, $text, $popup )
-					. self::icon_tag( $icon, $text )
+					. self::icon( $text )
 					. '</a>';
 
 			case 3:
@@ -57,17 +56,17 @@ class WP_Email_Link {
 				return WP_Email_Template::expand(
 					$link['html'],
 					array(
-						'EMAIL_URL'      => esc_url( $url ),
-						'EMAIL_POPUP'    => $popup,
-						'EMAIL_TEXT'     => esc_attr( $text ),
-						'EMAIL_ICON_URL' => esc_url( $icon ),
+						'EMAIL_URL'   => esc_url( $url ),
+						'EMAIL_POPUP' => $popup,
+						'EMAIL_TEXT'  => esc_attr( $text ),
+						'EMAIL_ICON'  => self::icon( $text ),
 					)
 				);
 
 			case 1:
 			default:
 				return self::open_tag( $url, $text, $popup )
-					. self::icon_tag( $icon, $text )
+					. self::icon()
 					. '</a>&nbsp;'
 					. self::open_tag( $url, $text, $popup )
 					. esc_html( $text )
@@ -89,15 +88,33 @@ class WP_Email_Link {
 	}
 
 	/**
-	 * The icon image tag.
+	 * The envelope glyph, drawn inline.
 	 *
-	 * @param string $icon Icon URL.
-	 * @param string $text Alt text.
+	 * An inline SVG rather than one of the two raster files the plugin shipped
+	 * until 3.0.0: it inherits the theme's colour through currentColor, stays
+	 * sharp at any density, and costs no request. Two paths, an outline and the
+	 * flap, so it reads as an envelope at 16px.
+	 *
+	 * With visible link text beside it the glyph is decorative and hidden from
+	 * assistive technology; on its own it carries the link text as its
+	 * accessible name instead.
+	 *
+	 * @param string $label Accessible name, or an empty string when the glyph
+	 *                      sits beside the same text.
 	 *
 	 * @return string
 	 */
-	private static function icon_tag( $icon, $text ) {
-		return '<img class="WP-EmailIcon" src="' . esc_url( $icon ) . '" alt="' . esc_attr( $text ) . '" title="' . esc_attr( $text ) . '" style="border: 0px;" />';
+	public static function icon( $label = '' ) {
+		$title = '' === $label
+			? ''
+			: '<title>' . esc_html( $label ) . '</title>';
+
+		return '<svg class="wp-email-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16" role="img"'
+			. ( '' === $label ? ' aria-hidden="true" focusable="false"' : '' ) . '>'
+			. $title
+			. '<path d="M1.5 3.5h13v9h-13z" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round" />'
+			. '<path d="M1.5 4 8 9l6.5-5" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" />'
+			. '</svg>';
 	}
 
 	/**

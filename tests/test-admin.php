@@ -216,7 +216,6 @@ class Test_Email_Admin extends WP_UnitTestCase {
 		$this->assertStringContainsString( 'E-Mail Settings', $html );
 		$this->assertStringContainsString( 'E-Mail Link', $html );
 		$this->assertStringContainsString( 'E-Mail Text Link For Post', $html );
-		$this->assertStringContainsString( 'email_famfamfam.png', $html );
 		$this->assertStringContainsString( 'E-Mail Link Type', $html );
 		$this->assertStringContainsString( 'E-Mail Fields', $html );
 		$this->assertStringContainsString( 'Interval Between E-Mails', $html );
