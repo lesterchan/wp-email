@@ -66,18 +66,37 @@
 		target.hidden = select.value !== wanted;
 	}
 
+	/**
+	 * Re-apply a toggle whenever its select changes.
+	 *
+	 * Delegated on document like the click handler, rather than bound to each
+	 * select: one listener, and a field the Settings API redraws keeps working
+	 * without anything having to rebind it.
+	 *
+	 * @param {Event} event The change event.
+	 */
+	function onChange( event ) {
+		const target = event.target;
+
+		if ( ! target || ! target.closest ) {
+			return;
+		}
+
+		const select = target.closest( '[data-wp-email-toggle]' );
+
+		if ( select ) {
+			applyToggle( select );
+		}
+	}
+
 	function init() {
 		document.addEventListener( 'click', onClick );
+		document.addEventListener( 'change', onChange );
 
-		const toggles = document.querySelectorAll( '[data-wp-email-toggle]' );
-
-		Array.prototype.forEach.call( toggles, function( select ) {
-			applyToggle( select );
-
-			select.addEventListener( 'change', function() {
-				applyToggle( select );
-			} );
-		} );
+		Array.prototype.forEach.call(
+			document.querySelectorAll( '[data-wp-email-toggle]' ),
+			applyToggle,
+		);
 	}
 
 	if ( 'loading' === document.readyState ) {

@@ -1,10 +1,12 @@
 /**
  * WP-EMail front-end behaviour.
  *
- * Vanilla fetch and delegated listeners: the plugin dropped its jQuery
+ * Vanilla fetch and delegated listeners: the plugin dropped its last library
  * dependency in 3.0.0, and the inline onclick attributes went with it. Every
  * handler is bound once on document, so a form swapped in over AJAX keeps
- * working without rebinding.
+ * working without rebinding, and nothing is declared on window.
+ *
+ * Server data arrives in wpEmailL10n, localised by WP_Email::enqueue_scripts().
  */
 ( function() {
 	'use strict';
@@ -70,7 +72,7 @@
 	 * @return {Object|null} The values to post.
 	 */
 	function collect() {
-		const max = parseInt( window.emailL10n.max_allowed, 10 ) || 1;
+		const max = parseInt( window.wpEmailL10n.max_allowed, 10 ) || 1;
 		const errors = [];
 		const values = {};
 		let names = [];
@@ -81,7 +83,7 @@
 		if ( null !== value ) {
 			values.yourname = value;
 			if ( isEmpty( value ) || ! isValidName( value ) ) {
-				errors.push( window.emailL10n.text_name_invalid );
+				errors.push( window.wpEmailL10n.text_name_invalid );
 			}
 		}
 
@@ -89,7 +91,7 @@
 		if ( null !== value ) {
 			values.youremail = value;
 			if ( isEmpty( value ) || ! isValidEmail( value ) ) {
-				errors.push( window.emailL10n.text_email_invalid );
+				errors.push( window.wpEmailL10n.text_email_invalid );
 			}
 		}
 
@@ -97,7 +99,7 @@
 		if ( null !== value ) {
 			values.yourremarks = value;
 			if ( ! isEmpty( value ) && ! isValidRemarks( value ) ) {
-				errors.push( window.emailL10n.text_remarks_invalid );
+				errors.push( window.wpEmailL10n.text_remarks_invalid );
 			}
 		}
 
@@ -106,18 +108,18 @@
 			values.friendname = value;
 
 			if ( isEmpty( value ) ) {
-				errors.push( window.emailL10n.text_friend_names_empty );
+				errors.push( window.wpEmailL10n.text_friend_names_empty );
 			} else {
 				names = splitList( value );
 
 				names.forEach( function( name ) {
 					if ( isEmpty( name ) || ! isValidName( name ) ) {
-						errors.push( window.emailL10n.text_friend_name_invalid + name );
+						errors.push( window.wpEmailL10n.text_friend_name_invalid + name );
 					}
 				} );
 
 				if ( names.length > max ) {
-					errors.push( window.emailL10n.text_max_friend_names_allowed );
+					errors.push( window.wpEmailL10n.text_max_friend_names_allowed );
 				}
 			}
 		}
@@ -126,23 +128,23 @@
 		values.friendemail = value || '';
 
 		if ( isEmpty( values.friendemail ) ) {
-			errors.push( window.emailL10n.text_friend_emails_empty );
+			errors.push( window.wpEmailL10n.text_friend_emails_empty );
 		} else {
 			emails = splitList( values.friendemail );
 
 			emails.forEach( function( email ) {
 				if ( isEmpty( email ) || ! isValidEmail( email ) ) {
-					errors.push( window.emailL10n.text_friend_email_invalid + email );
+					errors.push( window.wpEmailL10n.text_friend_email_invalid + email );
 				}
 			} );
 
 			if ( emails.length > max ) {
-				errors.push( window.emailL10n.text_max_friend_emails_allowed );
+				errors.push( window.wpEmailL10n.text_max_friend_emails_allowed );
 			}
 		}
 
 		if ( null !== valueOf( 'friendname' ) && names.length !== emails.length ) {
-			errors.push( window.emailL10n.text_friends_tally );
+			errors.push( window.wpEmailL10n.text_friends_tally );
 		}
 
 		value = valueOf( 'imageverify' );
@@ -151,7 +153,7 @@
 			values.imageverify_token = valueOf( 'imageverify_token' ) || '';
 
 			if ( isEmpty( value ) ) {
-				errors.push( window.emailL10n.text_image_verify_empty );
+				errors.push( window.wpEmailL10n.text_image_verify_empty );
 			}
 		}
 
@@ -160,7 +162,7 @@
 			// validation errors, and the server repeats every check anyway.
 			// eslint-disable-next-line no-alert
 			window.alert(
-				window.emailL10n.text_error +
+				window.wpEmailL10n.text_error +
 					'\n__________________________________\n\n' +
 					errors.join( '\n' ) +
 					'\n',
@@ -224,7 +226,7 @@
 		setBusy( true );
 
 		window
-			.fetch( window.emailL10n.ajax_url, {
+			.fetch( window.wpEmailL10n.ajax_url, {
 				method: 'POST',
 				credentials: 'same-origin',
 				headers: {
@@ -250,18 +252,19 @@
 	/**
 	 * Open the e-mail page in a popup window.
 	 *
-	 * Global because a custom link template saved before 3.0.0 may still call
-	 * it by name.
+	 * Closure-scoped: the plugin declared a global email_popup() until 3.0.0,
+	 * for the inline onclick it also emitted. Both are gone, and a link opts
+	 * into the popup with the %EMAIL_POPUP% data attribute instead.
 	 *
 	 * @param {string} url Where to point the popup.
 	 */
-	window.email_popup = function( url ) {
+	function openPopup( url ) {
 		window.open(
 			url,
 			'_blank',
 			'width=500,height=500,toolbar=0,menubar=0,location=0,resizable=0,scrollbars=1,status=0',
 		);
-	};
+	}
 
 	function repositionPopup() {
 		const content = byId( 'wp-email-popup' );
@@ -296,7 +299,7 @@
 		const popup = target.closest( '[data-wp-email-popup]' );
 		if ( popup && popup.href ) {
 			event.preventDefault();
-			window.email_popup( popup.href );
+			openPopup( popup.href );
 			return;
 		}
 
