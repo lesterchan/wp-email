@@ -87,6 +87,8 @@ require_once WP_EMAIL_DIR . 'includes/class-wp-email-captcha.php';
 require_once WP_EMAIL_DIR . 'includes/class-wp-email-link.php';
 require_once WP_EMAIL_DIR . 'includes/class-wp-email-form.php';
 require_once WP_EMAIL_DIR . 'includes/class-wp-email-wpstats.php';
+require_once WP_EMAIL_DIR . 'includes/class-wp-email-admin.php';
+require_once WP_EMAIL_DIR . 'includes/class-wp-email-settings.php';
 require_once WP_EMAIL_DIR . 'includes/class-wp-email.php';
 require_once WP_EMAIL_DIR . 'includes/template-tags.php';
 require_once WP_EMAIL_DIR . 'includes/deprecated.php';

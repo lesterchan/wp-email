@@ -20,6 +20,19 @@ class Test_Email_Form extends WP_Ajax_UnitTestCase {
 	private $post_id;
 
 	/**
+	 * Now, in the site's local time.
+	 *
+	 * The email_timestamp column has held local timestamps since 2.x, so the
+	 * fixtures have to match. Written out rather than asking current_time() for
+	 * a 'timestamp', which is not a Unix timestamp and which WPCS rejects.
+	 *
+	 * @return int
+	 */
+	private function local_timestamp() {
+		return time() + (int) ( (float) get_option( 'gmt_offset' ) * HOUR_IN_SECONDS );
+	}
+
+	/**
 	 * What wp_mail() was asked to send, if anything.
 	 *
 	 * @var array|null
@@ -263,7 +276,7 @@ class Test_Email_Form extends WP_Ajax_UnitTestCase {
 				'friendemail' => 'f@example.com',
 				'postid'      => $this->post_id,
 				'posttitle'   => 'Harness Post',
-				'timestamp'   => current_time( 'timestamp' ),
+				'timestamp'   => $this->local_timestamp(),
 				'ip'          => '198.51.100.200',
 				'host'        => '',
 				'status'      => WP_Email_Logs::STATUS_SUCCESS,
@@ -290,7 +303,7 @@ class Test_Email_Form extends WP_Ajax_UnitTestCase {
 				'friendemail' => 'f@example.com',
 				'postid'      => $this->post_id,
 				'posttitle'   => 'Harness Post',
-				'timestamp'   => current_time( 'timestamp' ),
+				'timestamp'   => $this->local_timestamp(),
 				'ip'          => '198.51.100.200',
 				'host'        => '',
 				'status'      => WP_Email_Logs::STATUS_SUCCESS,
@@ -724,7 +737,7 @@ class Test_Email_Form extends WP_Ajax_UnitTestCase {
 				'friendemail' => 'f@example.com',
 				'postid'      => $this->post_id,
 				'posttitle'   => 'Harness Post',
-				'timestamp'   => current_time( 'timestamp' ),
+				'timestamp'   => $this->local_timestamp(),
 				'ip'          => '198.51.100.200',
 				'host'        => '',
 				'status'      => WP_Email_Logs::STATUS_SUCCESS,

@@ -29,6 +29,22 @@ class WP_Email_Logs {
 	const STATUS_FAILED = 'Failed';
 
 	/**
+	 * The plugin's own table, prefixed for whichever site is current.
+	 *
+	 * WP_Email::register_table() adds 'email' to $wpdb->tables, so $wpdb->email
+	 * is re-prefixed across switch_to_blog(). The fallback is for uninstall.php,
+	 * which loads this class without booting the plugin: $wpdb->prefix tracks
+	 * the switched site by itself.
+	 *
+	 * @return string
+	 */
+	public static function table() {
+		global $wpdb;
+
+		return isset( $wpdb->email ) ? $wpdb->email : $wpdb->prefix . 'email';
+	}
+
+	/**
 	 * The columns the logs screen may sort on.
 	 *
 	 * @return array Query key => column name.
@@ -299,9 +315,25 @@ class WP_Email_Logs {
 		$per_page = max( 1, (int) $args['per_page'] );
 		$offset   = ( max( 1, (int) $args['paged'] ) - 1 ) * $per_page;
 
+		// The column goes through prepare()'s %i identifier placeholder and the
+		// direction is one of two literal queries, so nothing reaches the SQL by
+		// interpolation. The whitelist above still stands: %i would quote an
+		// unknown column name rather than reject it.
+		if ( 'ASC' === $order ) {
+			return (array) $wpdb->get_results(
+				$wpdb->prepare(
+					"SELECT * FROM {$wpdb->email} ORDER BY %i ASC LIMIT %d, %d",
+					$orderby,
+					$offset,
+					$per_page
+				)
+			);
+		}
+
 		return (array) $wpdb->get_results(
 			$wpdb->prepare(
-				"SELECT * FROM {$wpdb->email} ORDER BY {$orderby} {$order} LIMIT %d, %d",
+				"SELECT * FROM {$wpdb->email} ORDER BY %i DESC LIMIT %d, %d",
+				$orderby,
 				$offset,
 				$per_page
 			)
@@ -317,5 +349,21 @@ class WP_Email_Logs {
 		global $wpdb;
 
 		return (int) $wpdb->query( "DELETE FROM {$wpdb->email}" );
+	}
+
+	/**
+	 * Drop the table, for uninstall.
+	 *
+	 * The name goes through prepare()'s %i identifier placeholder rather than
+	 * being interpolated: it is built from $wpdb->prefix and a literal so there
+	 * is nothing to escape, but %i is the form the standard asks for and it
+	 * costs nothing to use it.
+	 *
+	 * @return void
+	 */
+	public static function drop_table() {
+		global $wpdb;
+
+		$wpdb->query( $wpdb->prepare( 'DROP TABLE IF EXISTS %i', self::table() ) );
 	}
 }

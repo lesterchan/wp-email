@@ -19,6 +19,8 @@ class Test_Email_Options extends WP_UnitTestCase {
 	 */
 	private function seed_legacy_install() {
 		delete_option( WP_Email_Options::VERSION );
+		delete_option( WP_Email_Options::OPTION );
+		WP_Email_Options::flush();
 
 		update_option(
 			'email_options',
@@ -168,7 +170,8 @@ class Test_Email_Options extends WP_UnitTestCase {
 	public function test_migration_carries_every_legacy_value_across() {
 		$this->seed_legacy_install();
 
-		WP_Email_Options::migrate();
+		WP_Email_Options::flush();
+		WP_Email_Options::maybe_upgrade();
 
 		$this->assertSame( 'Legacy Post Text', WP_Email_Options::get( 'link', 'post_text' ) );
 		$this->assertSame( 'Legacy Page Text', WP_Email_Options::get( 'link', 'page_text' ) );
@@ -197,7 +200,8 @@ class Test_Email_Options extends WP_UnitTestCase {
 	public function test_migration_takes_defaults_for_templates_the_install_never_customised() {
 		$this->seed_legacy_install();
 
-		WP_Email_Options::migrate();
+		WP_Email_Options::flush();
+		WP_Email_Options::maybe_upgrade();
 
 		$this->assertStringContainsString( '%EMAIL_ERROR_MSG%', WP_Email_Options::template( 'error' ) );
 	}
@@ -209,7 +213,8 @@ class Test_Email_Options extends WP_UnitTestCase {
 		$this->seed_legacy_install();
 		update_option( 'email_template_body', "Legacy body O\\'Brien %EMAIL_POST_CONTENT%" );
 
-		WP_Email_Options::migrate();
+		WP_Email_Options::flush();
+		WP_Email_Options::maybe_upgrade();
 
 		$this->assertStringContainsString( "O'Brien", WP_Email_Options::template( 'body' ) );
 		$this->assertStringNotContainsString( "O\\'Brien", WP_Email_Options::template( 'body' ) );
@@ -221,24 +226,26 @@ class Test_Email_Options extends WP_UnitTestCase {
 	public function test_migration_deletes_the_legacy_rows() {
 		$this->seed_legacy_install();
 
-		WP_Email_Options::migrate();
+		WP_Email_Options::flush();
+		WP_Email_Options::maybe_upgrade();
 
-		foreach ( WP_Email_Options::legacy_option_names() as $name ) {
+		foreach ( WP_Email_Options::LEGACY_ROWS as $name ) {
 			$this->assertFalse( get_option( $name ), "{$name} should have been deleted" );
 		}
 	}
 
 	/**
-	 * Email_options is reused, so deleting it would discard the migration.
+	 * The consolidated row is a new, prefixed one rather than the old name.
 	 */
-	public function test_migration_keeps_the_row_it_consolidated_into() {
+	public function test_migration_writes_the_prefixed_row_and_removes_the_old_one() {
 		$this->seed_legacy_install();
 
-		WP_Email_Options::migrate();
+		WP_Email_Options::flush();
+		WP_Email_Options::maybe_upgrade();
 
-		// Deleting email_options here would throw away everything just written.
-		$this->assertNotContains( WP_Email_Options::OPTION, WP_Email_Options::legacy_option_names() );
+		$this->assertSame( 'wp_email_options', WP_Email_Options::OPTION );
 		$this->assertIsArray( get_option( WP_Email_Options::OPTION ) );
+		$this->assertFalse( get_option( 'email_options' ) );
 	}
 
 	/**
@@ -247,9 +254,12 @@ class Test_Email_Options extends WP_UnitTestCase {
 	public function test_migration_is_idempotent() {
 		$this->seed_legacy_install();
 
-		WP_Email_Options::migrate();
-		WP_Email_Options::migrate();
-		WP_Email_Options::migrate();
+		WP_Email_Options::flush();
+		WP_Email_Options::maybe_upgrade();
+		WP_Email_Options::flush();
+		WP_Email_Options::maybe_upgrade();
+		WP_Email_Options::flush();
+		WP_Email_Options::maybe_upgrade();
 
 		// The failure mode is a second run finding no legacy rows and writing
 		// defaults straight over the settings it migrated a moment ago.
@@ -260,18 +270,21 @@ class Test_Email_Options extends WP_UnitTestCase {
 	/**
 	 * Migration leaves an already nested option alone.
 	 */
-	public function test_migration_leaves_an_already_nested_option_alone() {
+	public function test_migration_carries_an_unreleased_nested_row_across() {
+		delete_option( WP_Email_Options::VERSION );
 		update_option(
-			WP_Email_Options::OPTION,
+			'email_options',
 			array(
-				'link'      => array( 'post_text' => 'Already Migrated' ),
+				'link'      => array( 'post_text' => 'Already Nested' ),
 				'templates' => array( 'subject' => 'Mine' ),
 			)
 		);
 
-		WP_Email_Options::migrate();
+		WP_Email_Options::flush();
+		WP_Email_Options::maybe_upgrade();
 
-		$this->assertSame( 'Already Migrated', WP_Email_Options::get( 'link', 'post_text' ) );
+		$this->assertSame( 'Already Nested', WP_Email_Options::get( 'link', 'post_text' ) );
+		$this->assertSame( 'Mine', WP_Email_Options::template( 'subject' ) );
 	}
 
 	/**
@@ -282,7 +295,13 @@ class Test_Email_Options extends WP_UnitTestCase {
 
 		WP_Email::get_instance()->maybe_upgrade();
 
-		$this->assertSame( (string) WP_EMAIL_DB_VERSION, (string) get_option( WP_Email_Options::VERSION ) );
+		$this->assertSame(
+			array(
+				'plugin' => WP_EMAIL_VERSION,
+				'db'     => WP_EMAIL_DB_VERSION,
+			),
+			get_option( WP_Email_Options::VERSION )
+		);
 
 		WP_Email::get_instance()->maybe_upgrade();
 
@@ -300,10 +319,10 @@ class Test_Email_Options extends WP_UnitTestCase {
 		WP_Email::get_instance()->maybe_upgrade();
 
 		$rows = (int) $wpdb->get_var(
-			"SELECT COUNT(*) FROM {$wpdb->options} WHERE option_name LIKE 'email\\_%'"
+			"SELECT COUNT(*) FROM {$wpdb->options} WHERE option_name LIKE 'wp\\_email\\_%'"
 		);
 
-		$this->assertLessThanOrEqual( 2, $rows );
+		$this->assertSame( 2, $rows );
 	}
 
 	/**

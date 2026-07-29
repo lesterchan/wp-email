@@ -97,9 +97,6 @@ class WP_Email {
 		if ( is_admin() ) {
 			add_action( 'admin_init', array( $this, 'maybe_upgrade' ) );
 
-			require_once WP_EMAIL_DIR . 'includes/class-wp-email-admin.php';
-			require_once WP_EMAIL_DIR . 'includes/class-wp-email-settings.php';
-
 			new WP_Email_Admin();
 			new WP_Email_Settings();
 		}
@@ -388,7 +385,7 @@ class WP_Email {
 	}
 
 	/**
-	 * Run the install when the stored data version is behind.
+	 * Run the install when the stored markers are behind.
 	 *
 	 * Activation alone is not enough: the hook does not fire on a plugin
 	 * update, which is the single most common reason a migration never runs.
@@ -396,7 +393,12 @@ class WP_Email {
 	 * @return void
 	 */
 	public function maybe_upgrade() {
-		if ( (string) get_option( WP_Email_Options::VERSION ) === (string) WP_EMAIL_DB_VERSION ) {
+		$markers = WP_Email_Options::markers();
+
+		$plugin = isset( $markers['plugin'] ) ? (string) $markers['plugin'] : '';
+		$db     = isset( $markers['db'] ) ? (string) $markers['db'] : '';
+
+		if ( WP_EMAIL_VERSION === $plugin && WP_EMAIL_DB_VERSION === $db ) {
 			return;
 		}
 
@@ -404,22 +406,24 @@ class WP_Email {
 	}
 
 	/**
-	 * Create the table, fold the old options in, and grant the capability.
+	 * Create the table, fold the old rows in, and grant the capability.
+	 *
+	 * The markers are written last, by WP_Email_Options::maybe_upgrade(), so an
+	 * upgrade that dies half way through never records itself as finished.
 	 *
 	 * @return void
 	 */
 	public function install() {
 		WP_Email_Logs::install();
 		WP_Email_Logs::normalize_statuses();
-		WP_Email_Options::migrate();
 
 		$role = get_role( 'administrator' );
 
-		if ( $role && ! $role->has_cap( 'manage_email' ) ) {
-			$role->add_cap( 'manage_email' );
+		if ( $role && ! $role->has_cap( WP_Email_Admin::CAPABILITY ) ) {
+			$role->add_cap( WP_Email_Admin::CAPABILITY );
 		}
 
-		update_option( WP_Email_Options::VERSION, WP_EMAIL_DB_VERSION );
+		WP_Email_Options::maybe_upgrade();
 
 		// The endpoints are registered on init, which has already run by the
 		// time activation fires, so the rules are there to be written out.

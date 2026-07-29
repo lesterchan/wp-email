@@ -124,7 +124,7 @@ class Test_Email_Admin extends WP_UnitTestCase {
 	public function test_a_subscriber_does_not_have_the_capability() {
 		wp_set_current_user( self::factory()->user->create( array( 'role' => 'subscriber' ) ) );
 
-		$this->assertFalse( current_user_can( 'manage_email' ) );
+		$this->assertFalse( current_user_can( WP_Email_Admin::CAPABILITY ) );
 	}
 
 	// ------------------------------------------------------- the logs screen
@@ -247,9 +247,9 @@ class Test_Email_Admin extends WP_UnitTestCase {
 	public function test_the_options_screen_uses_nested_field_names() {
 		$html = $this->render_options();
 
-		$this->assertStringContainsString( 'name="email_options[link][post_text]"', $html );
-		$this->assertStringContainsString( 'name="email_options[sending][interval]"', $html );
-		$this->assertStringContainsString( 'name="email_options[templates][subject]"', $html );
+		$this->assertStringContainsString( 'name="wp_email_options[link][post_text]"', $html );
+		$this->assertStringContainsString( 'name="wp_email_options[sending][interval]"', $html );
+		$this->assertStringContainsString( 'name="wp_email_options[templates][subject]"', $html );
 	}
 
 	/**

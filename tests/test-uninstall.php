@@ -83,8 +83,9 @@ class Test_Email_Uninstall extends WP_UnitTestCase {
 		$source = $this->source();
 
 		// The old version called the drop inside the option loop, so it ran
-		// eighteen times per site.
-		$this->assertSame( 1, substr_count( $source, 'DROP TABLE' ) );
+		// eighteen times per site. The statement itself lives on
+		// WP_Email_Logs::drop_table() now, so uninstall.php names it once.
+		$this->assertSame( 2, substr_count( $source, 'WP_Email_Logs::drop_table()' ) );
 	}
 
 	/**
@@ -93,11 +94,13 @@ class Test_Email_Uninstall extends WP_UnitTestCase {
 	public function test_it_clears_the_consolidated_option_and_the_legacy_rows() {
 		$source = $this->source();
 
+		$this->assertStringContainsString( "'wp_email_options'", $source );
+		$this->assertStringContainsString( "'wp_email_version'", $source );
 		$this->assertStringContainsString( "'email_options'", $source );
 		$this->assertStringContainsString( "'email_db_version'", $source );
 
 		// An install that never reached the migration still has the originals.
-		foreach ( WP_Email_Options::legacy_option_names() as $name ) {
+		foreach ( WP_Email_Options::LEGACY_ROWS as $name ) {
 			$this->assertStringContainsString( "'{$name}'", $source, "uninstall.php should clear {$name}" );
 		}
 	}
