@@ -12,7 +12,7 @@
  * @covers WP_Email_Settings
  * @covers WP_Email_Logs_Table
  */
-class Test_Email_Admin extends WP_UnitTestCase {
+class WP_Email_Admin_Test extends WP_Email_TestCase {
 
 	/**
 	 * Administrator user.
@@ -107,29 +107,18 @@ class Test_Email_Admin extends WP_UnitTestCase {
 		return ob_get_clean();
 	}
 
-	// ------------------------------------------------------- capabilities --
 
-	/**
-	 * The administrator gains the capability on install.
-	 */
 	public function test_the_administrator_gains_the_capability_on_install() {
 		$this->assertTrue( get_role( 'administrator' )->has_cap( 'manage_email' ) );
 	}
 
-	/**
-	 * A subscriber does not have the capability.
-	 */
 	public function test_a_subscriber_does_not_have_the_capability() {
 		wp_set_current_user( self::factory()->user->create( array( 'role' => 'subscriber' ) ) );
 
 		$this->assertFalse( current_user_can( WP_Email_Admin::CAPABILITY ) );
 	}
 
-	// ------------------------------------------------------- the logs screen
 
-	/**
-	 * The logs screen lists its rows.
-	 */
 	public function test_the_logs_screen_lists_its_rows() {
 		$this->log();
 
@@ -143,9 +132,6 @@ class Test_Email_Admin extends WP_UnitTestCase {
 		$this->assertStringContainsString( 'Delete E-Mail Logs', $html );
 	}
 
-	/**
-	 * The logs screen escapes hostile stored values.
-	 */
 	public function test_the_logs_screen_escapes_hostile_stored_values() {
 		$this->log(
 			array(
@@ -165,16 +151,10 @@ class Test_Email_Admin extends WP_UnitTestCase {
 		$this->assertStringContainsString( '&amp;', $html );
 	}
 
-	/**
-	 * The logs screen says so when empty.
-	 */
 	public function test_the_logs_screen_says_so_when_empty() {
 		$this->assertStringContainsString( 'No E-Mail Logs Found', $this->render_logs() );
 	}
 
-	/**
-	 * The logs table sorts only on known columns.
-	 */
 	public function test_the_logs_table_sorts_only_on_known_columns() {
 
 		$table = new WP_Email_Logs_Table();
@@ -184,9 +164,6 @@ class Test_Email_Admin extends WP_UnitTestCase {
 		}
 	}
 
-	/**
-	 * The delete form carries a nonce.
-	 */
 	public function test_the_delete_form_carries_a_nonce() {
 		$html = $this->render_logs();
 
@@ -195,9 +172,6 @@ class Test_Email_Admin extends WP_UnitTestCase {
 		$this->assertStringContainsString( 'name="delete_logs"', $html );
 	}
 
-	/**
-	 * The delete button has no inline handler.
-	 */
 	public function test_the_delete_button_has_no_inline_handler() {
 		$html = $this->render_logs();
 
@@ -205,11 +179,7 @@ class Test_Email_Admin extends WP_UnitTestCase {
 		$this->assertStringContainsString( 'data-wp-email-confirm', $html );
 	}
 
-	// ---------------------------------------------------- the options screen
 
-	/**
-	 * The options screen renders every section.
-	 */
 	public function test_the_options_screen_renders_every_section() {
 		$html = $this->render_options();
 
@@ -226,9 +196,6 @@ class Test_Email_Admin extends WP_UnitTestCase {
 		$this->assertStringContainsString( 'Restore Default Template', $html );
 	}
 
-	/**
-	 * The options screen posts to the settings api.
-	 */
 	public function test_the_options_screen_posts_to_the_settings_api() {
 		$html = $this->render_options();
 
@@ -238,9 +205,6 @@ class Test_Email_Admin extends WP_UnitTestCase {
 		$this->assertStringContainsString( '_wpnonce', $html );
 	}
 
-	/**
-	 * The options screen uses nested field names.
-	 */
 	public function test_the_options_screen_uses_nested_field_names() {
 		$html = $this->render_options();
 
@@ -249,9 +213,6 @@ class Test_Email_Admin extends WP_UnitTestCase {
 		$this->assertStringContainsString( 'name="wp_email_options[templates][subject]"', $html );
 	}
 
-	/**
-	 * Phpcbf renumbers a literal %TOKEN% inside a translatable string.
-	 */
 	public function test_the_template_tokens_are_shown_verbatim() {
 		$html = $this->render_options();
 
@@ -263,9 +224,6 @@ class Test_Email_Admin extends WP_UnitTestCase {
 		$this->assertStringNotContainsString( '%1$EMAIL', $html );
 	}
 
-	/**
-	 * Not esc_js() into an inline onclick.
-	 */
 	public function test_the_restore_buttons_carry_defaults_in_data_attributes() {
 		$html = $this->render_options();
 
@@ -276,9 +234,6 @@ class Test_Email_Admin extends WP_UnitTestCase {
 		$this->assertStringNotContainsString( 'onclick', $html );
 	}
 
-	/**
-	 * The setting is registered with its sanitizer.
-	 */
 	public function test_the_setting_is_registered_with_its_sanitizer() {
 		$settings = new WP_Email_Settings();
 		$settings->register();
@@ -292,9 +247,6 @@ class Test_Email_Admin extends WP_UnitTestCase {
 		);
 	}
 
-	/**
-	 * The admin script is only enqueued on plugin screens.
-	 */
 	public function test_the_admin_script_is_only_enqueued_on_plugin_screens() {
 		$settings = new WP_Email_Settings();
 

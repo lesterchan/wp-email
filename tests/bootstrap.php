@@ -24,13 +24,23 @@ require_once $_tests_dir . '/includes/functions.php';
 
 /**
  * Load the plugin under test before WordPress finishes booting.
+ *
+ * @return void
  */
-function _email_manually_load_plugin() {
+function wp_email_test_load_plugin() {
 	require dirname( __DIR__ ) . '/wp-email.php';
 }
-tests_add_filter( 'muplugins_loaded', '_email_manually_load_plugin' );
+tests_add_filter( 'muplugins_loaded', 'wp_email_test_load_plugin' );
 
 require $_tests_dir . '/includes/bootstrap.php';
+
+// After the test library, not before: the two base classes extend
+// WP_UnitTestCase and WP_Ajax_UnitTestCase, neither of which exists until the
+// bootstrap above has run. Required by name rather than found by a glob, so a
+// helper is never silently left unloaded when discovery changes.
+require_once __DIR__ . '/helper-testcase.php';
+require_once __DIR__ . '/helper-ajax-testcase.php';
+require_once __DIR__ . '/helper-source.php';
 
 // The activation hook does not fire under the test bootstrap, so create the
 // table and seed the options the way a real install would.

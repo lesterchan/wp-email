@@ -10,7 +10,7 @@
  *
  * @covers WP_Email_Logs
  */
-class Test_Email_Logs extends WP_UnitTestCase {
+class WP_Email_Logs_Test extends WP_Email_TestCase {
 
 	/**
 	 * Insert a log row.
@@ -40,9 +40,6 @@ class Test_Email_Logs extends WP_UnitTestCase {
 		);
 	}
 
-	/**
-	 * None of these columns was indexed before 3.0.0.
-	 */
 	public function test_the_table_exists_with_its_indexes() {
 		global $wpdb;
 
@@ -58,9 +55,6 @@ class Test_Email_Logs extends WP_UnitTestCase {
 		$this->assertContains( 'email_ip', $names );
 	}
 
-	/**
-	 * $wpdb->tables[] is what keeps the name right across switch_to_blog().
-	 */
 	public function test_the_table_is_registered_for_multisite_prefixing() {
 		global $wpdb;
 
@@ -70,9 +64,6 @@ class Test_Email_Logs extends WP_UnitTestCase {
 		$this->assertSame( $wpdb->prefix . 'email', $wpdb->email );
 	}
 
-	/**
-	 * Counts.
-	 */
 	public function test_counts() {
 		$this->log();
 		$this->log();
@@ -86,9 +77,6 @@ class Test_Email_Logs extends WP_UnitTestCase {
 		$this->assertSame( 1, WP_Email_Logs::count_for_post( 99 ) );
 	}
 
-	/**
-	 * Last sent at only counts successes.
-	 */
 	public function test_last_sent_at_only_counts_successes() {
 		$this->log(
 			array(
@@ -111,9 +99,6 @@ class Test_Email_Logs extends WP_UnitTestCase {
 		$this->assertSame( 2000, WP_Email_Logs::last_sent_at( '203.0.113.1' ) );
 	}
 
-	/**
-	 * Query sorts on a whitelisted column only.
-	 */
 	public function test_query_sorts_on_a_whitelisted_column_only() {
 		$this->log( array( 'yourname' => 'Zoe' ) );
 		$this->log( array( 'yourname' => 'Adam' ) );
@@ -135,9 +120,6 @@ class Test_Email_Logs extends WP_UnitTestCase {
 		$this->assertSame( 'Zoe', $desc[0]->email_yourname );
 	}
 
-	/**
-	 * An identifier cannot be bound, so it must be whitelisted.
-	 */
 	public function test_an_unknown_orderby_falls_back_instead_of_reaching_sql() {
 		$this->log();
 
@@ -148,9 +130,6 @@ class Test_Email_Logs extends WP_UnitTestCase {
 		$this->assertCount( 1, $rows );
 	}
 
-	/**
-	 * Query paginates.
-	 */
 	public function test_query_paginates() {
 		for ( $i = 0; $i < 5; $i++ ) {
 			$this->log( array( 'yourname' => 'Name ' . $i ) );
@@ -179,9 +158,6 @@ class Test_Email_Logs extends WP_UnitTestCase {
 		$this->assertSame( 'Name 2', $page_two[0]->email_yourname );
 	}
 
-	/**
-	 * Delete all empties the table.
-	 */
 	public function test_delete_all_empties_the_table() {
 		$this->log();
 		$this->log();
@@ -191,9 +167,6 @@ class Test_Email_Logs extends WP_UnitTestCase {
 		$this->assertSame( 0, WP_Email_Logs::count_all() );
 	}
 
-	/**
-	 * Storing the translated string orphaned rows when the site language changed.
-	 */
 	public function test_status_is_stored_untranslated() {
 		$this->log();
 
@@ -204,17 +177,11 @@ class Test_Email_Logs extends WP_UnitTestCase {
 		$this->assertSame( 'Success', $rows[0]->email_status );
 	}
 
-	/**
-	 * Status labels are translated on the way out.
-	 */
 	public function test_status_labels_are_translated_on_the_way_out() {
 		$this->assertSame( __( 'Success', 'wp-email' ), WP_Email_Logs::status_label( WP_Email_Logs::STATUS_SUCCESS ) );
 		$this->assertSame( 'Something else', WP_Email_Logs::status_label( 'Something else' ) );
 	}
 
-	/**
-	 * Install is safe to run twice.
-	 */
 	public function test_install_is_safe_to_run_twice() {
 		$this->log();
 
@@ -223,9 +190,6 @@ class Test_Email_Logs extends WP_UnitTestCase {
 		$this->assertSame( 1, WP_Email_Logs::count_all() );
 	}
 
-	/**
-	 * Most emailed orders by volume.
-	 */
 	public function test_most_emailed_orders_by_volume() {
 		$past = gmdate( 'Y-m-d H:i:s', time() - HOUR_IN_SECONDS );
 
@@ -254,9 +218,6 @@ class Test_Email_Logs extends WP_UnitTestCase {
 		$this->assertSame( 3, (int) $rows[0]->email_total );
 	}
 
-	/**
-	 * Most emailed respects its limit.
-	 */
 	public function test_most_emailed_respects_its_limit() {
 		$past = gmdate( 'Y-m-d H:i:s', time() - HOUR_IN_SECONDS );
 
@@ -268,9 +229,6 @@ class Test_Email_Logs extends WP_UnitTestCase {
 		$this->assertCount( 2, WP_Email_Logs::most_emailed( 'post', 2 ) );
 	}
 
-	/**
-	 * Most emailed skips drafts and password protected posts.
-	 */
 	public function test_most_emailed_skips_drafts_and_password_protected_posts() {
 		$past = gmdate( 'Y-m-d H:i:s', time() - HOUR_IN_SECONDS );
 
@@ -293,9 +251,6 @@ class Test_Email_Logs extends WP_UnitTestCase {
 		$this->assertSame( array(), WP_Email_Logs::most_emailed( 'post', 10 ) );
 	}
 
-	/**
-	 * Rows written with a translated status are rewritten to the canonical one.
-	 */
 	public function test_normalize_statuses_rewrites_translated_rows() {
 		global $wpdb;
 
@@ -331,9 +286,6 @@ class Test_Email_Logs extends WP_UnitTestCase {
 		return 'Success' === $text ? 'Réussi' : $translation;
 	}
 
-	/**
-	 * On an English install it is a no-op rather than a pointless write.
-	 */
 	public function test_normalize_statuses_is_a_no_op_in_english() {
 		$this->log();
 
@@ -342,9 +294,6 @@ class Test_Email_Logs extends WP_UnitTestCase {
 		$this->assertSame( 1, WP_Email_Logs::count_by_status( WP_Email_Logs::STATUS_SUCCESS ) );
 	}
 
-	/**
-	 * The sortable column map only names real columns.
-	 */
 	public function test_every_sortable_column_exists_on_the_table() {
 		global $wpdb;
 
@@ -355,13 +304,17 @@ class Test_Email_Logs extends WP_UnitTestCase {
 		}
 	}
 
-	/**
-	 * An empty table reports zero rather than null.
-	 */
 	public function test_counts_are_zero_on_an_empty_table() {
 		$this->assertSame( 0, WP_Email_Logs::count_all() );
 		$this->assertSame( 0, WP_Email_Logs::count_by_status( WP_Email_Logs::STATUS_SUCCESS ) );
 		$this->assertSame( 0, WP_Email_Logs::count_for_post( 1 ) );
 		$this->assertSame( array(), WP_Email_Logs::query() );
+	}
+
+	public function test_the_table_name_is_prefixed_for_the_current_site() {
+		global $wpdb;
+
+		$this->assertSame( $wpdb->email, WP_Email_Logs::table() );
+		$this->assertStringEndsWith( 'email', WP_Email_Logs::table() );
 	}
 }

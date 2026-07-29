@@ -10,7 +10,7 @@
  *
  * @covers WP_Email_Options
  */
-class Test_Email_Options extends WP_UnitTestCase {
+class WP_Email_Options_Test extends WP_Email_TestCase {
 
 	/**
 	 * Put the database back into the shape a 2.69.4 install leaves behind.
@@ -55,11 +55,9 @@ class Test_Email_Options extends WP_UnitTestCase {
 		update_option( 'email_smtp', 'should-be-removed' );
 	}
 
-	/**
-	 * Defaults are returned for a fresh install.
-	 */
 	public function test_defaults_are_returned_for_a_fresh_install() {
 		delete_option( WP_Email_Options::OPTION );
+		WP_Email_Options::flush();
 
 		$this->assertSame( 'Email This Post', WP_Email_Options::get( 'link', 'post_text' ) );
 		$this->assertSame( 1, WP_Email_Options::get( 'link', 'type' ) );
@@ -67,11 +65,9 @@ class Test_Email_Options extends WP_UnitTestCase {
 		$this->assertSame( 10, WP_Email_Options::get( 'sending', 'interval' ) );
 	}
 
-	/**
-	 * Stored values merge over defaults group by group.
-	 */
 	public function test_stored_values_merge_over_defaults_group_by_group() {
 		update_option( WP_Email_Options::OPTION, array( 'link' => array( 'post_text' => 'Mine' ) ) );
+		WP_Email_Options::flush();
 
 		$this->assertSame( 'Mine', WP_Email_Options::get( 'link', 'post_text' ) );
 		// Untouched keys in the same group still resolve.
@@ -80,35 +76,23 @@ class Test_Email_Options extends WP_UnitTestCase {
 		$this->assertSame( 10, WP_Email_Options::get( 'sending', 'interval' ) );
 	}
 
-	/**
-	 * Unknown setting is null rather than a warning.
-	 */
 	public function test_unknown_setting_is_null_rather_than_a_warning() {
 		$this->assertNull( WP_Email_Options::get( 'link', 'nope' ) );
 		$this->assertNull( WP_Email_Options::get( 'nope', 'nope' ) );
 	}
 
-	/**
-	 * Sanitize rejects an out of range link style.
-	 */
 	public function test_sanitize_rejects_an_out_of_range_link_style() {
 		$clean = WP_Email_Options::sanitize( array( 'link' => array( 'style' => 99 ) ) );
 
 		$this->assertSame( 1, $clean['link']['style'] );
 	}
 
-	/**
-	 * The icon setting went with the image files it chose between.
-	 */
 	public function test_sanitize_drops_the_retired_icon_setting() {
 		$clean = WP_Email_Options::sanitize( array( 'link' => array( 'icon' => '../../../wp-config.php' ) ) );
 
 		$this->assertArrayNotHasKey( 'icon', $clean['link'] );
 	}
 
-	/**
-	 * Sanitize rejects a bogus ip header.
-	 */
 	public function test_sanitize_rejects_a_bogus_ip_header() {
 		$clean = WP_Email_Options::sanitize( array( 'sending' => array( 'ip_header' => 'not a header!' ) ) );
 
@@ -119,9 +103,6 @@ class Test_Email_Options extends WP_UnitTestCase {
 		$this->assertSame( 'HTTP_X_REAL_IP', $clean['sending']['ip_header'] );
 	}
 
-	/**
-	 * Sanitize keeps the friend email field mandatory.
-	 */
 	public function test_sanitize_keeps_the_friend_email_field_mandatory() {
 		$clean = WP_Email_Options::sanitize( array( 'fields' => array() ) );
 
@@ -129,9 +110,6 @@ class Test_Email_Options extends WP_UnitTestCase {
 		$this->assertSame( 0, $clean['fields']['yourname'] );
 	}
 
-	/**
-	 * Sanitize strips markup from the subject.
-	 */
 	public function test_sanitize_strips_markup_from_the_subject() {
 		$clean = WP_Email_Options::sanitize(
 			array( 'templates' => array( 'subject' => 'Hi <b>there</b><script>x</script>' ) )
@@ -142,9 +120,6 @@ class Test_Email_Options extends WP_UnitTestCase {
 		$this->assertSame( 'Hi there', $clean['templates']['subject'] );
 	}
 
-	/**
-	 * Sanitize keeps markup in the body but drops scripts.
-	 */
 	public function test_sanitize_keeps_markup_in_the_body_but_drops_scripts() {
 		$clean = WP_Email_Options::sanitize(
 			array( 'templates' => array( 'body' => '<p>Hi</p><script>alert(1)</script>' ) )
@@ -154,18 +129,12 @@ class Test_Email_Options extends WP_UnitTestCase {
 		$this->assertStringNotContainsString( '<script>', $clean['templates']['body'] );
 	}
 
-	/**
-	 * Sanitize never lowers the recipient maximum below one.
-	 */
 	public function test_sanitize_never_lowers_the_recipient_maximum_below_one() {
 		$clean = WP_Email_Options::sanitize( array( 'sending' => array( 'multiple' => 0 ) ) );
 
 		$this->assertSame( 1, $clean['sending']['multiple'] );
 	}
 
-	/**
-	 * Migration carries every legacy value across.
-	 */
 	public function test_migration_carries_every_legacy_value_across() {
 		$this->seed_legacy_install();
 
@@ -192,9 +161,6 @@ class Test_Email_Options extends WP_UnitTestCase {
 		$this->assertStringContainsString( 'Legacy title', WP_Email_Options::template( 'title' ) );
 	}
 
-	/**
-	 * Migration takes defaults for templates the install never customised.
-	 */
 	public function test_migration_takes_defaults_for_templates_the_install_never_customised() {
 		$this->seed_legacy_install();
 
@@ -204,9 +170,6 @@ class Test_Email_Options extends WP_UnitTestCase {
 		$this->assertStringContainsString( '%EMAIL_ERROR_MSG%', WP_Email_Options::template( 'error' ) );
 	}
 
-	/**
-	 * Migration unslashes templates stored by the old screen.
-	 */
 	public function test_migration_unslashes_templates_stored_by_the_old_screen() {
 		$this->seed_legacy_install();
 		update_option( 'email_template_body', "Legacy body O\\'Brien %EMAIL_POST_CONTENT%" );
@@ -218,9 +181,6 @@ class Test_Email_Options extends WP_UnitTestCase {
 		$this->assertStringNotContainsString( "O\\'Brien", WP_Email_Options::template( 'body' ) );
 	}
 
-	/**
-	 * Migration deletes the legacy rows.
-	 */
 	public function test_migration_deletes_the_legacy_rows() {
 		$this->seed_legacy_install();
 
@@ -232,9 +192,6 @@ class Test_Email_Options extends WP_UnitTestCase {
 		}
 	}
 
-	/**
-	 * The consolidated row is a new, prefixed one rather than the old name.
-	 */
 	public function test_migration_writes_the_prefixed_row_and_removes_the_old_one() {
 		$this->seed_legacy_install();
 
@@ -246,9 +203,6 @@ class Test_Email_Options extends WP_UnitTestCase {
 		$this->assertFalse( get_option( 'email_options' ) );
 	}
 
-	/**
-	 * Running the migration again must not write defaults over real settings.
-	 */
 	public function test_migration_is_idempotent() {
 		$this->seed_legacy_install();
 
@@ -265,9 +219,6 @@ class Test_Email_Options extends WP_UnitTestCase {
 		$this->assertSame( 7, WP_Email_Options::get( 'sending', 'interval' ) );
 	}
 
-	/**
-	 * Migration leaves an already nested option alone.
-	 */
 	public function test_migration_carries_an_unreleased_nested_row_across() {
 		delete_option( WP_Email_Options::VERSION );
 		update_option(
@@ -285,9 +236,6 @@ class Test_Email_Options extends WP_UnitTestCase {
 		$this->assertSame( 'Mine', WP_Email_Options::template( 'subject' ) );
 	}
 
-	/**
-	 * Upgrade writes the version marker and stops repeating.
-	 */
 	public function test_upgrade_writes_the_version_marker_and_stops_repeating() {
 		$this->seed_legacy_install();
 
@@ -306,9 +254,6 @@ class Test_Email_Options extends WP_UnitTestCase {
 		$this->assertSame( 'Legacy Post Text', WP_Email_Options::get( 'link', 'post_text' ) );
 	}
 
-	/**
-	 * The plugin owns at most two option rows after upgrading.
-	 */
 	public function test_the_plugin_owns_at_most_two_option_rows_after_upgrading() {
 		global $wpdb;
 
@@ -323,9 +268,6 @@ class Test_Email_Options extends WP_UnitTestCase {
 		$this->assertSame( 2, $rows );
 	}
 
-	/**
-	 * The marker decides whether the option needs migrating, so it lives elsewhere.
-	 */
 	public function test_the_version_marker_is_not_stored_inside_the_option_it_gates() {
 		WP_Email::get_instance()->maybe_upgrade();
 
@@ -335,9 +277,6 @@ class Test_Email_Options extends WP_UnitTestCase {
 		$this->assertArrayNotHasKey( 'versions', $stored );
 	}
 
-	/**
-	 * The registered sanitize callback runs on save.
-	 */
 	public function test_the_registered_sanitize_callback_runs_on_save() {
 		$settings = new WP_Email_Settings();
 		$settings->register();
@@ -352,5 +291,126 @@ class Test_Email_Options extends WP_UnitTestCase {
 		$clean = apply_filters( 'sanitize_option_' . WP_Email_Options::OPTION, array( 'link' => array( 'style' => 99 ) ), WP_Email_Options::OPTION, '' );
 
 		$this->assertSame( 1, $clean['link']['style'] );
+	}
+
+	public function test_sanitize_keeps_the_wp_stats_settings() {
+		$clean = WP_Email_Options::sanitize(
+			array(
+				'stats_display'    => '1',
+				'stats_most_limit' => '25',
+			)
+		);
+
+		$this->assertTrue( $clean['stats_display'] );
+		$this->assertSame( 25, $clean['stats_most_limit'] );
+	}
+
+	public function test_sanitize_reads_an_absent_stats_checkbox_as_off() {
+		$clean = WP_Email_Options::sanitize( array() );
+
+		$this->assertFalse( $clean['stats_display'] );
+	}
+
+	public function test_sanitize_never_lowers_the_stats_limit_below_one() {
+		$clean = WP_Email_Options::sanitize( array( 'stats_most_limit' => 0 ) );
+
+		$this->assertSame( 1, $clean['stats_most_limit'] );
+	}
+
+	/**
+	 * The 13.2 rule: an absent shared row means a sibling plugin has already
+	 * migrated and deleted it, not that the block was switched off.
+	 *
+	 * Read the other way round -- get_option( 'stats_display', false ) -- six of
+	 * the seven plugins would lose their block with no error anywhere.
+	 */
+	public function test_a_missing_shared_stats_row_leaves_the_block_switched_on() {
+		$this->seed_legacy_install();
+		delete_option( 'stats_display' );
+
+		WP_Email_Options::flush();
+		WP_Email_Options::maybe_upgrade();
+
+		$this->assertTrue( WP_Email_Options::stats_display() );
+	}
+
+	public function test_the_shared_stats_row_is_carried_across_when_it_is_still_there() {
+		$this->seed_legacy_install();
+		update_option( 'stats_display', array( 'email' => 1 ) );
+		update_option( 'stats_mostlimit', 25 );
+
+		WP_Email_Options::flush();
+		WP_Email_Options::maybe_upgrade();
+
+		$this->assertTrue( WP_Email_Options::stats_display() );
+		$this->assertSame( 25, WP_Email_Options::stats_most_limit() );
+	}
+
+	/**
+	 * WP-Stats 2.x kept one toggle per block and WP-EMail owned three of them,
+	 * so the single section is on if any of the three was.
+	 */
+	public function test_any_of_the_three_old_toggles_keeps_the_block_on() {
+		$this->seed_legacy_install();
+		update_option( 'stats_display', array( 'emailed_most_page' => 1 ) );
+
+		WP_Email_Options::flush();
+		WP_Email_Options::maybe_upgrade();
+
+		$this->assertTrue( WP_Email_Options::stats_display() );
+	}
+
+	public function test_all_three_old_toggles_off_switches_the_block_off() {
+		$this->seed_legacy_install();
+		update_option(
+			'stats_display',
+			array(
+				'email'             => 0,
+				'emailed_most_post' => 0,
+				'emailed_most_page' => 0,
+			)
+		);
+
+		WP_Email_Options::flush();
+		WP_Email_Options::maybe_upgrade();
+
+		$this->assertFalse( WP_Email_Options::stats_display() );
+	}
+
+	/**
+	 * Deleted by the migration, because 2.1 requires every folded-in row to go.
+	 * uninstall.php is the half that must leave them alone.
+	 */
+	public function test_the_migration_deletes_the_two_shared_stats_rows() {
+		$this->seed_legacy_install();
+		update_option( 'stats_display', array( 'email' => 1 ) );
+		update_option( 'stats_mostlimit', 25 );
+
+		WP_Email_Options::flush();
+		WP_Email_Options::maybe_upgrade();
+
+		$this->assertFalse( get_option( 'stats_display' ) );
+		$this->assertFalse( get_option( 'stats_mostlimit' ) );
+	}
+
+	public function test_the_stats_limit_never_falls_below_one() {
+		$this->seed_legacy_install();
+		update_option( 'stats_mostlimit', 0 );
+
+		WP_Email_Options::flush();
+		WP_Email_Options::maybe_upgrade();
+
+		$this->assertSame( 1, WP_Email_Options::stats_most_limit() );
+	}
+
+	public function test_the_cache_is_dropped_when_the_settings_are_written() {
+		$this->assertSame( 'Email This Post', WP_Email_Options::get( 'link', 'post_text' ) );
+
+		$options                      = WP_Email_Options::defaults();
+		$options['link']['post_text'] = 'Send This';
+
+		WP_Email_Options::update( $options );
+
+		$this->assertSame( 'Send This', WP_Email_Options::get( 'link', 'post_text' ) );
 	}
 }

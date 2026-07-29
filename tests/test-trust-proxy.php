@@ -17,7 +17,7 @@
  * @preserveGlobalState disabled
  * @coversNothing
  */
-class Test_Email_Trust_Proxy extends WP_UnitTestCase {
+class WP_Email_Trust_Proxy_Test extends WP_Email_TestCase {
 
 	/**
 	 * Set up the fixtures for each test.
@@ -45,9 +45,6 @@ class Test_Email_Trust_Proxy extends WP_UnitTestCase {
 		parent::tear_down();
 	}
 
-	/**
-	 * With the constant defined, the proxy headers are honoured.
-	 */
 	public function test_the_constant_opts_into_the_proxy_headers() {
 		define( 'WP_EMAIL_TRUST_PROXY', true );
 
@@ -56,9 +53,6 @@ class Test_Email_Trust_Proxy extends WP_UnitTestCase {
 		$this->assertSame( '203.0.113.7', WP_Email_Form::ip_address() );
 	}
 
-	/**
-	 * Cloudflare's own header is preferred over the generic one.
-	 */
 	public function test_the_cloudflare_header_wins() {
 		define( 'WP_EMAIL_TRUST_PROXY', true );
 
@@ -68,9 +62,6 @@ class Test_Email_Trust_Proxy extends WP_UnitTestCase {
 		$this->assertSame( '203.0.113.8', WP_Email_Form::ip_address() );
 	}
 
-	/**
-	 * The first usable address in a forwarding chain is taken.
-	 */
 	public function test_the_first_address_in_a_chain_is_used() {
 		define( 'WP_EMAIL_TRUST_PROXY', true );
 
@@ -79,9 +70,6 @@ class Test_Email_Trust_Proxy extends WP_UnitTestCase {
 		$this->assertSame( '203.0.113.10', WP_Email_Form::ip_address() );
 	}
 
-	/**
-	 * A junk header still falls back to REMOTE_ADDR.
-	 */
 	public function test_a_junk_header_falls_back() {
 		define( 'WP_EMAIL_TRUST_PROXY', true );
 
@@ -90,9 +78,6 @@ class Test_Email_Trust_Proxy extends WP_UnitTestCase {
 		$this->assertSame( '198.51.100.200', WP_Email_Form::ip_address() );
 	}
 
-	/**
-	 * A configured header still takes precedence over the blanket opt-in.
-	 */
 	public function test_a_named_header_still_wins() {
 		define( 'WP_EMAIL_TRUST_PROXY', true );
 
@@ -108,9 +93,6 @@ class Test_Email_Trust_Proxy extends WP_UnitTestCase {
 		unset( $_SERVER['HTTP_X_REAL_IP'] );
 	}
 
-	/**
-	 * The filter can veto the constant.
-	 */
 	public function test_the_filter_can_override_the_constant() {
 		define( 'WP_EMAIL_TRUST_PROXY', true );
 

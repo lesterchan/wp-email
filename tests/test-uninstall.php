@@ -16,7 +16,7 @@
  *
  * @coversNothing
  */
-class Test_Email_Uninstall extends WP_UnitTestCase {
+class WP_Email_Uninstall_Test extends WP_Email_TestCase {
 
 	/**
 	 * The uninstall script's source.
@@ -27,16 +27,10 @@ class Test_Email_Uninstall extends WP_UnitTestCase {
 		return file_get_contents( dirname( __DIR__ ) . '/uninstall.php' );
 	}
 
-	/**
-	 * It refuses to run outside an uninstall.
-	 */
 	public function test_it_refuses_to_run_outside_an_uninstall() {
 		$this->assertStringContainsString( 'WP_UNINSTALL_PLUGIN', $this->source() );
 	}
 
-	/**
-	 * Get_sites() defaults to 100, silently orphaning data on larger networks.
-	 */
 	public function test_it_lifts_the_site_query_row_cap() {
 		// get_sites() defaults 'number' to 100, so without this the options and
 		// the table are left behind on every site past the hundredth and the
@@ -44,17 +38,11 @@ class Test_Email_Uninstall extends WP_UnitTestCase {
 		$this->assertMatchesRegularExpression( "/'number'\s*=>\s*0/", $this->source() );
 	}
 
-	/**
-	 * Removed in WordPress 5.1; calling it fatals rather than skipping.
-	 */
 	public function test_it_does_not_call_the_removed_wp_get_sites() {
 		// Removed in WordPress 5.1; calling it fatals rather than skipping.
 		$this->assertStringNotContainsString( 'wp_get_sites', $this->source() );
 	}
 
-	/**
-	 * Switch_to_blog() pushes onto a stack that one restore cannot unwind.
-	 */
 	public function test_it_restores_the_blog_inside_the_loop() {
 		$source = $this->source();
 
@@ -69,16 +57,10 @@ class Test_Email_Uninstall extends WP_UnitTestCase {
 		$this->assertStringContainsString( 'restore_current_blog', $loop_body );
 	}
 
-	/**
-	 * It only fetches the ids it needs.
-	 */
 	public function test_it_only_fetches_the_ids_it_needs() {
 		$this->assertMatchesRegularExpression( "/'fields'\s*=>\s*'ids'/", $this->source() );
 	}
 
-	/**
-	 * It drops the table once per site not once per option.
-	 */
 	public function test_it_drops_the_table_once_per_site_not_once_per_option() {
 		$source = $this->source();
 
@@ -88,9 +70,6 @@ class Test_Email_Uninstall extends WP_UnitTestCase {
 		$this->assertSame( 2, substr_count( $source, 'WP_Email_Logs::drop_table()' ) );
 	}
 
-	/**
-	 * It clears the consolidated option and the legacy rows.
-	 */
 	public function test_it_clears_the_consolidated_option_and_the_legacy_rows() {
 		$source = $this->source();
 
@@ -105,60 +84,27 @@ class Test_Email_Uninstall extends WP_UnitTestCase {
 		}
 	}
 
-	/**
-	 * It takes the capability back.
-	 */
 	public function test_it_takes_the_capability_back() {
 		$this->assertStringContainsString( 'remove_cap', $this->source() );
 	}
 
 	/**
-	 * Uninstalling a single site clears everything.
+	 * The behavioural half of this lives in test-metadata.php.
+	 *
+	 * The uninstaller declares global functions, so only one test file in the
+	 * plugin may require it -- a second fatals on redeclare. That file is
+	 * test-metadata.php, where the family-wide
+	 * test_uninstall_removes_every_option_row() already has to run it.
 	 */
-	public function test_uninstalling_a_single_site_clears_everything() {
-		global $wpdb;
+	public function test_the_uninstaller_is_executed_by_exactly_one_test_file() {
+		$requiring = array();
 
-		if ( is_multisite() ) {
-			$this->markTestSkipped( 'Single-site path only.' );
+		foreach ( (array) glob( __DIR__ . '/test-*.php' ) as $file ) {
+			if ( preg_match( "#require(_once)?\\s+dirname\\( __DIR__ \\) \\. '/uninstall\\.php'#", (string) file_get_contents( $file ) ) ) {
+				$requiring[] = basename( $file );
+			}
 		}
 
-		WP_Email_Logs::insert(
-			array(
-				'yourname'    => 'Alice',
-				'youremail'   => 'a@example.com',
-				'yourremarks' => '',
-				'friendname'  => 'F',
-				'friendemail' => 'f@example.com',
-				'postid'      => 1,
-				'posttitle'   => 'T',
-				'timestamp'   => time(),
-				'ip'          => '198.51.100.1',
-				'host'        => '',
-				'status'      => WP_Email_Logs::STATUS_SUCCESS,
-			)
-		);
-
-		// The test suite rewrites CREATE/DROP TABLE to their TEMPORARY forms so
-		// each test rolls back. The plugin's table is real -- bootstrap.php
-		// installs it before those filters matter -- so DROP TEMPORARY TABLE
-		// would quietly do nothing here.
-		remove_filter( 'query', array( $this, '_create_temporary_tables' ) );
-		remove_filter( 'query', array( $this, '_drop_temporary_tables' ) );
-
-		define( 'WP_UNINSTALL_PLUGIN', 'wp-email/wp-email.php' );
-
-		require dirname( __DIR__ ) . '/uninstall.php';
-
-		$this->assertFalse( get_option( WP_Email_Options::OPTION ) );
-		$this->assertFalse( get_option( WP_Email_Options::VERSION ) );
-		$this->assertFalse( get_role( 'administrator' )->has_cap( 'manage_email' ) );
-
-		$table = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $wpdb->email ) );
-		$this->assertNull( $table );
-
-		// Put the schema back for whatever runs next; the transaction rollback
-		// does not cover DROP TABLE.
-		WP_Email_Logs::install();
-		get_role( 'administrator' )->add_cap( 'manage_email' );
+		$this->assertSame( array( 'test-metadata.php' ), $requiring );
 	}
 }

@@ -12,7 +12,7 @@
  * @covers ::get_emails
  * @covers ::get_mostemailed
  */
-class Test_Email_Template_Tags extends WP_UnitTestCase {
+class WP_Email_Template_Tags_Test extends WP_Email_TestCase {
 
 	/**
 	 * Post fixture.
@@ -93,9 +93,6 @@ class Test_Email_Template_Tags extends WP_UnitTestCase {
 		}
 	}
 
-	/**
-	 * Counters.
-	 */
 	public function test_counters() {
 		$this->assertSame( '5', get_emails( false ) );
 		$this->assertSame( '4', get_emails_success( false ) );
@@ -104,9 +101,6 @@ class Test_Email_Template_Tags extends WP_UnitTestCase {
 		$this->assertSame( '1', get_email_count( $this->page_id, false ) );
 	}
 
-	/**
-	 * Most emailed filters by post type.
-	 */
 	public function test_most_emailed_filters_by_post_type() {
 		$posts = get_mostemailed( 'post', 10, 0, false );
 
@@ -119,23 +113,14 @@ class Test_Email_Template_Tags extends WP_UnitTestCase {
 		$this->assertStringContainsString( 'Harness Page', $both );
 	}
 
-	/**
-	 * Most emailed shows the count.
-	 */
 	public function test_most_emailed_shows_the_count() {
 		$this->assertStringContainsString( '4 emails', get_mostemailed( 'post', 10, 0, false ) );
 	}
 
-	/**
-	 * Most emailed says not available when there is nothing.
-	 */
 	public function test_most_emailed_says_not_available_when_there_is_nothing() {
 		$this->assertStringContainsString( 'N/A', get_mostemailed( 'attachment', 10, 0, false ) );
 	}
 
-	/**
-	 * Most emailed escapes a hostile post title.
-	 */
 	public function test_most_emailed_escapes_a_hostile_post_title() {
 		$hostile = self::factory()->post->create(
 			array(
@@ -165,9 +150,6 @@ class Test_Email_Template_Tags extends WP_UnitTestCase {
 		$this->assertStringNotContainsString( '<script>alert(1)</script>', $output );
 	}
 
-	/**
-	 * The old loop assigned each row to the $post global.
-	 */
 	public function test_most_emailed_does_not_clobber_the_global_post() {
 		$this->go_to( get_permalink( $this->post_id ) );
 		the_post();
@@ -179,9 +161,6 @@ class Test_Email_Template_Tags extends WP_UnitTestCase {
 		$this->assertSame( $before, $GLOBALS['post']->ID );
 	}
 
-	/**
-	 * Email link styles.
-	 */
 	public function test_email_link_styles() {
 		$this->go_to( get_permalink( $this->post_id ) );
 		the_post();
@@ -206,9 +185,6 @@ class Test_Email_Template_Tags extends WP_UnitTestCase {
 		$this->assertStringNotContainsString( 'wp-email-icon', email_link( '', '', false ) );
 	}
 
-	/**
-	 * Email link custom style expands every token.
-	 */
 	public function test_email_link_custom_style_expands_every_token() {
 		$this->go_to( get_permalink( $this->post_id ) );
 		the_post();
@@ -225,9 +201,6 @@ class Test_Email_Template_Tags extends WP_UnitTestCase {
 		$this->assertStringNotContainsString( '%EMAIL_', $link );
 	}
 
-	/**
-	 * Email link popup uses a data attribute not an onclick.
-	 */
 	public function test_email_link_popup_uses_a_data_attribute_not_an_onclick() {
 		$this->go_to( get_permalink( $this->post_id ) );
 		the_post();
@@ -242,9 +215,6 @@ class Test_Email_Template_Tags extends WP_UnitTestCase {
 		$this->assertStringNotContainsString( 'onclick', $link );
 	}
 
-	/**
-	 * Email link text can be overridden.
-	 */
 	public function test_email_link_text_can_be_overridden() {
 		$this->go_to( get_permalink( $this->post_id ) );
 		the_post();
@@ -252,9 +222,6 @@ class Test_Email_Template_Tags extends WP_UnitTestCase {
 		$this->assertStringContainsString( 'Send this along', email_link( 'Send this along', '', false ) );
 	}
 
-	/**
-	 * Title template expands.
-	 */
 	public function test_title_template_expands() {
 		$this->go_to( get_permalink( $this->post_id ) );
 		the_post();
@@ -269,16 +236,10 @@ class Test_Email_Template_Tags extends WP_UnitTestCase {
 		$this->assertStringNotContainsString( '%EMAIL_', $title );
 	}
 
-	/**
-	 * Title filter is a passthrough outside the loop.
-	 */
 	public function test_title_filter_is_a_passthrough_outside_the_loop() {
 		$this->assertSame( 'untouched', email_title( 'untouched' ) );
 	}
 
-	/**
-	 * Snippet cuts the content at the word limit.
-	 */
 	public function test_snippet_cuts_the_content_at_the_word_limit() {
 		$this->go_to( get_permalink( $this->post_id ) );
 		the_post();
@@ -293,9 +254,6 @@ class Test_Email_Template_Tags extends WP_UnitTestCase {
 		$this->assertStringNotContainsString( 'ten', $content );
 	}
 
-	/**
-	 * They used to stay neutered for the rest of the request.
-	 */
 	public function test_email_content_restores_the_shortcodes_it_neuters() {
 		$this->go_to( get_permalink( $this->post_id ) );
 		the_post();
@@ -308,9 +266,6 @@ class Test_Email_Template_Tags extends WP_UnitTestCase {
 		$this->assertSame( 'keep me', do_shortcode( '[donotemail]keep me[/donotemail]' ) );
 	}
 
-	/**
-	 * Alternate content is plain text.
-	 */
 	public function test_alternate_content_is_plain_text() {
 		$this->go_to( get_permalink( $this->post_id ) );
 		the_post();
@@ -318,9 +273,6 @@ class Test_Email_Template_Tags extends WP_UnitTestCase {
 		$this->assertStringNotContainsString( '<p>', email_content_alt() );
 	}
 
-	/**
-	 * Endpoints are registered.
-	 */
 	public function test_endpoints_are_registered() {
 		global $wp_rewrite;
 
@@ -340,9 +292,6 @@ class Test_Email_Template_Tags extends WP_UnitTestCase {
 		$this->assertContains( 'emailpopup', $names );
 	}
 
-	/**
-	 * Query vars are public.
-	 */
 	public function test_query_vars_are_public() {
 		$vars = apply_filters( 'query_vars', array() );
 
@@ -350,16 +299,10 @@ class Test_Email_Template_Tags extends WP_UnitTestCase {
 		$this->assertContains( 'wp_email_popup', $vars );
 	}
 
-	/**
-	 * It was printed on every page view whether or not anything used it.
-	 */
 	public function test_jquery_is_not_forced_into_wp_head() {
 		$this->assertFalse( has_action( 'wp_head', 'email_javascripts_header' ) );
 	}
 
-	/**
-	 * The script does not depend on jquery.
-	 */
 	public function test_the_script_does_not_depend_on_jquery() {
 		do_action( 'wp_enqueue_scripts' );
 

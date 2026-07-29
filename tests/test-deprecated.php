@@ -14,7 +14,7 @@
  *
  * @coversNothing
  */
-class Test_Email_Deprecated extends WP_UnitTestCase {
+class WP_Email_Deprecated_Test extends WP_Email_TestCase {
 
 	/**
 	 * Post fixture.
@@ -62,11 +62,7 @@ class Test_Email_Deprecated extends WP_UnitTestCase {
 		the_post();
 	}
 
-	// ---------------------------------------------------- the global names --
 
-	/**
-	 * Every shim the plugin promised to keep still exists.
-	 */
 	public function test_the_shimmed_names_all_exist() {
 		$names = array(
 			'get_ipaddress',
@@ -86,9 +82,6 @@ class Test_Email_Deprecated extends WP_UnitTestCase {
 		}
 	}
 
-	/**
-	 * Each shared helper is still guarded, so a sibling plugin can win.
-	 */
 	public function test_the_shared_helpers_are_still_guarded() {
 		$source = file_get_contents( dirname( __DIR__ ) . '/includes/deprecated.php' );
 
@@ -103,9 +96,6 @@ class Test_Email_Deprecated extends WP_UnitTestCase {
 		}
 	}
 
-	/**
-	 * The PHP 4 era polyfills are gone.
-	 */
 	public function test_the_dead_polyfills_were_deleted() {
 		$source = file_get_contents( dirname( __DIR__ ) . '/includes/deprecated.php' );
 
@@ -115,19 +105,12 @@ class Test_Email_Deprecated extends WP_UnitTestCase {
 		$this->assertStringNotContainsString( 'function get_the_id', $source );
 	}
 
-	// ------------------------------------------------------ the delegation --
 
-	/**
-	 * Get_ipaddress() reaches the same code as the class.
-	 */
 	public function test_get_ipaddress_delegates() {
 		$this->assertSame( WP_Email_Form::ip_address(), get_ipaddress() );
 		$this->assertSame( '198.51.100.5', get_ipaddress() );
 	}
 
-	/**
-	 * The validators delegate.
-	 */
 	public function test_the_validators_delegate() {
 		$this->assertTrue( is_valid_name( 'Mary Jane' ) );
 		$this->assertFalse( is_valid_name( 'Mary <b>' ) );
@@ -139,17 +122,11 @@ class Test_Email_Deprecated extends WP_UnitTestCase {
 		$this->assertFalse( is_valid_remarks( "hi\ncontent-type: text/html" ) );
 	}
 
-	/**
-	 * The snippet helpers delegate.
-	 */
 	public function test_the_snippet_helpers_delegate() {
 		$this->assertSame( 'one two ...', snippet_words( 'one two three', 2 ) );
 		$this->assertSame( 'abcde...', snippet_text( 'abcdefghij', 5 ) );
 	}
 
-	/**
-	 * The filter helpers delegate.
-	 */
 	public function test_the_filter_helpers_delegate() {
 		$this->go_to( get_permalink( $this->post_id ) );
 
@@ -160,9 +137,6 @@ class Test_Email_Deprecated extends WP_UnitTestCase {
 		$this->assertFalse( has_filter( 'the_title', array( 'WP_Email', 'filter_title' ) ) );
 	}
 
-	/**
-	 * The robots helper delegates.
-	 */
 	public function test_the_robots_helper_delegates() {
 		ob_start();
 		email_meta_nofollow();
@@ -171,9 +145,6 @@ class Test_Email_Deprecated extends WP_UnitTestCase {
 		$this->assertStringContainsString( 'noindex', $out );
 	}
 
-	/**
-	 * The four WP-Stats wrappers went with the filters they wrapped.
-	 */
 	public function test_the_wpstats_wrappers_are_gone() {
 		// WP-Stats 3.0.0 retired wp_stats_page_* entirely, so a wrapper round a
 		// method that answered one of them had nothing left to wrap.
@@ -182,20 +153,13 @@ class Test_Email_Deprecated extends WP_UnitTestCase {
 		}
 	}
 
-	// ------------------------------------------------- the template tags ---
 
-	/**
-	 * The counter tags return formatted strings.
-	 */
 	public function test_the_counter_tags_delegate() {
 		$this->assertSame( '0', get_emails( false ) );
 		$this->assertSame( '0', get_emails_success( false ) );
 		$this->assertSame( '0', get_emails_failed( false ) );
 	}
 
-	/**
-	 * Get_email_count() falls back to the post in the loop.
-	 */
 	public function test_get_email_count_defaults_to_the_current_post() {
 		WP_Email_Logs::insert(
 			array(
@@ -218,9 +182,6 @@ class Test_Email_Deprecated extends WP_UnitTestCase {
 		$this->assertSame( '1', get_email_count( 0, false ) );
 	}
 
-	/**
-	 * The title and remark tags delegate.
-	 */
 	public function test_the_title_and_remark_tags_delegate() {
 		update_post_meta( $this->post_id, 'wp-email-remark', 'Suggested' );
 
@@ -230,9 +191,6 @@ class Test_Email_Deprecated extends WP_UnitTestCase {
 		$this->assertSame( 'Suggested', email_get_remark() );
 	}
 
-	/**
-	 * The category tag delegates.
-	 */
 	public function test_the_category_tag_delegates() {
 		$term = self::factory()->category->create( array( 'name' => 'Reviews' ) );
 		wp_set_post_categories( $this->post_id, array( $term ) );
@@ -242,9 +200,6 @@ class Test_Email_Deprecated extends WP_UnitTestCase {
 		$this->assertStringContainsString( 'Reviews', email_category() );
 	}
 
-	/**
-	 * The content tags delegate.
-	 */
 	public function test_the_content_tags_delegate() {
 		$this->loop();
 
@@ -253,16 +208,10 @@ class Test_Email_Deprecated extends WP_UnitTestCase {
 		$this->assertStringContainsString( 'One two three', get_email_content() );
 	}
 
-	/**
-	 * The page title tag delegates.
-	 */
 	public function test_the_page_title_tag_delegates() {
 		$this->assertStringContainsString( 'E-Mail', email_pagetitle( 'Harness Post' ) );
 	}
 
-	/**
-	 * The interval tag returns the configured minutes.
-	 */
 	public function test_the_interval_tag_delegates() {
 		$options                        = WP_Email_Options::all();
 		$options['sending']['interval'] = 7;
@@ -271,16 +220,10 @@ class Test_Email_Deprecated extends WP_UnitTestCase {
 		$this->assertSame( 7, email_flood_interval( false ) );
 	}
 
-	/**
-	 * Not_spamming() delegates.
-	 */
 	public function test_not_spamming_delegates() {
 		$this->assertTrue( not_spamming() );
 	}
 
-	/**
-	 * The multiple-entries hint delegates and respects the cap.
-	 */
 	public function test_the_multiple_hint_delegates() {
 		$options                        = WP_Email_Options::all();
 		$options['sending']['multiple'] = 5;
@@ -295,9 +238,6 @@ class Test_Email_Deprecated extends WP_UnitTestCase {
 		$this->assertSame( '', email_multiple( false ) );
 	}
 
-	/**
-	 * Both form header tags delegate to the right endpoint.
-	 */
 	public function test_the_form_header_tags_delegate() {
 		$this->set_permalink_structure( '/%postname%/' );
 		$this->loop();
@@ -314,9 +254,6 @@ class Test_Email_Deprecated extends WP_UnitTestCase {
 		}
 	}
 
-	/**
-	 * The echoing tags print rather than return.
-	 */
 	public function test_the_echoing_tags_print() {
 		$this->loop();
 
@@ -331,9 +268,6 @@ class Test_Email_Deprecated extends WP_UnitTestCase {
 		$this->assertSame( '0', trim( ob_get_clean() ) );
 	}
 
-	/**
-	 * Email_form() still accepts its pre-3.0.0 signature.
-	 */
 	public function test_the_form_tag_keeps_its_old_signature() {
 		$this->loop();
 

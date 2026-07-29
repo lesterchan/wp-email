@@ -10,7 +10,7 @@
  *
  * @covers WP_Email_Captcha
  */
-class Test_Email_Captcha extends WP_UnitTestCase {
+class WP_Email_Captcha_Test extends WP_Email_TestCase {
 
 	/**
 	 * Set up the fixtures for each test.
@@ -36,9 +36,6 @@ class Test_Email_Captcha extends WP_UnitTestCase {
 		return get_transient( WP_Email_Captcha::TRANSIENT_PREFIX . $token );
 	}
 
-	/**
-	 * Issue returns nothing when verification is off.
-	 */
 	public function test_issue_returns_nothing_when_verification_is_off() {
 		$options                           = WP_Email_Options::all();
 		$options['sending']['imageverify'] = 0;
@@ -47,9 +44,6 @@ class Test_Email_Captcha extends WP_UnitTestCase {
 		$this->assertSame( '', WP_Email_Captcha::issue() );
 	}
 
-	/**
-	 * Issue produces a token and stores an answer.
-	 */
 	public function test_issue_produces_a_token_and_stores_an_answer() {
 		if ( ! WP_Email_Captcha::is_available() ) {
 			$this->markTestSkipped( 'No GD library on this PHP build.' );
@@ -61,9 +55,6 @@ class Test_Email_Captcha extends WP_UnitTestCase {
 		$this->assertSame( WP_Email_Captcha::LENGTH, strlen( $this->answer_for( $token ) ) );
 	}
 
-	/**
-	 * The session-backed version kept one site-wide answer.
-	 */
 	public function test_each_challenge_is_independent() {
 		if ( ! WP_Email_Captcha::is_available() ) {
 			$this->markTestSkipped( 'No GD library on this PHP build.' );
@@ -80,9 +71,6 @@ class Test_Email_Captcha extends WP_UnitTestCase {
 		$this->assertNotFalse( $this->answer_for( $second ) );
 	}
 
-	/**
-	 * The right answer verifies.
-	 */
 	public function test_the_right_answer_verifies() {
 		if ( ! WP_Email_Captcha::is_available() ) {
 			$this->markTestSkipped( 'No GD library on this PHP build.' );
@@ -93,9 +81,6 @@ class Test_Email_Captcha extends WP_UnitTestCase {
 		$this->assertTrue( WP_Email_Captcha::verify( $token, $this->answer_for( $token ) ) );
 	}
 
-	/**
-	 * Verification is case insensitive.
-	 */
 	public function test_verification_is_case_insensitive() {
 		if ( ! WP_Email_Captcha::is_available() ) {
 			$this->markTestSkipped( 'No GD library on this PHP build.' );
@@ -106,9 +91,6 @@ class Test_Email_Captcha extends WP_UnitTestCase {
 		$this->assertTrue( WP_Email_Captcha::verify( $token, strtolower( $this->answer_for( $token ) ) ) );
 	}
 
-	/**
-	 * A challenge can only be answered once.
-	 */
 	public function test_a_challenge_can_only_be_answered_once() {
 		if ( ! WP_Email_Captcha::is_available() ) {
 			$this->markTestSkipped( 'No GD library on this PHP build.' );
@@ -121,9 +103,6 @@ class Test_Email_Captcha extends WP_UnitTestCase {
 		$this->assertFalse( WP_Email_Captcha::verify( $token, $answer ) );
 	}
 
-	/**
-	 * Otherwise a five-character code could be brute-forced against one challenge.
-	 */
 	public function test_a_wrong_answer_burns_the_challenge() {
 		if ( ! WP_Email_Captcha::is_available() ) {
 			$this->markTestSkipped( 'No GD library on this PHP build.' );
@@ -139,18 +118,12 @@ class Test_Email_Captcha extends WP_UnitTestCase {
 		$this->assertFalse( WP_Email_Captcha::verify( $token, $answer ) );
 	}
 
-	/**
-	 * An unknown token never verifies.
-	 */
 	public function test_an_unknown_token_never_verifies() {
 		$this->assertFalse( WP_Email_Captcha::verify( str_repeat( 'a', 32 ), 'ABCDE' ) );
 		$this->assertFalse( WP_Email_Captcha::verify( '', 'ABCDE' ) );
 		$this->assertFalse( WP_Email_Captcha::verify( '../../etc/passwd', 'ABCDE' ) );
 	}
 
-	/**
-	 * Token sanitizing rejects anything off shape.
-	 */
 	public function test_token_sanitizing_rejects_anything_off_shape() {
 		$this->assertSame( '', WP_Email_Captcha::sanitize_token( 'short' ) );
 		$this->assertSame( '', WP_Email_Captcha::sanitize_token( str_repeat( 'a', 33 ) ) );
@@ -158,9 +131,6 @@ class Test_Email_Captcha extends WP_UnitTestCase {
 		$this->assertSame( str_repeat( 'a', 32 ), WP_Email_Captcha::sanitize_token( str_repeat( 'a', 32 ) ) );
 	}
 
-	/**
-	 * Sessions were unavailable behind most page caches and on a lot of hosting.
-	 */
 	public function test_the_plugin_no_longer_touches_php_sessions() {
 		$files   = glob( dirname( __DIR__ ) . '/includes/*.php' );
 		$files[] = dirname( __DIR__ ) . '/wp-email.php';
@@ -186,9 +156,6 @@ class Test_Email_Captcha extends WP_UnitTestCase {
 		}
 	}
 
-	/**
-	 * The image URL points at the public AJAX endpoint and carries the token.
-	 */
 	public function test_the_image_url_targets_the_public_endpoint() {
 		$url = WP_Email_Captcha::image_url( str_repeat( 'a', 32 ) );
 
@@ -197,16 +164,10 @@ class Test_Email_Captcha extends WP_UnitTestCase {
 		$this->assertStringContainsString( 'token=' . str_repeat( 'a', 32 ), $url );
 	}
 
-	/**
-	 * A token with URL-significant characters is encoded, not injected.
-	 */
 	public function test_the_image_url_encodes_its_token() {
 		$this->assertStringNotContainsString( '&foo=bar', WP_Email_Captcha::image_url( 'x&foo=bar' ) );
 	}
 
-	/**
-	 * Verification is off while the setting is off.
-	 */
 	public function test_is_enabled_follows_the_setting() {
 		$options                           = WP_Email_Options::all();
 		$options['sending']['imageverify'] = 0;
@@ -234,9 +195,6 @@ class Test_Email_Captcha extends WP_UnitTestCase {
 		WP_Email_Captcha::serve();
 	}
 
-	/**
-	 * It 404s for a malformed token rather than looking anything up.
-	 */
 	public function test_the_endpoint_refuses_a_malformed_token() {
 		$_GET['token'] = '../../../etc/passwd';
 
@@ -245,9 +203,6 @@ class Test_Email_Captcha extends WP_UnitTestCase {
 		WP_Email_Captcha::serve();
 	}
 
-	/**
-	 * It 404s when no token is given at all.
-	 */
 	public function test_the_endpoint_refuses_a_missing_token() {
 		unset( $_GET['token'] );
 
@@ -256,9 +211,6 @@ class Test_Email_Captcha extends WP_UnitTestCase {
 		WP_Email_Captcha::serve();
 	}
 
-	/**
-	 * Requesting the image does not consume the challenge.
-	 */
 	public function test_requesting_the_image_does_not_spend_the_answer() {
 		if ( ! WP_Email_Captcha::is_available() ) {
 			$this->markTestSkipped( 'No GD library on this PHP build.' );
@@ -273,9 +225,6 @@ class Test_Email_Captcha extends WP_UnitTestCase {
 		$this->assertTrue( WP_Email_Captcha::verify( $token, $answer ) );
 	}
 
-	/**
-	 * An issued challenge does not outlive its window.
-	 */
 	public function test_a_challenge_has_a_bounded_lifetime() {
 		$this->assertLessThanOrEqual( 900, WP_Email_Captcha::TTL );
 		$this->assertGreaterThan( 0, WP_Email_Captcha::TTL );

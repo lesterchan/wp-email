@@ -10,7 +10,7 @@
  *
  * @covers WP_Email_Widget
  */
-class Test_Email_Widget extends WP_UnitTestCase {
+class WP_Email_Widget_Test extends WP_Email_TestCase {
 
 	/**
 	 * Sidebar arguments.
@@ -41,9 +41,6 @@ class Test_Email_Widget extends WP_UnitTestCase {
 		return ob_get_clean();
 	}
 
-	/**
-	 * The widget is registered under its new name.
-	 */
 	public function test_the_widget_is_registered_under_its_new_name() {
 		$this->assertTrue( class_exists( 'WP_Email_Widget' ) );
 
@@ -69,18 +66,12 @@ class Test_Email_Widget extends WP_UnitTestCase {
 		$this->assertTrue( $registered, 'WP_Email_Widget was not registered' );
 	}
 
-	/**
-	 * The widget supports selective refresh.
-	 */
 	public function test_the_widget_supports_selective_refresh() {
 		$widget = new WP_Email_Widget();
 
 		$this->assertTrue( $widget->widget_options['customize_selective_refresh'] );
 	}
 
-	/**
-	 * The widget lists the most emailed post.
-	 */
 	public function test_the_widget_lists_the_most_emailed_post() {
 		$post_id = self::factory()->post->create(
 			array(
@@ -120,27 +111,18 @@ class Test_Email_Widget extends WP_UnitTestCase {
 		$this->assertStringContainsString( 'Harness Post', $html );
 	}
 
-	/**
-	 * An empty title renders no heading markup.
-	 */
 	public function test_an_empty_title_renders_no_heading_markup() {
 		$html = $this->render( array( 'title' => '' ) );
 
 		$this->assertStringNotContainsString( '<h2>', $html );
 	}
 
-	/**
-	 * The widget title is escaped.
-	 */
 	public function test_the_widget_title_is_escaped() {
 		$html = $this->render( array( 'title' => '<script>alert(1)</script>' ) );
 
 		$this->assertStringNotContainsString( '<script>alert(1)</script>', $html );
 	}
 
-	/**
-	 * Update sanitizes its input.
-	 */
 	public function test_update_sanitizes_its_input() {
 		$widget = new WP_Email_Widget();
 
@@ -160,9 +142,6 @@ class Test_Email_Widget extends WP_UnitTestCase {
 		$this->assertSame( 0, $instance['chars'] );
 	}
 
-	/**
-	 * The old update() returned false unless a hidden field was posted.
-	 */
 	public function test_update_saves_without_the_legacy_submit_marker() {
 		$widget = new WP_Email_Widget();
 
@@ -174,9 +153,6 @@ class Test_Email_Widget extends WP_UnitTestCase {
 		$this->assertSame( 'Saved', $instance['title'] );
 	}
 
-	/**
-	 * The form renders its controls.
-	 */
 	public function test_the_form_renders_its_controls() {
 		$widget = new WP_Email_Widget();
 		$widget->_set( 1 );

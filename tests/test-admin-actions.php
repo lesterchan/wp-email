@@ -10,7 +10,7 @@
  *
  * @covers WP_Email_Admin
  */
-class Test_Email_Admin_Actions extends WP_UnitTestCase {
+class WP_Email_Admin_Actions_Test extends WP_Email_TestCase {
 
 	/**
 	 * Where the screen tried to redirect to, if it did.
@@ -106,11 +106,7 @@ class Test_Email_Admin_Actions extends WP_UnitTestCase {
 		return false;
 	}
 
-	// --------------------------------------------------------- the delete --
 
-	/**
-	 * With the box ticked, every row goes and the screen redirects.
-	 */
 	public function test_a_confirmed_delete_empties_the_table() {
 		$this->log();
 		$this->log();
@@ -131,9 +127,6 @@ class Test_Email_Admin_Actions extends WP_UnitTestCase {
 		$this->assertStringContainsString( 'wp-email-notice=deleted', $this->redirected_to );
 	}
 
-	/**
-	 * Without the box ticked, nothing is deleted.
-	 */
 	public function test_an_unconfirmed_delete_keeps_the_rows() {
 		$this->log();
 
@@ -149,9 +142,6 @@ class Test_Email_Admin_Actions extends WP_UnitTestCase {
 		$this->assertStringContainsString( 'wp-email-notice=not-confirmed', $this->redirected_to );
 	}
 
-	/**
-	 * A delete without a valid nonce is refused.
-	 */
 	public function test_a_delete_without_a_nonce_is_refused() {
 		$this->log();
 
@@ -170,9 +160,6 @@ class Test_Email_Admin_Actions extends WP_UnitTestCase {
 		( new WP_Email_Admin() )->load_logs();
 	}
 
-	/**
-	 * Nothing happens when no delete was requested.
-	 */
 	public function test_no_delete_request_leaves_the_rows_alone() {
 		$this->log();
 
@@ -180,9 +167,6 @@ class Test_Email_Admin_Actions extends WP_UnitTestCase {
 		$this->assertSame( 1, WP_Email_Logs::count_all() );
 	}
 
-	/**
-	 * A visitor without the capability cannot delete.
-	 */
 	public function test_a_user_without_the_capability_cannot_delete() {
 		$this->log();
 
@@ -200,11 +184,7 @@ class Test_Email_Admin_Actions extends WP_UnitTestCase {
 		$this->assertSame( 1, WP_Email_Logs::count_all() );
 	}
 
-	// -------------------------------------------------------- the notices --
 
-	/**
-	 * The success notice is shown after a delete.
-	 */
 	public function test_the_deleted_notice_renders() {
 		$_GET['wp-email-notice'] = 'deleted';
 
@@ -214,9 +194,6 @@ class Test_Email_Admin_Actions extends WP_UnitTestCase {
 		$this->assertStringContainsString( 'All E-Mail Logs Have Been Deleted.', $html );
 	}
 
-	/**
-	 * The warning notice is shown when the box was not ticked.
-	 */
 	public function test_the_not_confirmed_notice_renders() {
 		$_GET['wp-email-notice'] = 'not-confirmed';
 
@@ -226,9 +203,6 @@ class Test_Email_Admin_Actions extends WP_UnitTestCase {
 		$this->assertStringContainsString( 'confirmation box was not ticked', $html );
 	}
 
-	/**
-	 * An unrecognised notice key renders nothing.
-	 */
 	public function test_an_unknown_notice_renders_nothing() {
 		$_GET['wp-email-notice'] = 'made-up';
 
@@ -251,11 +225,7 @@ class Test_Email_Admin_Actions extends WP_UnitTestCase {
 		return ob_get_clean();
 	}
 
-	// ------------------------------------------------------- the menu ------
 
-	/**
-	 * The menu registers both screens under the capability.
-	 */
 	public function test_the_menu_registers_both_screens() {
 		global $submenu, $menu;
 
@@ -279,9 +249,6 @@ class Test_Email_Admin_Actions extends WP_UnitTestCase {
 		);
 	}
 
-	/**
-	 * Rendering is refused outright without the capability.
-	 */
 	public function test_rendering_is_refused_without_the_capability() {
 		wp_set_current_user( self::factory()->user->create( array( 'role' => 'subscriber' ) ) );
 
@@ -290,9 +257,6 @@ class Test_Email_Admin_Actions extends WP_UnitTestCase {
 		( new WP_Email_Admin() )->render_logs();
 	}
 
-	/**
-	 * The options screen is refused too.
-	 */
 	public function test_the_options_screen_is_refused_without_the_capability() {
 		wp_set_current_user( self::factory()->user->create( array( 'role' => 'subscriber' ) ) );
 
