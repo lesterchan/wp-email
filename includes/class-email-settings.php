@@ -48,7 +48,7 @@ class Email_Settings {
 
 		wp_enqueue_script(
 			'wp-email-admin',
-			plugins_url( 'email-admin.js', WP_EMAIL_MAIN_FILE ),
+			plugins_url( 'js/wp-email-admin.js', WP_EMAIL_MAIN_FILE ),
 			array(),
 			WP_EMAIL_VERSION,
 			true

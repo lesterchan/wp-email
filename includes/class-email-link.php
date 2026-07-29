@@ -20,7 +20,7 @@ class Email_Link {
 	 * Attribute that marks a link as opening the popup.
 	 *
 	 * Replaces the inline onclick="email_popup(this.href); return false;" the
-	 * plugin emitted before 3.0.0. One delegated listener in email.js picks it
+	 * plugin emitted before 3.0.0. One delegated listener in js/wp-email.js picks
 	 * up, which keeps the markup free of executable attributes.
 	 */
 	const POPUP_ATTRIBUTE = 'data-wp-email-popup="1"';

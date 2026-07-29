@@ -431,7 +431,7 @@ class Test_Email_Boot extends WP_UnitTestCase {
 	 * A theme copy of the stylesheet wins over the plugin's own.
 	 */
 	public function test_a_theme_stylesheet_overrides_the_plugin_one() {
-		// The plugin directory already holds an email-css.css, so pointing the
+		// The plugin directory already holds a css/wp-email.css, so pointing the
 		// stylesheet directory at it is enough to exercise the branch.
 		$dir = dirname( __DIR__ );
 
@@ -449,7 +449,7 @@ class Test_Email_Boot extends WP_UnitTestCase {
 		remove_all_filters( 'stylesheet_directory' );
 		remove_all_filters( 'stylesheet_directory_uri' );
 
-		$this->assertStringContainsString( 'http://example.org/theme/email-css.css', $src );
+		$this->assertStringContainsString( 'http://example.org/theme/css/wp-email.css', $src );
 	}
 
 	/**
@@ -460,7 +460,7 @@ class Test_Email_Boot extends WP_UnitTestCase {
 
 		do_action( 'wp_enqueue_scripts' );
 
-		$this->assertStringContainsString( 'plugins/wp-email/email-css.css', wp_styles()->registered['wp-email']->src );
+		$this->assertStringContainsString( 'plugins/wp-email/css/wp-email.css', wp_styles()->registered['wp-email']->src );
 	}
 
 	/**

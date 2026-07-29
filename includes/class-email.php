@@ -141,17 +141,17 @@ class Email {
 	 * @return void
 	 */
 	public function enqueue_scripts() {
-		$this->enqueue_style( 'wp-email', 'email-css.css' );
+		$this->enqueue_style( 'wp-email', 'css/wp-email.css' );
 
 		if ( is_rtl() ) {
-			$this->enqueue_style( 'wp-email-rtl', 'email-css-rtl.css' );
+			$this->enqueue_style( 'wp-email-rtl', 'css/wp-email-rtl.css' );
 		}
 
 		// Shipped unminified and served as-is: with no build step in the repo a
 		// separate minified copy only drifts out of sync with this one.
 		wp_enqueue_script(
 			'wp-email',
-			plugins_url( 'email.js', WP_EMAIL_MAIN_FILE ),
+			plugins_url( 'js/wp-email.js', WP_EMAIL_MAIN_FILE ),
 			array(),
 			WP_EMAIL_VERSION,
 			true
@@ -225,12 +225,12 @@ class Email {
 		}
 
 		if ( array_key_exists( 'wp_email', $wp_query->query_vars ) ) {
-			require __DIR__ . '/email-standalone.php';
+			require __DIR__ . '/screen-standalone.php';
 			exit;
 		}
 
 		if ( array_key_exists( 'wp_email_popup', $wp_query->query_vars ) ) {
-			require __DIR__ . '/email-popup.php';
+			require __DIR__ . '/screen-popup.php';
 			exit;
 		}
 	}
