@@ -1,29 +1,43 @@
-.wp-email P {
-	text-align: left;
+/**
+ * WP-EMail front end.
+ *
+ * Everything is scoped under the .wp-email root class, and nothing here sets
+ * font-family, font-size or colour: the form is the theme's typography with a
+ * few layout rules on top. There is no second mirrored stylesheet -- the rules
+ * below use logical properties, so one file serves both text directions.
+ *
+ * The plugin paints no surface of its own, so there is nothing for
+ * prefers-color-scheme to answer; the one animation answers
+ * prefers-reduced-motion at the bottom of the file.
+ */
+
+.wp-email p {
+	text-align: start;
 }
-.wp-email label {
-  font-weight: bold;
+
+.wp-email label,
+.wp-email .wp-email-required {
+	font-weight: 700;
 }
-.wp-email-loading {
-	display: none;
+
+.wp-email .wp-email-button,
+.wp-email .wp-email-subtitle,
+.wp-email .wp-email-loading {
 	text-align: center;
-	height: 16px;
 }
-.wp-email-image {
-	border: 0px;
+
+.wp-email .wp-email-loading {
+	display: none;
 }
-.TextField {
+
+.wp-email-popup {
+	padding-block: 1em 0;
+	padding-inline: 1em;
 }
-.Button {
-}
-#wp-email-required {
-  font-weight: bold;
-}
-#wp-email-button {
-  text-align: center;
-}
-#wp-email-popup {
-	padding: 1em 1em 0;
+
+.wp-email-popup-close {
+	padding-block-start: 20px;
+	text-align: center;
 }
 
 /* The envelope glyph, drawn inline by WP_Email_Link::icon(). */

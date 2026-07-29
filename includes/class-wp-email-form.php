@@ -291,11 +291,13 @@ class WP_Email_Form {
 		// 'page_id' vs 'p' is what tells the handler which query to run.
 		$id_field = is_page() ? 'page_id' : 'p';
 
+		// hidden rather than style="display: none;": the plugin sets no inline
+		// styles, so a theme has one place to look.
 		$output  = '<form action="' . esc_url( $action ) . '" method="post">' . "\n";
-		$output .= '<p style="display: none;">';
+		$output .= '<p hidden>';
 		$output .= '<input type="hidden" id="' . esc_attr( $id_field ) . '" name="' . esc_attr( $id_field ) . '" value="' . esc_attr( $post_id ) . '" />';
 		$output .= '</p>' . "\n";
-		$output .= '<p style="display: none;">';
+		$output .= '<p hidden>';
 		$output .= '<input type="hidden" id="' . esc_attr( self::NONCE_NAME ) . '" name="' . esc_attr( self::NONCE_NAME ) . '" value="' . esc_attr( wp_create_nonce( self::NONCE_ACTION ) ) . '" />';
 		$output .= '</p>' . "\n";
 
@@ -407,7 +409,7 @@ class WP_Email_Form {
 		$popup   = 2 === (int) WP_Email_Options::get( 'link', 'type' );
 
 		$output  = self::header( $post_id, $popup );
-		$output .= '<p id="wp-email-required">' . esc_html__( '* Required Field', 'wp-email' ) . '</p>' . "\n";
+		$output .= '<p id="wp-email-required" class="wp-email-required">' . esc_html__( '* Required Field', 'wp-email' ) . '</p>' . "\n";
 
 		if ( 1 === (int) $fields['yourname'] ) {
 			$output .= '<p>' . "\n";
@@ -461,7 +463,7 @@ class WP_Email_Form {
 			$output .= '</p>' . "\n";
 		}
 
-		$output .= '<p id="wp-email-button">';
+		$output .= '<p id="wp-email-button" class="wp-email-button">';
 		$output .= '<input type="button" value="' . esc_attr__( '     Mail It!     ', 'wp-email' ) . '" id="wp-email-submit" class="Button" />';
 		$output .= '</p>' . "\n";
 		$output .= '</form>' . "\n";

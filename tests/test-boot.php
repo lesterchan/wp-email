@@ -313,7 +313,7 @@ class Test_Email_Boot extends WP_UnitTestCase {
 
 		$data = wp_scripts()->get_data( 'wp-email', 'data' );
 
-		$this->assertStringContainsString( 'emailL10n', $data );
+		$this->assertStringContainsString( 'wpEmailL10n', $data );
 		$this->assertStringContainsString( 'ajax_url', $data );
 		$this->assertStringContainsString( 'max_allowed', $data );
 		$this->assertStringContainsString( 'text_friend_email_invalid', $data );
@@ -428,34 +428,9 @@ class Test_Email_Boot extends WP_UnitTestCase {
 	}
 
 	/**
-	 * A theme copy of the stylesheet wins over the plugin's own.
+	 * The plugin's own stylesheet is the only one.
 	 */
-	public function test_a_theme_stylesheet_overrides_the_plugin_one() {
-		// The plugin directory already holds a css/wp-email.css, so pointing the
-		// stylesheet directory at it is enough to exercise the branch.
-		$dir = dirname( __DIR__ );
-
-		add_filter( 'stylesheet_directory', static fn() => $dir );
-		add_filter( 'stylesheet_directory_uri', static fn() => 'http://example.org/theme' );
-
-		// wp_enqueue_style() ignores a new src for an already-registered
-		// handle, and an earlier test in this process will have registered it.
-		wp_deregister_style( 'wp-email' );
-
-		do_action( 'wp_enqueue_scripts' );
-
-		$src = wp_styles()->registered['wp-email']->src;
-
-		remove_all_filters( 'stylesheet_directory' );
-		remove_all_filters( 'stylesheet_directory_uri' );
-
-		$this->assertStringContainsString( 'http://example.org/theme/css/wp-email.css', $src );
-	}
-
-	/**
-	 * Without a theme copy the plugin's own stylesheet is used.
-	 */
-	public function test_the_plugin_stylesheet_is_the_default() {
+	public function test_the_plugin_stylesheet_is_enqueued_from_the_plugin_directory() {
 		wp_deregister_style( 'wp-email' );
 
 		do_action( 'wp_enqueue_scripts' );
@@ -464,14 +439,9 @@ class Test_Email_Boot extends WP_UnitTestCase {
 	}
 
 	/**
-	 * The RTL stylesheet is only enqueued on an RTL site.
+	 * One stylesheet serves both text directions.
 	 */
-	public function test_the_rtl_stylesheet_is_conditional() {
-		wp_dequeue_style( 'wp-email-rtl' );
-
-		do_action( 'wp_enqueue_scripts' );
-		$this->assertFalse( wp_style_is( 'wp-email-rtl', 'enqueued' ) );
-
+	public function test_no_second_stylesheet_is_enqueued_on_an_rtl_site() {
 		// is_rtl() reads $wp_locale->text_direction directly; core has no
 		// filter for it.
 		$GLOBALS['wp_locale']->text_direction = 'rtl';
@@ -480,7 +450,9 @@ class Test_Email_Boot extends WP_UnitTestCase {
 
 		$GLOBALS['wp_locale']->text_direction = 'ltr';
 
-		$this->assertTrue( wp_style_is( 'wp-email-rtl', 'enqueued' ) );
+		$this->assertFalse( wp_style_is( 'wp-email-rtl', 'enqueued' ) );
+		$this->assertFalse( wp_style_is( 'wp-email-rtl', 'registered' ) );
+		$this->assertSame( array(), (array) glob( dirname( __DIR__ ) . '/css/*-rtl.css' ) );
 	}
 
 	/**

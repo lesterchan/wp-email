@@ -29,9 +29,9 @@ wp_enqueue_style( 'wp-email-popup-theme', get_stylesheet_uri(), array(), WP_EMAI
 	<?php wp_head(); ?>
 </head>
 <body class="wp-email-popup-body" data-wp-email-reposition="1">
-	<div id="wp-email-popup">
+	<div id="wp-email-popup" class="wp-email wp-email-popup">
 		<?php WP_Email_Form::render(); ?>
-		<p style="text-align: center; padding-top: 20px;">
+		<p class="wp-email-popup-close">
 			<a href="#" data-wp-email-close="1"><?php esc_html_e( 'Close This Window', 'wp-email' ); ?></a>
 		</p>
 	</div>

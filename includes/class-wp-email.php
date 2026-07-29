@@ -127,19 +127,21 @@ class WP_Email {
 	}
 
 	/**
-	 * Enqueue the stylesheet and the refresh script.
+	 * Enqueue the stylesheet and the form script.
 	 *
-	 * A theme may override either stylesheet by dropping a file of the same
-	 * name into its own directory.
+	 * One stylesheet, in both text directions: the rules are written with
+	 * logical properties, so the mirrored email-css-rtl.css the plugin shipped
+	 * until 3.0.0 has nothing left to say and is gone.
+	 *
+	 * A theme that wants its own rules enqueues them after this handle, or
+	 * dequeues it outright; the plugin no longer goes looking for a file of its
+	 * own name in the theme directory, which meant a theme could only replace
+	 * the sheet wholesale and never add to it.
 	 *
 	 * @return void
 	 */
 	public function enqueue_scripts() {
-		$this->enqueue_style( 'wp-email', 'css/wp-email.css' );
-
-		if ( is_rtl() ) {
-			$this->enqueue_style( 'wp-email-rtl', 'css/wp-email-rtl.css' );
-		}
+		wp_enqueue_style( 'wp-email', WP_EMAIL_URL . 'css/wp-email.css', array(), WP_EMAIL_VERSION );
 
 		// Shipped unminified and served as-is: with no build step in the repo a
 		// separate minified copy only drifts out of sync with this one.
@@ -181,24 +183,6 @@ class WP_Email {
 				'text_image_verify_empty'        => __( '- Image Verification is empty', 'wp-email' ),
 			)
 		);
-	}
-
-	/**
-	 * Enqueue one stylesheet, preferring a theme copy when there is one.
-	 *
-	 * @param string $handle Style handle.
-	 * @param string $file   File name.
-	 *
-	 * @return void
-	 */
-	private function enqueue_style( $handle, $file ) {
-		if ( file_exists( get_stylesheet_directory() . '/' . $file ) ) {
-			$src = get_stylesheet_directory_uri() . '/' . $file;
-		} else {
-			$src = WP_EMAIL_URL . $file;
-		}
-
-		wp_enqueue_style( $handle, $src, array(), WP_EMAIL_VERSION, 'all' );
 	}
 
 	/**
