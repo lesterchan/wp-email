@@ -87,7 +87,7 @@ class WP_Email {
 
 		add_action( 'widgets_init', array( $this, 'register_widget' ) );
 
-		add_filter( 'email_form-fieldvalues', array( $this, 'prefill_for_logged_in_user' ) );
+		add_filter( 'wp_email_form_field_values', array( $this, 'prefill_for_logged_in_user' ) );
 
 		// Loaded unconditionally and inert without WP-Stats: the class hooks one
 		// filter WP-Stats fires and nothing else, so there is nothing to probe

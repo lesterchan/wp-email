@@ -294,3 +294,13 @@ FIXED: Notices
 * NEW: Uses WordPress uninstall.php file to uninstall the plugin
 * NEW: Added noindex, nofollow to meta tag to email-standalone.php
 * FIXED: Use get_the_author() instead of the_author('', false)
+
+## Upgrade Notice
+### 3.0.0
+**Two filters were renamed and five global functions removed.** `email_form-fieldvalues` — the only hook WP-EMail fired that carried neither the plugin's prefix nor an underscore — is now `wp_email_form_field_values`, and it takes the same argument and returns the same array. There is no compatibility shim, so a theme or snippet still hooking the old name simply stops pre-filling the form. The plugin's other filters (`wp_email_ipaddress`, `wp_email_template_redirect`, `wp_email_trust_proxy`) are unchanged, and there is one new one, `wp_email_capability`, for handing a screen to a role of your own.
+
+The five removed functions are `email_wpstats_instance()`, `email_page_admin_general_stats()`, `email_page_admin_most_stats()`, `email_page_general_stats()` and `email_page_most_stats()`. They existed only to answer WP-Stats' `wp_stats_page_*` filters, and WP-Stats 3.0.0 retired those filters outright.
+
+**WP-Stats integration is now one block, switched on from WP-EMail's own settings.** WP-EMail used to have three checkboxes on the WP-Stats options screen — the e-mail totals, the most-emailed posts and the most-emailed pages — and all three lived in a `stats_display` row that seven plugins shared and none owned. There is now a single **Show WP-EMail on the WP-Stats page** setting under `WP-Admin -> E-Mail -> Settings`, and it draws the totals and both lists together. Your old setting is carried across: if any of the three boxes was ticked, the block stays on.
+
+**Update all seven WP-Stats plugins together.** WP-EMail, WP-DownloadManager, WP-Polls, WP-PostRatings, WP-PostViews, WP-Stats and WP-UserOnline all read that shared row, and each one deletes it once it has copied the value into its own settings. Whichever you update first is the only one that finds anything there, so update them in one go. If you update them apart, a plugin that finds the row missing switches its block **on** rather than off — nothing disappears, but you may need to untick a block you had hidden. Every plugin's toggle now lives on its own settings screen.

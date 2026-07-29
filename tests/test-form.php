@@ -479,7 +479,7 @@ class Test_Email_Form extends WP_Ajax_UnitTestCase {
 			)
 		);
 
-		// email_form() used to assign the email_form-fieldvalues filter result
+		// email_form() used to assign the field-values filter result
 		// straight over its $error_field parameter, discarding the lot.
 		$this->assertStringContainsString( 'Bad #Name$', $response );
 		$this->assertStringContainsString( 'value="nope"', $response );

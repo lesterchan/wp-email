@@ -10,7 +10,20 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Contributes WP-EMail's numbers to the WP-Stats page.
  *
- * Only loaded when WP-Stats is active.
+ * One filter, one entry, and nothing else. Before 3.0.0 this hooked five
+ * WP-Stats filters, appended a string to each, and read WP-Stats' own
+ * stats_display row to find out whether it was allowed to -- so WP-Stats
+ * decided whether a plugin it knew nothing about got to draw a panel, and the
+ * two shared a wp_options row that neither of them owned.
+ *
+ * WP-EMail now answers wp_stats_sections with one entry keyed 'wp_email',
+ * decides for itself out of its own settings whether to answer at all, and lets
+ * WP-Stats echo the heading and call the render callback. A theme takes this
+ * block over by hooking wp_stats_section_wp_email earlier and removing
+ * WP-Stats' own listener.
+ *
+ * Loaded unconditionally: with WP-Stats absent nothing ever fires the filter,
+ * so the class is inert and there is nothing to probe for.
  *
  * @since 3.0.0
  */
@@ -20,205 +33,114 @@ class WP_Email_WPStats {
 	 * Hook into WP-Stats.
 	 */
 	public function __construct() {
-		add_filter( 'wp_stats_display_defaults', array( $this, 'display_defaults' ) );
-		add_filter( 'wp_stats_page_admin_plugins', array( $this, 'admin_general' ) );
-		add_filter( 'wp_stats_page_admin_most', array( $this, 'admin_most' ) );
-		add_filter( 'wp_stats_page_plugins', array( $this, 'general' ) );
-		add_filter( 'wp_stats_page_most', array( $this, 'most' ) );
+		add_filter( 'wp_stats_sections', array( $this, 'register_section' ) );
 	}
 
 	/**
-	 * Tell WP-Stats about the toggles this plugin owns, and their defaults.
+	 * Contribute WP-EMail's section to the statistics page.
 	 *
-	 * Without this WP-Stats only learns a key exists once its checkbox has been
-	 * submitted, so the panels would start out off on a fresh install.
+	 * Reads only this plugin's own settings row, per STANDARDS.md 13. A site
+	 * that has switched the block off gets $sections back untouched rather than
+	 * an entry with an empty body.
 	 *
-	 * @param array $defaults Registered toggles.
+	 * @param array $sections Sections keyed by plugin slug with underscores.
 	 *
 	 * @return array
 	 */
-	public function display_defaults( $defaults ) {
-		// WP-Stats' own defaults win, so this only ever adds.
-		return array_merge(
+	public function register_section( $sections ) {
+		if ( ! is_array( $sections ) ) {
+			$sections = array();
+		}
+
+		if ( ! WP_Email_Options::stats_display() ) {
+			return $sections;
+		}
+
+		$sections['wp_email'] = array(
+			'title'    => __( 'E-Mails', 'wp-email' ),
+			'priority' => 10,
+			'render'   => array( $this, 'render' ),
+		);
+
+		return $sections;
+	}
+
+	/**
+	 * Echo the section body.
+	 *
+	 * Echoes rather than returns: WP-Stats assembles its page inside
+	 * ob_start(), so a returned string is silently dropped. The heading above
+	 * this is WP-Stats' to print, not WP-EMail's.
+	 *
+	 * @return void
+	 */
+	public function render() {
+		$limit = WP_Email_Options::stats_most_limit();
+
+		$this->render_totals();
+		$this->render_most_emailed( 'post', $limit );
+		$this->render_most_emailed( 'page', $limit );
+	}
+
+	/**
+	 * The three running totals.
+	 *
+	 * @return void
+	 */
+	protected function render_totals() {
+		$lines = array(
 			array(
-				'email'             => 1,
-				'emailed_most_post' => 1,
-				'emailed_most_page' => 0,
+				WP_Email_Logs::count_all(),
+				/* translators: %s: Number of e-mails. */
+				_n_noop( '<strong>%s</strong> email was sent.', '<strong>%s</strong> emails were sent.', 'wp-email' ),
 			),
-			(array) $defaults
-		);
-	}
-
-	/**
-	 * Whether a WP-Stats display toggle is on.
-	 *
-	 * @param string $key Toggle name.
-	 *
-	 * @return bool
-	 */
-	private function is_displayed( $key ) {
-		if ( function_exists( 'wp_stats_display_enabled' ) ) {
-			return wp_stats_display_enabled( $key );
-		}
-
-		// WP-Stats before 3.0.0 kept the toggles in their own option row.
-		$stats_display = get_option( 'stats_display' );
-
-		if ( ! is_array( $stats_display ) ) {
-			return false;
-		}
-
-		return isset( $stats_display[ $key ] ) && 1 === (int) $stats_display[ $key ];
-	}
-
-	/**
-	 * How many "most" entries WP-Stats is configured to show.
-	 *
-	 * @return int
-	 */
-	private function most_limit() {
-		if ( function_exists( 'wp_stats_most_limit' ) ) {
-			return wp_stats_most_limit();
-		}
-
-		return (int) get_option( 'stats_mostlimit' );
-	}
-
-	/**
-	 * A WP-Stats options checkbox.
-	 *
-	 * @param string $value Checkbox value.
-	 * @param string $label Checkbox label.
-	 *
-	 * @return string
-	 */
-	private function checkbox( $value, $label ) {
-		// WP-Stats 3.0.0 owns the field name, because it changed when the option
-		// rows were consolidated.
-		if ( function_exists( 'wp_stats_checkbox' ) ) {
-			return wp_stats_checkbox( $value, $label );
-		}
-
-		return sprintf(
-			'<input type="checkbox" name="stats_display[]" id="wpstats_%1$s" value="%1$s"%2$s />&nbsp;&nbsp;<label for="wpstats_%1$s">%3$s</label><br />' . "\n",
-			esc_attr( $value ),
-			checked( $this->is_displayed( $value ), true, false ),
-			esc_html( $label )
-		);
-	}
-
-	/**
-	 * The general-stats toggle on the WP-Stats options screen.
-	 *
-	 * @param string $content Accumulated markup.
-	 *
-	 * @return string
-	 */
-	public function admin_general( $content ) {
-		return $content . $this->checkbox( 'email', __( 'WP-EMail', 'wp-email' ) );
-	}
-
-	/**
-	 * The most-emailed toggles on the WP-Stats options screen.
-	 *
-	 * @param string $content Accumulated markup.
-	 *
-	 * @return string
-	 */
-	public function admin_most( $content ) {
-		$limit = $this->most_limit();
-
-		$content .= $this->checkbox(
-			'emailed_most_post',
-			sprintf(
-				/* translators: %s: Number of posts. */
-				_n( '%s Most Emailed Post', '%s Most Emailed Posts', $limit, 'wp-email' ),
-				number_format_i18n( $limit )
-			)
+			array(
+				WP_Email_Logs::count_by_status( WP_Email_Logs::STATUS_SUCCESS ),
+				/* translators: %s: Number of e-mails. */
+				_n_noop( '<strong>%s</strong> email was sent successfully.', '<strong>%s</strong> emails were sent successfully.', 'wp-email' ),
+			),
+			array(
+				WP_Email_Logs::count_by_status( WP_Email_Logs::STATUS_FAILED ),
+				/* translators: %s: Number of e-mails. */
+				_n_noop( '<strong>%s</strong> email failed to send.', '<strong>%s</strong> emails failed to send.', 'wp-email' ),
+			),
 		);
 
-		$content .= $this->checkbox(
-			'emailed_most_page',
-			sprintf(
-				/* translators: %s: Number of pages. */
-				_n( '%s Most Emailed Page', '%s Most Emailed Pages', $limit, 'wp-email' ),
-				number_format_i18n( $limit )
-			)
-		);
+		echo '<ul>' . "\n";
 
-		return $content;
+		foreach ( $lines as $line ) {
+			list( $count, $strings ) = $line;
+
+			// The strings carry their own <strong>, so wp_kses_post() rather
+			// than esc_html(), which would print the tags as text.
+			echo '<li>' . wp_kses_post(
+				sprintf(
+					translate_nooped_plural( $strings, $count, 'wp-email' ),
+					number_format_i18n( $count )
+				)
+			) . '</li>' . "\n";
+		}
+
+		echo '</ul>' . "\n";
 	}
 
 	/**
-	 * The general-stats block on the WP-Stats page.
+	 * One "most emailed" list.
 	 *
-	 * @param string $content Accumulated markup.
+	 * @param string $mode  'post' or 'page'.
+	 * @param int    $limit Maximum entries.
 	 *
-	 * @return string
+	 * @return void
 	 */
-	public function general( $content ) {
-		if ( ! $this->is_displayed( 'email' ) ) {
-			return $content;
-		}
+	protected function render_most_emailed( $mode, $limit ) {
+		$heading = 'page' === $mode
+			/* translators: %s: Number of pages. */
+			? _n( '%s Most Emailed Page', '%s Most Emailed Pages', $limit, 'wp-email' )
+			/* translators: %s: Number of posts. */
+			: _n( '%s Most Emailed Post', '%s Most Emailed Posts', $limit, 'wp-email' );
 
-		$success = WP_Email_Logs::count_by_status( WP_Email_Logs::STATUS_SUCCESS );
-		$failed  = WP_Email_Logs::count_by_status( WP_Email_Logs::STATUS_FAILED );
-		$total   = WP_Email_Logs::count_all();
+		echo '<p><strong>' . esc_html( sprintf( $heading, number_format_i18n( $limit ) ) ) . '</strong></p>' . "\n";
 
-		$content .= '<p><strong>' . esc_html__( 'WP-EMail', 'wp-email' ) . '</strong></p>' . "\n";
-		$content .= '<ul>' . "\n";
-
-		$content .= '<li>' . sprintf(
-			/* translators: %s: Number of e-mails. */
-			wp_kses_post( _n( '<strong>%s</strong> email was sent.', '<strong>%s</strong> emails were sent.', $total, 'wp-email' ) ),
-			esc_html( number_format_i18n( $total ) )
-		) . '</li>' . "\n";
-
-		$content .= '<li>' . sprintf(
-			/* translators: %s: Number of e-mails. */
-			wp_kses_post( _n( '<strong>%s</strong> email was sent successfully.', '<strong>%s</strong> emails were sent successfully.', $success, 'wp-email' ) ),
-			esc_html( number_format_i18n( $success ) )
-		) . '</li>' . "\n";
-
-		$content .= '<li>' . sprintf(
-			/* translators: %s: Number of e-mails. */
-			wp_kses_post( _n( '<strong>%s</strong> email failed to send.', '<strong>%s</strong> emails failed to send.', $failed, 'wp-email' ) ),
-			esc_html( number_format_i18n( $failed ) )
-		) . '</li>' . "\n";
-
-		$content .= '</ul>' . "\n";
-
-		return $content;
-	}
-
-	/**
-	 * The most-emailed blocks on the WP-Stats page.
-	 *
-	 * @param string $content Accumulated markup.
-	 *
-	 * @return string
-	 */
-	public function most( $content ) {
-		$limit = $this->most_limit();
-
-		if ( $this->is_displayed( 'emailed_most_post' ) ) {
-			$content .= '<p><strong>' . sprintf(
-				/* translators: %s: Number of posts. */
-				esc_html( _n( '%s Most Emailed Post', '%s Most Emailed Posts', $limit, 'wp-email' ) ),
-				esc_html( number_format_i18n( $limit ) )
-			) . '</strong></p>' . "\n";
-			$content .= '<ul>' . "\n" . get_mostemailed( 'post', $limit, 0, false ) . '</ul>' . "\n";
-		}
-
-		if ( $this->is_displayed( 'emailed_most_page' ) ) {
-			$content .= '<p><strong>' . sprintf(
-				/* translators: %s: Number of pages. */
-				esc_html( _n( '%s Most Emailed Page', '%s Most Emailed Pages', $limit, 'wp-email' ) ),
-				esc_html( number_format_i18n( $limit ) )
-			) . '</strong></p>' . "\n";
-			$content .= '<ul>' . "\n" . get_mostemailed( 'page', $limit, 0, false ) . '</ul>' . "\n";
-		}
-
-		return $content;
+		echo '<ul>' . "\n" . get_mostemailed( $mode, $limit, 0, false ) . '</ul>' . "\n"; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- get_mostemailed() escapes every value it prints.
 	}
 }

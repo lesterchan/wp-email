@@ -285,10 +285,10 @@ class Test_Email_Boot extends WP_UnitTestCase {
 		$user = self::factory()->user->create_and_get( array( 'display_name' => 'Lester Chan' ) );
 		wp_set_current_user( $user->ID );
 
-		// email_form-fieldvalues is part of the plugin's public API; themes
+		// wp_email_form_field_values is part of the plugin's public API; themes
 		// hook it by that exact name.
 		// Hyphenated on purpose: it is the plugin's documented filter name.
-		$values = apply_filters( 'email_form-fieldvalues', array() ); // phpcs:ignore WordPress.NamingConventions.ValidHookName.UseUnderscores
+		$values = apply_filters( 'wp_email_form_field_values', array() );
 
 		$this->assertSame( 'Lester Chan', $values['yourname'] );
 	}

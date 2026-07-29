@@ -1,12 +1,12 @@
 <?php
 /**
- * The WP-Stats integration.
+ * The WP-Stats integration: one filter, one entry, one rendered block.
  *
  * @package WP-EMail
  */
 
 /**
- * Tests for the four filters WP-Stats calls.
+ * The wp_stats_sections contributor.
  *
  * @covers WP_Email_WPStats
  */
@@ -41,8 +41,6 @@ class Test_Email_WpStats extends WP_UnitTestCase {
 	public function set_up() {
 		parent::set_up();
 
-		require_once dirname( __DIR__ ) . '/includes/class-wp-email-wpstats.php';
-
 		$this->stats = new WP_Email_WPStats();
 
 		$past = gmdate( 'Y-m-d H:i:s', time() - HOUR_IN_SECONDS );
@@ -62,7 +60,23 @@ class Test_Email_WpStats extends WP_UnitTestCase {
 			)
 		);
 
-		update_option( 'stats_mostlimit', 5 );
+		$this->set_stats_options( true, 5 );
+	}
+
+	/**
+	 * Write the two WP-Stats settings into the plugin's own row.
+	 *
+	 * @param bool $display Whether the section is contributed.
+	 * @param int  $limit   How many entries the lists show.
+	 *
+	 * @return void
+	 */
+	private function set_stats_options( $display, $limit ) {
+		$options                     = WP_Email_Options::defaults();
+		$options['stats_display']    = $display;
+		$options['stats_most_limit'] = $limit;
+
+		WP_Email_Options::update( $options );
 	}
 
 	/**
@@ -91,92 +105,113 @@ class Test_Email_WpStats extends WP_UnitTestCase {
 		);
 	}
 
-	// --------------------------------------------------------- the toggles --
+	/**
+	 * Capture what render() echoes.
+	 *
+	 * @return string
+	 */
+	private function rendered() {
+		ob_start();
+		$this->stats->render();
+
+		return (string) ob_get_clean();
+	}
+
+	// ------------------------------------------------------------- the entry --
 
 	/**
-	 * The options screen offers a WP-EMail checkbox.
+	 * The section is contributed under the plugin's own key.
 	 */
-	public function test_admin_general_renders_a_checkbox() {
-		$out = $this->stats->admin_general( '' );
+	public function test_the_section_is_keyed_by_the_plugin_slug_with_underscores() {
+		$sections = $this->stats->register_section( array() );
 
-		$this->assertStringContainsString( 'wpstats_email', $out );
-		$this->assertStringContainsString( 'WP-EMail', $out );
-		$this->assertStringContainsString( 'name="stats_display[]"', $out );
+		$this->assertArrayHasKey( 'wp_email', $sections );
 	}
 
 	/**
-	 * The checkbox reflects the stored setting.
+	 * The entry carries exactly what WP-Stats documents.
 	 */
-	public function test_admin_general_checkbox_reflects_the_setting() {
-		$this->assertStringNotContainsString( 'checked', $this->stats->admin_general( '' ) );
+	public function test_the_entry_carries_a_title_a_priority_and_a_callable_render() {
+		$section = $this->stats->register_section( array() )['wp_email'];
 
-		update_option( 'stats_display', array( 'email' => 1 ) );
-
-		$this->assertStringContainsString( 'checked', $this->stats->admin_general( '' ) );
+		$this->assertIsString( $section['title'] );
+		$this->assertNotSame( '', $section['title'] );
+		$this->assertIsInt( $section['priority'] );
+		$this->assertTrue( is_callable( $section['render'] ) );
 	}
 
 	/**
-	 * Both most-emailed toggles are offered.
+	 * Whatever other plugins contributed is left alone.
 	 */
-	public function test_admin_most_renders_both_checkboxes() {
-		$out = $this->stats->admin_most( '' );
+	public function test_other_contributors_survive() {
+		$sections = $this->stats->register_section( array( 'wp_polls' => array( 'title' => 'Polls' ) ) );
 
-		$this->assertStringContainsString( 'wpstats_emailed_most_post', $out );
-		$this->assertStringContainsString( 'wpstats_emailed_most_page', $out );
+		$this->assertArrayHasKey( 'wp_polls', $sections );
+		$this->assertArrayHasKey( 'wp_email', $sections );
 	}
 
 	/**
-	 * Each filter appends to what it was given rather than replacing it.
+	 * Opted out, the plugin contributes nothing rather than an empty block.
 	 */
-	public function test_the_filters_append_to_existing_content() {
-		$this->assertStringStartsWith( 'EXISTING', $this->stats->admin_general( 'EXISTING' ) );
-		$this->assertStringStartsWith( 'EXISTING', $this->stats->admin_most( 'EXISTING' ) );
-		$this->assertStringStartsWith( 'EXISTING', $this->stats->general( 'EXISTING' ) );
-		$this->assertStringStartsWith( 'EXISTING', $this->stats->most( 'EXISTING' ) );
-	}
+	public function test_an_opted_out_site_contributes_nothing() {
+		$this->set_stats_options( false, 5 );
 
-	// ------------------------------------------------------- general stats --
-
-	/**
-	 * Nothing is rendered while the toggle is off.
-	 */
-	public function test_general_renders_nothing_when_switched_off() {
-		$this->log( $this->post_id );
-
-		$this->assertSame( '', $this->stats->general( '' ) );
+		$this->assertSame( array(), $this->stats->register_section( array() ) );
 	}
 
 	/**
-	 * A missing stats_display option is not an error.
+	 * A non-array filter value is tolerated rather than fatal.
 	 */
-	public function test_general_survives_a_missing_option() {
-		delete_option( 'stats_display' );
-
-		$this->assertSame( '', $this->stats->general( '' ) );
+	public function test_a_non_array_filter_value_is_tolerated() {
+		$this->assertArrayHasKey( 'wp_email', $this->stats->register_section( 'nonsense' ) );
 	}
 
 	/**
-	 * A malformed stats_display option is not an error either.
+	 * Constructing the class hooks the one filter and nothing else.
 	 */
-	public function test_general_survives_a_malformed_option() {
-		update_option( 'stats_display', 'not-an-array' );
+	public function test_the_constructor_registers_only_the_sections_filter() {
+		$stats = new WP_Email_WPStats();
 
-		$this->assertSame( '', $this->stats->general( '' ) );
+		$this->assertNotFalse( has_filter( 'wp_stats_sections', array( $stats, 'register_section' ) ) );
+
+		foreach ( array( 'wp_stats_display_defaults', 'wp_stats_page_plugins', 'wp_stats_page_most', 'wp_stats_page_admin_plugins', 'wp_stats_page_admin_most' ) as $retired ) {
+			$this->assertFalse( has_filter( $retired, array( $stats, 'register_section' ) ) );
+		}
 	}
 
 	/**
-	 * Switched on, the totals are reported.
+	 * The plugin is wired up whether or not WP-Stats is installed.
 	 */
-	public function test_general_reports_the_totals() {
-		update_option( 'stats_display', array( 'email' => 1 ) );
+	public function test_the_filter_is_hooked_without_probing_for_wp_stats() {
+		$this->assertNotFalse( has_filter( 'wp_stats_sections' ) );
+		$this->assertStringNotContainsString( 'class_exists', file_get_contents( dirname( __DIR__ ) . '/includes/class-wp-email-wpstats.php' ) );
+		$this->assertStringNotContainsString( 'function_exists', file_get_contents( dirname( __DIR__ ) . '/includes/class-wp-email-wpstats.php' ) );
+	}
 
+	// ------------------------------------------------------------ the render --
+
+	/**
+	 * Render echoes; a returned string would be dropped by WP-Stats' ob_start().
+	 */
+	public function test_render_echoes_rather_than_returns() {
+		ob_start();
+		$returned = $this->stats->render();
+		$echoed   = (string) ob_get_clean();
+
+		$this->assertNull( $returned );
+		$this->assertNotSame( '', $echoed );
+	}
+
+	/**
+	 * The totals are reported.
+	 */
+	public function test_render_reports_the_totals() {
 		$this->log( $this->post_id );
 		$this->log( $this->post_id );
 		$this->log( $this->post_id, WP_Email_Logs::STATUS_FAILED );
 
-		$out = $this->stats->general( '' );
+		$out = $this->rendered();
 
-		$this->assertStringContainsString( 'WP-EMail', $out );
 		$this->assertStringContainsString( '<strong>3</strong> emails were sent.', $out );
 		$this->assertStringContainsString( '<strong>2</strong> emails were sent successfully.', $out );
 		$this->assertStringContainsString( '<strong>1</strong> email failed to send.', $out );
@@ -185,105 +220,35 @@ class Test_Email_WpStats extends WP_UnitTestCase {
 	/**
 	 * Counting uses the stored status, not a translated one.
 	 */
-	public function test_general_counts_untranslated_statuses() {
-		update_option( 'stats_display', array( 'email' => 1 ) );
-
+	public function test_render_counts_untranslated_statuses() {
 		// Rows written before 3.0.0 held __( 'Success' ); the upgrade rewrites
 		// them, and the counts read the canonical value.
 		$this->log( $this->post_id );
 
-		$this->assertStringContainsString( '<strong>1</strong> email was sent successfully.', $this->stats->general( '' ) );
-	}
-
-	// ---------------------------------------------------------- most stats --
-
-	/**
-	 * Nothing is rendered while both toggles are off.
-	 */
-	public function test_most_renders_nothing_when_switched_off() {
-		$this->log( $this->post_id );
-
-		$this->assertSame( '', $this->stats->most( '' ) );
+		$this->assertStringContainsString( '<strong>1</strong> email was sent successfully.', $this->rendered() );
 	}
 
 	/**
-	 * The most-emailed posts block lists posts only.
+	 * Posts and pages each get their own list.
 	 */
-	public function test_most_lists_posts_when_switched_on() {
-		update_option( 'stats_display', array( 'emailed_most_post' => 1 ) );
-
+	public function test_render_lists_the_most_emailed_posts_and_pages() {
 		$this->log( $this->post_id );
 		$this->log( $this->page_id );
 
-		$out = $this->stats->most( '' );
+		$out = $this->rendered();
 
 		$this->assertStringContainsString( 'Most Emailed Post', $out );
-		$this->assertStringContainsString( 'Harness Post', $out );
-		$this->assertStringNotContainsString( 'Harness Page', $out );
-	}
-
-	/**
-	 * The most-emailed pages block lists pages only.
-	 */
-	public function test_most_lists_pages_when_switched_on() {
-		update_option( 'stats_display', array( 'emailed_most_page' => 1 ) );
-
-		$this->log( $this->post_id );
-		$this->log( $this->page_id );
-
-		$out = $this->stats->most( '' );
-
-		$this->assertStringContainsString( 'Harness Page', $out );
-		$this->assertStringNotContainsString( 'Harness Post', $out );
-	}
-
-	/**
-	 * Both blocks appear when both toggles are on.
-	 */
-	public function test_most_lists_both_when_both_are_on() {
-		update_option(
-			'stats_display',
-			array(
-				'emailed_most_post' => 1,
-				'emailed_most_page' => 1,
-			)
-		);
-
-		$this->log( $this->post_id );
-		$this->log( $this->page_id );
-
-		$out = $this->stats->most( '' );
-
+		$this->assertStringContainsString( 'Most Emailed Page', $out );
 		$this->assertStringContainsString( 'Harness Post', $out );
 		$this->assertStringContainsString( 'Harness Page', $out );
 	}
 
-	// ------------------------------------------------------------- wiring --
-
 	/**
-	 * Constructing the class registers all four WP-Stats filters.
+	 * The heading counts come from the plugin's own copy of the limit.
 	 */
-	public function test_the_constructor_registers_its_filters() {
-		$stats = new WP_Email_WPStats();
+	public function test_render_uses_the_plugins_own_copy_of_the_most_limit() {
+		$this->set_stats_options( true, 3 );
 
-		$this->assertNotFalse( has_filter( 'wp_stats_page_admin_plugins', array( $stats, 'admin_general' ) ) );
-		$this->assertNotFalse( has_filter( 'wp_stats_page_admin_most', array( $stats, 'admin_most' ) ) );
-		$this->assertNotFalse( has_filter( 'wp_stats_page_plugins', array( $stats, 'general' ) ) );
-		$this->assertNotFalse( has_filter( 'wp_stats_page_most', array( $stats, 'most' ) ) );
-	}
-
-	/**
-	 * The pre-3.0.0 global functions still reach the class.
-	 */
-	public function test_the_legacy_global_functions_still_work() {
-		update_option( 'stats_display', array( 'email' => 1 ) );
-		$this->log( $this->post_id );
-
-		$this->assertStringContainsString( 'WP-EMail', email_page_general_stats( '' ) );
-		$this->assertStringContainsString( 'wpstats_email', email_page_admin_general_stats( '' ) );
-		$this->assertStringContainsString( 'wpstats_emailed_most_post', email_page_admin_most_stats( '' ) );
-
-		update_option( 'stats_display', array( 'emailed_most_post' => 1 ) );
-		$this->assertStringContainsString( 'Harness Post', email_page_most_stats( '' ) );
+		$this->assertStringContainsString( '3 Most Emailed Posts', $this->rendered() );
 	}
 }

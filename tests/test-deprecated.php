@@ -79,10 +79,6 @@ class Test_Email_Deprecated extends WP_UnitTestCase {
 			'email_removefilters',
 			'email_meta_nofollow',
 			'process_email_form',
-			'email_page_admin_general_stats',
-			'email_page_admin_most_stats',
-			'email_page_general_stats',
-			'email_page_most_stats',
 		);
 
 		foreach ( $names as $name ) {
@@ -114,7 +110,7 @@ class Test_Email_Deprecated extends WP_UnitTestCase {
 		$source = file_get_contents( dirname( __DIR__ ) . '/includes/deprecated.php' );
 
 		// htmlspecialchars_decode() landed in PHP 5.1 and get_the_id() only
-		// ever shadowed core's get_the_ID(); the 7.4 floor makes both dead.
+		// ever shadowed core's get_the_ID(); the 8.2 floor makes both dead.
 		$this->assertStringNotContainsString( 'function htmlspecialchars_decode', $source );
 		$this->assertStringNotContainsString( 'function get_the_id', $source );
 	}
@@ -176,11 +172,14 @@ class Test_Email_Deprecated extends WP_UnitTestCase {
 	}
 
 	/**
-	 * The WP-Stats instance is created once and reused.
+	 * The four WP-Stats wrappers went with the filters they wrapped.
 	 */
-	public function test_the_wpstats_instance_is_shared() {
-		$this->assertInstanceOf( 'WP_Email_WPStats', email_wpstats_instance() );
-		$this->assertSame( email_wpstats_instance(), email_wpstats_instance() );
+	public function test_the_wpstats_wrappers_are_gone() {
+		// WP-Stats 3.0.0 retired wp_stats_page_* entirely, so a wrapper round a
+		// method that answered one of them had nothing left to wrap.
+		foreach ( array( 'email_wpstats_instance', 'email_page_admin_general_stats', 'email_page_admin_most_stats', 'email_page_general_stats', 'email_page_most_stats' ) as $name ) {
+			$this->assertFalse( function_exists( $name ), "{$name}() should have been removed" );
+		}
 	}
 
 	// ------------------------------------------------- the template tags ---

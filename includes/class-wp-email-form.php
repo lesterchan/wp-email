@@ -379,11 +379,14 @@ class WP_Email_Form {
 		/**
 		 * Filters the values the form is pre-filled with.
 		 *
+		 * Named email_form-fieldvalues before 3.0.0, which was neither prefixed
+		 * with the plugin's slug nor spelled with underscores.
+		 *
+		 * @since 3.0.0
+		 *
 		 * @param array $values Field name => value.
 		 */
-		// Hyphenated rather than underscored, and kept that way: it is the
-		// plugin's documented filter name and themes hook it by that string.
-		$values = apply_filters( 'email_form-fieldvalues', array() ); // phpcs:ignore WordPress.NamingConventions.ValidHookName.UseUnderscores
+		$values = apply_filters( 'wp_email_form_field_values', array() );
 
 		// Anything the visitor actually typed wins over the pre-fill, so a
 		// failed submission comes back with their input intact.
