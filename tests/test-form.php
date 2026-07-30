@@ -20,6 +20,17 @@ class WP_Email_Form_Test extends WP_Email_Ajax_TestCase {
 	private $post_id;
 
 	/**
+	 * The arguments the last wp_mail() call was made with, or null if none was.
+	 *
+	 * Declared rather than assigned into: PHP 8.2 deprecates creating a dynamic
+	 * property, and the shared PHPUnit config turns deprecations into
+	 * exceptions, so an undeclared property fails every test in this class.
+	 *
+	 * @var array|null
+	 */
+	private $mail;
+
+	/**
 	 * Set up the fixtures for each test.
 	 *
 	 * @return void
