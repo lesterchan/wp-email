@@ -90,7 +90,7 @@ class WP_Email_Admin {
 	public function add_menu() {
 		$logs = add_menu_page(
 			__( 'E-Mail', 'wp-email' ),
-			__( 'E-Mail', 'wp-email' ),
+			__( 'WP-EMail', 'wp-email' ),
 			self::capability(),
 			self::PAGE,
 			array( $this, 'render_logs' ),
