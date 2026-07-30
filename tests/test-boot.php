@@ -288,7 +288,15 @@ class WP_Email_Boot_Test extends WP_Email_TestCase {
 
 		WP_Email::get_instance()->install();
 
-		$this->assertSame( (string) WP_EMAIL_DB_VERSION, (string) get_option( WP_Email_Options::VERSION ) );
+		// The marker row holds 'plugin' and 'db' and nothing else, per
+		// STANDARDS.md 2.1, so the schema counter is one key of it rather than
+		// the whole value. Reading the row as a string casts the array and, with
+		// deprecations converted to exceptions, takes the test down with it.
+		$this->assertSame(
+			(string) WP_EMAIL_DB_VERSION,
+			(string) WP_Email_Options::markers()['db'],
+			'install() did not record the schema version.'
+		);
 	}
 
 	public function test_maybe_upgrade_is_a_no_op_when_current() {
@@ -313,13 +321,19 @@ class WP_Email_Boot_Test extends WP_Email_TestCase {
 	}
 
 	public function test_the_plugin_constants_exist() {
-		$this->assertTrue( defined( 'WP_EMAIL_VERSION' ) );
-		$this->assertTrue( defined( 'WP_EMAIL_DB_VERSION' ) );
-		$this->assertTrue( defined( 'WP_EMAIL_MAIN_FILE' ) );
+		// All six of STANDARDS.md 2.3, not a sample of three: the two that were
+		// not asserted are the ones every path and URL in the plugin is built
+		// from, so losing one is how a stylesheet quietly 404s.
+		foreach ( array( 'WP_EMAIL_VERSION', 'WP_EMAIL_DB_VERSION', 'WP_EMAIL_SLUG', 'WP_EMAIL_MAIN_FILE', 'WP_EMAIL_DIR', 'WP_EMAIL_URL' ) as $constant ) {
+			$this->assertTrue( defined( $constant ), $constant . ' is not defined.' );
+		}
 
 		// Guarded so it can be overridden from wp-config.php and survive an
-		// upgrade, which the pre-3.0.0 instructions could not.
-		$this->assertTrue( defined( 'EMAIL_SHOW_REMARKS' ) );
+		// upgrade, which the pre-3.0.0 instructions could not. Renamed from the
+		// unprefixed EMAIL_SHOW_REMARKS in 3.0.0, per 2.3; the old spelling must
+		// not come back, or a site would have two switches for one behaviour.
+		$this->assertTrue( defined( 'WP_EMAIL_SHOW_REMARKS' ), 'WP_EMAIL_SHOW_REMARKS is not defined.' );
+		$this->assertFalse( defined( 'EMAIL_SHOW_REMARKS' ), 'The retired unprefixed constant is still defined.' );
 	}
 
 	public function test_the_version_constant_matches_the_header() {
@@ -358,7 +372,11 @@ class WP_Email_Boot_Test extends WP_Email_TestCase {
 
 		WP_Email::get_instance()->activate( false );
 
-		$this->assertSame( (string) WP_EMAIL_DB_VERSION, (string) get_option( WP_Email_Options::VERSION ) );
+		$this->assertSame(
+			(string) WP_EMAIL_DB_VERSION,
+			(string) WP_Email_Options::markers()['db'],
+			'Activation did not record the schema version.'
+		);
 		$this->assertTrue( get_role( 'administrator' )->has_cap( 'manage_email' ) );
 		$this->assertNotNull( $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->email}" ) );
 	}
@@ -426,8 +444,12 @@ class WP_Email_Boot_Test extends WP_Email_TestCase {
 				continue;
 			}
 
+			// The one spelling the collection uses, from the shared templates.
+			// The long if-block form this used to look for appears nowhere in the
+			// plugin, so the assertion failed on the first file it was given
+			// while every one of them was in fact guarded.
 			$this->assertStringContainsString(
-				"if ( ! defined( 'ABSPATH' ) ) {",
+				"defined( 'ABSPATH' ) || exit;",
 				file_get_contents( $file ),
 				basename( $file ) . ' can be requested directly'
 			);

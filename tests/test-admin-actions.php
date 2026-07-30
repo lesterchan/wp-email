@@ -43,6 +43,12 @@ class WP_Email_Admin_Actions_Test extends WP_Email_TestCase {
 
 		$this->redirected_to = '';
 
+		// add_settings_error() writes into a global that no transaction rolls
+		// back, so a notice queued by one test would be rendered by the next one
+		// and the "unknown notice renders nothing" assertion would fail on
+		// execution order.
+		$GLOBALS['wp_settings_errors'] = array();
+
 		// The screen redirects and then exits; intercepting the redirect is how
 		// the exit is avoided without changing the code under test.
 		add_filter(
@@ -213,12 +219,20 @@ class WP_Email_Admin_Actions_Test extends WP_Email_TestCase {
 	}
 
 	/**
-	 * Render the logs screen.
+	 * Load and then render the logs screen, as a real request does.
+	 *
+	 * Both steps, on one instance. WordPress fires load-{$hook_suffix} before it
+	 * calls the page callback, and that is where register_notice() turns
+	 * ?wp-email-notice=… into a settings error for settings_errors() to print.
+	 * Calling render_logs() alone renders a screen that was never loaded, so no
+	 * notice could ever appear and an assertion about one proves nothing.
 	 *
 	 * @return string
 	 */
 	private function render_logs() {
 		$admin = new WP_Email_Admin();
+
+		$admin->load_logs();
 
 		ob_start();
 		$admin->render_logs();
