@@ -295,7 +295,7 @@ Two option rows — `wp_email_options` for the settings and `wp_email_version` f
 ### 3.0.0
 The first release since 2.69.4, and there is a fair amount in it. Nothing you have configured is lost, but seven things are worth knowing before you update.
 
-**Your site must be on WordPress 6.8 or later and PHP 8.2 or later.** Anything older will simply not be offered the update. If your host still runs PHP 7.4, ask to be moved to a supported version before updating — 7.4 stopped receiving security fixes in 2022.
+**Your site must be on WordPress 6.8 or later and PHP 8.2 or later.** Anything older will simply not be offered the update. Check `WP-Admin -> Tools -> Site Health -> Info -> Server` for your PHP version; if it is below 8.2, ask your host to move you up. PHP 8.1 and everything before it stopped receiving security fixes.
 
 **Your settings move to new rows in the database, and the old ones are deleted.** The eighteen rows the plugin used — `email_options`, `email_fields`, the eight `email_template_*` rows and the rest — become one `wp_email_options` row, and `email_db_version` becomes `wp_email_version`. Nothing is lost and there is nothing to do: the move runs by itself the first time an administrator loads wp-admin after the update. If you have a backup script, a migration tool or a `wp-config.php` snippet that names any of the old rows, point it at the new ones.
 
