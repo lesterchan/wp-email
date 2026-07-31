@@ -88,31 +88,44 @@ class WP_Email_Admin {
 	 * @return void
 	 */
 	public function add_menu() {
-		$logs = add_menu_page(
-			__( 'E-Mail', 'wp-email' ),
+		/*
+		 * Settings first, the log last.
+		 *
+		 * STANDARDS.md 4.1: the data screen leads when it is what somebody came
+		 * for, and a log is not. This one records the mail that went out, which
+		 * is for answering "did it send?" and little else, while the settings are
+		 * what a site owner opens. "Manage E-Mail" promised a workspace and
+		 * delivered a ledger; it is called Logs now.
+		 *
+		 * The parent slug is the settings page, which is what puts it first:
+		 * WordPress orders submenus by registration and the parent's own entry is
+		 * registered first.
+		 */
+		add_menu_page(
+			__( 'E-Mail Settings', 'wp-email' ),
 			__( 'WP-EMail', 'wp-email' ),
-			self::capability(),
-			self::PAGE,
-			array( $this, 'render_logs' ),
+			WP_Email_Settings::capability(),
+			WP_Email_Settings::PAGE,
+			array( 'WP_Email_Settings', 'render' ),
 			'dashicons-email-alt'
 		);
 
 		add_submenu_page(
-			self::PAGE,
-			__( 'Manage E-Mail', 'wp-email' ),
-			__( 'Manage E-Mail', 'wp-email' ),
-			self::capability(),
-			self::PAGE,
-			array( $this, 'render_logs' )
-		);
-
-		add_submenu_page(
-			self::PAGE,
-			__( 'Settings', 'wp-email' ),
+			WP_Email_Settings::PAGE,
+			__( 'E-Mail Settings', 'wp-email' ),
 			__( 'Settings', 'wp-email' ),
 			WP_Email_Settings::capability(),
 			WP_Email_Settings::PAGE,
 			array( 'WP_Email_Settings', 'render' )
+		);
+
+		$logs = add_submenu_page(
+			WP_Email_Settings::PAGE,
+			__( 'E-Mail Logs', 'wp-email' ),
+			__( 'Logs', 'wp-email' ),
+			self::capability(),
+			self::PAGE,
+			array( $this, 'render_logs' )
 		);
 
 		add_action( 'load-' . $logs, array( $this, 'load_logs' ) );

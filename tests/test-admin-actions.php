@@ -248,17 +248,27 @@ class WP_Email_Admin_Actions_Test extends WP_Email_TestCase {
 
 		( new WP_Email_Admin() )->add_menu();
 
-		$slugs = wp_list_pluck( $submenu[ WP_Email_Admin::PAGE ], 2 );
+		$slugs = wp_list_pluck( $submenu[ WP_Email_Settings::PAGE ], 2 );
 
-		// The data screen first, Settings last, per STANDARDS.md 4.1.
-		$this->assertSame( array( WP_Email_Admin::PAGE, WP_Email_Settings::PAGE ), $slugs );
-
-		$capabilities = wp_list_pluck( $submenu[ WP_Email_Admin::PAGE ], 1 );
-
-		// The logs screen keeps the plugin's own capability because it is a
-		// data screen; the settings screen takes manage_options (4.2, 2.7).
+		// Settings first, the log last, per STANDARDS.md 4.1: the data screen
+		// leads when it is what somebody came for, and a log is not.
 		$this->assertSame(
-			array( WP_Email_Admin::CAPABILITY, WP_Email_Settings::CAPABILITY ),
+			array( WP_Email_Settings::PAGE, WP_Email_Admin::PAGE ),
+			$slugs,
+			'Settings must come first and the log last'
+		);
+
+		$labels = wp_list_pluck( $submenu[ WP_Email_Settings::PAGE ], 0 );
+
+		$this->assertSame( 'Settings', $labels[0], 'the first entry is not Settings' );
+		$this->assertSame( 'Logs', $labels[1], 'the log is not called Logs' );
+
+		$capabilities = wp_list_pluck( $submenu[ WP_Email_Settings::PAGE ], 1 );
+
+		// The log keeps the plugin's own capability because it is a data screen;
+		// the settings screen takes manage_options (4.2, 2.7).
+		$this->assertSame(
+			array( WP_Email_Settings::CAPABILITY, WP_Email_Admin::CAPABILITY ),
 			$capabilities
 		);
 	}
