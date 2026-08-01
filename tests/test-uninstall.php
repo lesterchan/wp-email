@@ -90,22 +90,24 @@ class WP_Email_Uninstall_Test extends WP_Email_TestCase {
 	}
 
 	/**
-	 * The behavioural half of this lives in test-metadata.php.
+	 * The behavioural half of this is reached through run_uninstall().
 	 *
-	 * The uninstaller declares global functions, so only one test file in the
-	 * plugin may require it -- a second fatals on redeclare. That file is
-	 * test-metadata.php, where the family-wide
-	 * test_uninstall_removes_every_option_row() already has to run it.
+	 * The uninstaller declares global functions, so only one file in the suite
+	 * may require it -- a second fatals on redeclare, and a require_once that
+	 * has already fired is a silent no-op, which proves nothing. That file is
+	 * helper-testcase.php, whose run_uninstall() requires it once for the
+	 * declarations and then drives the work itself, so every caller gets the
+	 * same thing. Nothing else in tests/ may reach for the file directly.
 	 */
-	public function test_the_uninstaller_is_executed_by_exactly_one_test_file() {
+	public function test_the_uninstaller_is_required_by_exactly_one_file() {
 		$requiring = array();
 
-		foreach ( (array) glob( __DIR__ . '/test-*.php' ) as $file ) {
+		foreach ( (array) glob( __DIR__ . '/*.php' ) as $file ) {
 			if ( preg_match( "#require(_once)?\\s+dirname\\( __DIR__ \\) \\. '/uninstall\\.php'#", (string) file_get_contents( $file ) ) ) {
 				$requiring[] = basename( $file );
 			}
 		}
 
-		$this->assertSame( array( 'test-metadata.php' ), $requiring );
+		$this->assertSame( array( 'helper-testcase.php' ), $requiring );
 	}
 }

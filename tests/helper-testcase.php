@@ -45,6 +45,36 @@ abstract class WP_Email_TestCase extends WP_UnitTestCase {
 	}
 
 	/**
+	 * Run the uninstaller, repeatably.
+	 *
+	 * The uninstaller does its work in the file body, and PHP will not run a file
+	 * body twice - so the first caller in a process would get the real thing
+	 * and every later one silently nothing at all. The require is therefore
+	 * only there to guarantee the two functions exist, and the work is driven
+	 * from here: the same three calls the file itself makes, for the current
+	 * site. That the file loops get_sites() with the cap lifted and restores
+	 * inside the loop is asserted against the source in test-uninstall.php,
+	 * which is where it belongs.
+	 *
+	 * The log table survives this under the harness, which rewrites DROP TABLE
+	 * into its TEMPORARY form; the test that actually means to prove the drop
+	 * removes that filter first.
+	 *
+	 * @return void
+	 */
+	protected function run_uninstall() {
+		if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
+			define( 'WP_UNINSTALL_PLUGIN', 'wp-email/wp-email.php' );
+		}
+
+		require_once dirname( __DIR__ ) . '/uninstall.php';
+
+		wp_email_delete_options();
+		WP_Email_Logs::drop_table();
+		wp_email_remove_capability();
+	}
+
+	/**
 	 * Write settings over the defaults.
 	 *
 	 * Written raw rather than through update_option(), so the sanitize callback
