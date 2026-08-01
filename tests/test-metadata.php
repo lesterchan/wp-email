@@ -62,7 +62,7 @@ class WP_Email_Metadata_Test extends WP_Email_TestCase {
 					return true;
 				}
 
-				return ! in_array( $current->getFilename(), array( 'vendor', 'node_modules', '.git' ), true );
+				return ! in_array( $current->getFilename(), array( 'vendor', 'node_modules', '.git', 'artifacts' ), true );
 			}
 		);
 
@@ -487,7 +487,15 @@ class WP_Email_Metadata_Test extends WP_Email_TestCase {
 		);
 
 		$this->assertSame( array(), (array) glob( $root . '/*.css' ) );
-		$this->assertSame( array(), (array) glob( $root . '/*.js' ) );
+
+		// playwright.config.js is the one exception, and it is not a script the
+		// plugin ships: section 7.5 puts it at the plugin root because that is
+		// where Playwright looks for it, and the SVN deploy excludes it along with
+		// the rest of the dev tooling.
+		$this->assertSame(
+			array( 'playwright.config.js' ),
+			array_values( array_map( 'basename', (array) glob( $root . '/*.js' ) ) )
+		);
 	}
 
 	/**
