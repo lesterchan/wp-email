@@ -44,7 +44,7 @@ define( 'WP_EMAIL_VERSION', '3.0.0' );
 /**
  * Schema counter. Bumped only when the stored rows or the table need reshaping.
  */
-define( 'WP_EMAIL_DB_VERSION', '1' );
+define( 'WP_EMAIL_DB_VERSION', '2' );
 
 /**
  * WP-EMail slug, which is also the text domain.

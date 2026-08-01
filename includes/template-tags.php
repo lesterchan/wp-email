@@ -14,14 +14,21 @@ defined( 'ABSPATH' ) || exit;
 /**
  * Display the "Email This Post" link.
  *
- * @param string $email_post_text Override for the post link text.
- * @param string $email_page_text Override for the page link text.
+ * The first two parameters are kept so that a theme calling this the way the
+ * plugin documented before 3.0.0 still renders a link rather than fatalling,
+ * but they no longer do anything: the link is one template, edited on the
+ * settings screen, and a per-call override cannot be expressed in it.
+ *
+ * @param string $email_post_text Unused since 3.0.0.
+ * @param string $email_page_text Unused since 3.0.0.
  * @param bool   $echo_output     Whether to echo rather than return.
  *
  * @return string
  */
 function email_link( $email_post_text = '', $email_page_text = '', $echo_output = true ) {
-	$output = WP_Email_Link::render( $email_post_text, $email_page_text );
+	unset( $email_post_text, $email_page_text );
+
+	$output = WP_Email_Link::render();
 
 	if ( $echo_output ) {
 		echo $output . "\n"; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped at each sink in WP_Email_Link.

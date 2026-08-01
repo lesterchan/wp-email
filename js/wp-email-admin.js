@@ -44,59 +44,8 @@
 		}
 	}
 
-	/**
-	 * Show or hide a block depending on a select's value.
-	 *
-	 * The hidden attribute rather than an inline display style, so the markup
-	 * PHP prints carries no style attribute for the handler to fight with.
-	 *
-	 * @param {HTMLSelectElement} select The controlling select.
-	 */
-	function applyToggle( select ) {
-		const target = document.getElementById(
-			select.getAttribute( 'data-wp-email-toggle' ),
-		);
-
-		if ( ! target ) {
-			return;
-		}
-
-		const wanted = select.getAttribute( 'data-wp-email-toggle-value' );
-
-		target.hidden = select.value !== wanted;
-	}
-
-	/**
-	 * Re-apply a toggle whenever its select changes.
-	 *
-	 * Delegated on document like the click handler, rather than bound to each
-	 * select: one listener, and a field the Settings API redraws keeps working
-	 * without anything having to rebind it.
-	 *
-	 * @param {Event} event The change event.
-	 */
-	function onChange( event ) {
-		const target = event.target;
-
-		if ( ! target || ! target.closest ) {
-			return;
-		}
-
-		const select = target.closest( '[data-wp-email-toggle]' );
-
-		if ( select ) {
-			applyToggle( select );
-		}
-	}
-
 	function init() {
 		document.addEventListener( 'click', onClick );
-		document.addEventListener( 'change', onChange );
-
-		Array.prototype.forEach.call(
-			document.querySelectorAll( '[data-wp-email-toggle]' ),
-			applyToggle,
-		);
 	}
 
 	if ( 'loading' === document.readyState ) {

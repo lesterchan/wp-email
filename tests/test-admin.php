@@ -94,17 +94,27 @@ class WP_Email_Admin_Test extends WP_Email_TestCase {
 	/**
 	 * Render the options screen.
 	 *
+	 * @param string $tab Which tab to draw.
+	 *
 	 * @return string
 	 */
-	private function render_options() {
+	private function render_options( $tab = 'settings' ) {
 		set_current_screen( 'e-mail_page_wp-email-settings' );
+
+		// The tab is read out of the request, so a test asking for one has to
+		// put it there rather than passing it in.
+		$_GET['tab'] = $tab;
 
 		$settings = new WP_Email_Settings();
 		$settings->register();
 
 		ob_start();
 		$settings->render();
-		return ob_get_clean();
+		$html = ob_get_clean();
+
+		unset( $_GET['tab'] );
+
+		return $html;
 	}
 
 
@@ -180,26 +190,70 @@ class WP_Email_Admin_Test extends WP_Email_TestCase {
 	}
 
 
-	public function test_the_options_screen_renders_every_section() {
-		$html = $this->render_options();
+	public function test_the_settings_tab_renders_the_three_sections_it_owns() {
+		$html = $this->render_options( 'settings' );
 
-		$this->assertStringContainsString( 'E-Mail Settings', $html );
 		$this->assertStringContainsString( 'E-Mail Link', $html );
-		$this->assertStringContainsString( 'E-Mail Text Link For Post', $html );
 		$this->assertStringContainsString( 'E-Mail Link Type', $html );
+		$this->assertStringContainsString( 'E-Mail Link Template', $html );
 		$this->assertStringContainsString( 'E-Mail Fields', $html );
 		$this->assertStringContainsString( 'Interval Between E-Mails', $html );
 		$this->assertStringContainsString( 'Header That Contains The IP', $html );
+		$this->assertStringContainsString( 'WP-Stats', $html );
+	}
+
+	public function test_the_templates_tab_renders_the_eight_templates() {
+		$html = $this->render_options( 'templates' );
+
 		$this->assertStringContainsString( 'E-Mail Subject', $html );
 		$this->assertStringContainsString( 'E-Mail Body', $html );
-		$this->assertStringContainsString( 'WP-Stats', $html );
 		$this->assertStringContainsString( 'Restore Default Template', $html );
+	}
+
+	/**
+	 * Each tab is its own Settings API page, which is the whole mechanism: a
+	 * tab that drew the other's fields would post them too, and the tabs would
+	 * stop being separable at all.
+	 */
+	public function test_neither_tab_draws_the_other_tab_fields() {
+		$settings  = $this->render_options( 'settings' );
+		$templates = $this->render_options( 'templates' );
+
+		$this->assertStringNotContainsString( 'name="wp_email_options[templates][subject]"', $settings );
+		$this->assertStringNotContainsString( 'name="wp_email_options[sending][interval]"', $templates );
+	}
+
+	public function test_both_tabs_are_offered_and_the_current_one_is_marked() {
+		$html = $this->render_options( 'templates' );
+
+		$this->assertStringContainsString( 'nav-tab-wrapper', $html );
+		$this->assertStringContainsString( 'tab=settings', $html );
+		$this->assertStringContainsString( 'tab=templates', $html );
+		$this->assertMatchesRegularExpression( '/nav-tab nav-tab-active[^>]*>\s*Templates/', $html );
+	}
+
+	public function test_an_unknown_tab_falls_back_to_the_first_one() {
+		$html = $this->render_options( 'nonsense' );
+
+		$this->assertStringContainsString( 'E-Mail Link Type', $html );
+		$this->assertStringNotContainsString( 'name="wp_email_options[templates][subject]"', $html );
+	}
+
+	/**
+	 * The tab travels through options.php in the referer, so a save comes back
+	 * to the tab it was submitted from rather than to the first one.
+	 */
+	public function test_the_save_returns_to_the_tab_it_was_submitted_from() {
+		$html = $this->render_options( 'templates' );
+
+		$this->assertStringContainsString( 'name="_wp_http_referer"', $html );
+		$this->assertMatchesRegularExpression( '/_wp_http_referer" value="[^"]*tab=templates/', $html );
 	}
 
 	public function test_the_options_screen_posts_to_the_settings_api() {
 		$html = $this->render_options();
 
-		$this->assertStringContainsString( 'action="options.php"', $html );
+		$this->assertStringContainsString( 'action="' . admin_url( 'options.php' ) . '"', $html );
 		// settings_fields() emits single-quoted attributes.
 		$this->assertStringContainsString( "name='option_page' value='wp_email_options'", $html );
 		$this->assertStringContainsString( '_wpnonce', $html );
@@ -208,13 +262,16 @@ class WP_Email_Admin_Test extends WP_Email_TestCase {
 	public function test_the_options_screen_uses_nested_field_names() {
 		$html = $this->render_options();
 
-		$this->assertStringContainsString( 'name="wp_email_options[link][post_text]"', $html );
+		$this->assertStringContainsString( 'name="wp_email_options[link][html]"', $html );
 		$this->assertStringContainsString( 'name="wp_email_options[sending][interval]"', $html );
-		$this->assertStringContainsString( 'name="wp_email_options[templates][subject]"', $html );
+		$this->assertStringContainsString(
+			'name="wp_email_options[templates][subject]"',
+			$this->render_options( 'templates' )
+		);
 	}
 
 	public function test_the_template_tokens_are_shown_verbatim() {
-		$html = $this->render_options();
+		$html = $this->render_options( 'templates' );
 
 		// phpcbf reads a literal %TOKEN% inside a translatable string as a
 		// printf placeholder and renumbers it, which would rewrite the very
@@ -225,13 +282,30 @@ class WP_Email_Admin_Test extends WP_Email_TestCase {
 	}
 
 	public function test_the_restore_buttons_carry_defaults_in_data_attributes() {
-		$html = $this->render_options();
+		$html = $this->render_options( 'templates' );
 
 		// Not esc_js() into an inline onclick, which is where these plugins
 		// hide their XSS.
 		$this->assertStringContainsString( 'data-wp-email-restore=', $html );
 		$this->assertStringContainsString( 'data-wp-email-default=', $html );
 		$this->assertStringNotContainsString( 'onclick', $html );
+	}
+
+	/**
+	 * An unticked checkbox posts nothing, and the sanitizer keeps what the
+	 * submission did not mention -- so without a hidden 0 sharing its name, a
+	 * box could be ticked and never unticked.
+	 */
+	public function test_every_checkbox_carries_a_hidden_zero_of_its_own() {
+		$html = $this->render_options( 'settings' );
+
+		foreach ( array( 'wp_email_options[fields][yourname]', 'wp_email_options[sending][imageverify]', 'wp_email_options[stats_display]' ) as $name ) {
+			$this->assertStringContainsString(
+				'<input type="hidden" name="' . $name . '" value="0" />',
+				$html,
+				"{$name} needs a hidden 0 so that unticking it says so."
+			);
+		}
 	}
 
 	public function test_the_setting_is_registered_with_its_sanitizer() {

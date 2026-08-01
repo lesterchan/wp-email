@@ -161,44 +161,31 @@ class WP_Email_Template_Tags_Test extends WP_Email_TestCase {
 		$this->assertSame( $before, $GLOBALS['post']->ID );
 	}
 
-	public function test_email_link_styles() {
+	public function test_email_link_renders_the_shipped_template() {
 		$this->go_to( get_permalink( $this->post_id ) );
 		the_post();
 
-		$options = WP_Email_Options::all();
-
-		$options['link']['style'] = 1;
-		$options['link']['type']  = 1;
-		WP_Email_Options::update( $options );
-
 		$link = email_link( '', '', false );
+
 		$this->assertStringContainsString( 'wp-email-icon', $link );
 		$this->assertStringContainsString( 'Email This Post', $link );
 		$this->assertStringContainsString( 'rel="nofollow"', $link );
-
-		$options['link']['style'] = 2;
-		WP_Email_Options::update( $options );
-		$this->assertStringContainsString( 'wp-email-icon', email_link( '', '', false ) );
-
-		$options['link']['style'] = 3;
-		WP_Email_Options::update( $options );
-		$this->assertStringNotContainsString( 'wp-email-icon', email_link( '', '', false ) );
 	}
 
-	public function test_email_link_custom_style_expands_every_token() {
+	public function test_email_link_expands_every_token_of_a_custom_template() {
 		$this->go_to( get_permalink( $this->post_id ) );
 		the_post();
 
-		$options                  = WP_Email_Options::all();
-		$options['link']['style'] = 4;
-		$options['link']['html']  = '<a href="%EMAIL_URL%" title="%EMAIL_TEXT%">%EMAIL_ICON% %EMAIL_TEXT%</a>';
+		$options                 = WP_Email_Options::all();
+		$options['link']['html'] = '<a href="%EMAIL_URL%" title="%POST_TYPE%">%EMAIL_ICON% %POST_TYPE%</a>';
 		WP_Email_Options::update( $options );
 
 		$link = email_link( '', '', false );
 
-		$this->assertStringContainsString( 'Email This Post', $link );
+		$this->assertStringContainsString( 'title="Post"', $link );
 		$this->assertStringContainsString( '<svg class="wp-email-icon"', $link );
 		$this->assertStringNotContainsString( '%EMAIL_', $link );
+		$this->assertStringNotContainsString( '%POST_TYPE%', $link );
 	}
 
 	public function test_email_link_popup_uses_a_data_attribute_not_an_onclick() {
@@ -211,15 +198,23 @@ class WP_Email_Template_Tags_Test extends WP_Email_TestCase {
 
 		$link = email_link( '', '', false );
 
-		$this->assertStringContainsString( 'data-wp-email-popup', $link );
+		$this->assertStringContainsString( 'data-wp-email-popup="1"', $link );
 		$this->assertStringNotContainsString( 'onclick', $link );
 	}
 
-	public function test_email_link_text_can_be_overridden() {
+	/**
+	 * The two text parameters are kept so a theme written against the pre-3.0.0
+	 * signature still renders a link, but the link is one template now and a
+	 * per-call override cannot be expressed in it.
+	 */
+	public function test_the_two_retired_email_link_parameters_are_accepted_and_ignored() {
 		$this->go_to( get_permalink( $this->post_id ) );
 		the_post();
 
-		$this->assertStringContainsString( 'Send this along', email_link( 'Send this along', '', false ) );
+		$link = email_link( 'Send this along', 'Share this page', false );
+
+		$this->assertStringNotContainsString( 'Send this along', $link );
+		$this->assertStringContainsString( 'Email This Post', $link );
 	}
 
 	public function test_title_template_expands() {

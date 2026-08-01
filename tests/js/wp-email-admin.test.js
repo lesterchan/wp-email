@@ -6,12 +6,34 @@ import { click, loadPluginScript, readPluginFile } from './helpers.js';
 
 const DEFAULT_TEMPLATE = "E-Mail '%EMAIL_POST_TITLE%' To A Friend";
 
+// The link template is markup, so every character esc_attr() touches is in it.
+// A fixture carrying it verbatim would end the attribute at its first quote.
+const DEFAULT_LINK_TEMPLATE =
+	'<a href="%EMAIL_URL%" data-wp-email-popup="%EMAIL_POPUP%" title="Email This %POST_TYPE%" rel="nofollow">%EMAIL_ICON% Email This %POST_TYPE%</a>';
+
+/**
+ * Escape a value into an attribute the way PHP's esc_attr() does.
+ *
+ * @param {string} value Raw value.
+ * @return {string} The same value, safe between double quotes.
+ */
+function escAttr( value ) {
+	return value
+		.replace( /&/g, '&amp;' )
+		.replace( /</g, '&lt;' )
+		.replace( />/g, '&gt;' )
+		.replace( /"/g, '&quot;' )
+		.replace( /'/g, '&#039;' );
+}
+
 /**
  * The markup WP_Email_Settings prints for the fields this script touches.
  *
  * @return {string} Markup.
  */
 function settingsMarkup() {
+	const linkDefault = escAttr( DEFAULT_LINK_TEMPLATE );
+
 	return `
 		<input type="text" id="wp_email_template_title" value="something else" />
 		<p>
@@ -19,14 +41,12 @@ function settingsMarkup() {
 				data-wp-email-restore="wp_email_template_title"
 				data-wp-email-default="${ DEFAULT_TEMPLATE }">Restore Default Template</button>
 		</p>
-		<select id="wp_email_link_style"
-			data-wp-email-toggle="wp_email_link_custom" data-wp-email-toggle-value="4">
-			<option value="1" selected>Icon With Text Link</option>
-			<option value="4">Custom</option>
-		</select>
-		<div id="wp_email_link_custom" hidden>
-			<textarea id="wp_email_link_html"></textarea>
-		</div>
+		<textarea id="wp_email_link_html">something else again</textarea>
+		<p>
+			<button type="button" class="button button-secondary"
+				data-wp-email-restore="wp_email_link_html"
+				data-wp-email-default="${ linkDefault }">Restore Default Template</button>
+		</p>
 		<input type="submit" name="delete_logs" value="Delete"
 			data-wp-email-confirm="You are about to delete all e-mail logs." />
 	`;
@@ -80,45 +100,25 @@ describe( 'Restore Default Template', () => {
 	} );
 } );
 
-/**
- * Change the link style the way a browser does.
- *
- * The event has to bubble: the script listens on document, and a change event
- * built without { bubbles: true } never leaves the select.
- *
- * @param {string} value The style to select.
- */
-function chooseStyle( value ) {
-	const select = document.getElementById( 'wp_email_link_style' );
+describe( 'Restore Default Template on the link template', () => {
+	it( 'puts the markup back, angle brackets and quotes and all', async () => {
+		await click( '[data-wp-email-restore="wp_email_link_html"]' );
 
-	select.value = value;
-	select.dispatchEvent( new window.Event( 'change', { bubbles: true } ) );
-}
-
-describe( 'the custom link markup toggle', () => {
-	it( 'stays hidden while another style is selected', () => {
-		expect( document.getElementById( 'wp_email_link_custom' ).hidden ).toBe( true );
+		// Read back through the DOM's own attribute decoding, which is the whole
+		// of the mechanism: PHP escapes once with esc_attr() and the browser
+		// undoes it. A template that arrived HTML-encoded would render as text.
+		expect( document.getElementById( 'wp_email_link_html' ).value ).toBe(
+			DEFAULT_LINK_TEMPLATE,
+		);
 	} );
 
-	it( 'appears when Custom is chosen', () => {
-		chooseStyle( '4' );
+	it( 'leaves %POST_TYPE% as PHP wrote it', async () => {
+		await click( '[data-wp-email-restore="wp_email_link_html"]' );
 
-		expect( document.getElementById( 'wp_email_link_custom' ).hidden ).toBe( false );
-	} );
+		const value = document.getElementById( 'wp_email_link_html' ).value;
 
-	it( 'hides again when the style is changed back', () => {
-		chooseStyle( '4' );
-		chooseStyle( '1' );
-
-		expect( document.getElementById( 'wp_email_link_custom' ).hidden ).toBe( true );
-	} );
-
-	it( 'uses the hidden property rather than an inline style', () => {
-		chooseStyle( '4' );
-
-		expect(
-			document.getElementById( 'wp_email_link_custom' ).getAttribute( 'style' ),
-		).toBeNull();
+		expect( value ).toContain( '%POST_TYPE%' );
+		expect( value ).not.toContain( '%EMAIL_TEXT%' );
 	} );
 } );
 

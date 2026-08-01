@@ -193,7 +193,7 @@ describe( 'the popup link', () => {
 		document.body.innerHTML =
 			'<a href="http://example.test/hello-world/emailpopup/" data-wp-email-popup="1">Email</a>';
 
-		await click( '[data-wp-email-popup]' );
+		await click( '[data-wp-email-popup="1"]' );
 
 		expect( window.open ).toHaveBeenCalledTimes( 1 );
 		expect( window.open.mock.calls[ 0 ][ 0 ] ).toBe(

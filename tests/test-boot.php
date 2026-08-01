@@ -302,13 +302,13 @@ class WP_Email_Boot_Test extends WP_Email_TestCase {
 	public function test_maybe_upgrade_is_a_no_op_when_current() {
 		WP_Email::get_instance()->install();
 
-		$options                      = WP_Email_Options::all();
-		$options['link']['post_text'] = 'Untouched';
+		$options                 = WP_Email_Options::all();
+		$options['link']['html'] = '<a href="%EMAIL_URL%">Untouched</a>';
 		WP_Email_Options::update( $options );
 
 		WP_Email::get_instance()->maybe_upgrade();
 
-		$this->assertSame( 'Untouched', WP_Email_Options::get( 'link', 'post_text' ) );
+		$this->assertSame( '<a href="%EMAIL_URL%">Untouched</a>', WP_Email_Options::get( 'link', 'html' ) );
 	}
 
 	public function test_the_upgrade_is_hooked_where_an_update_will_reach_it() {

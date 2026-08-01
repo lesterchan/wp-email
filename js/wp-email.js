@@ -296,7 +296,10 @@
 			return;
 		}
 
-		const popup = target.closest( '[data-wp-email-popup]' );
+		// Matched on the value, not on the attribute being there: the link
+		// template always writes the attribute and puts 1 or 0 in it, because a
+		// bare %EMAIL_POPUP% in attribute position does not survive kses.
+		const popup = target.closest( '[data-wp-email-popup="1"]' );
 		if ( popup && popup.href ) {
 			event.preventDefault();
 			openPopup( popup.href );

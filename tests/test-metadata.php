@@ -377,6 +377,8 @@ class WP_Email_Metadata_Test extends WP_Email_TestCase {
 			'manage_options',
 			'manage_email',
 			'%EMAIL_ICON%',
+			'%EMAIL_TEXT%',
+			'%POST_TYPE%',
 			'email-css-rtl.css',
 			'email_popup(',
 			'stats_display',

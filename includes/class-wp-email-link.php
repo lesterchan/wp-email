@@ -8,7 +8,7 @@
 defined( 'ABSPATH' ) || exit;
 
 /**
- * The "Email This Post" link, in each of its four styles.
+ * The "Email This Post" link, built from the site's link template.
  *
  * @since 3.0.0
  */
@@ -19,72 +19,61 @@ class WP_Email_Link {
 	 *
 	 * Replaces the inline onclick="email_popup(this.href); return false;" the
 	 * plugin emitted before 3.0.0. One delegated listener in js/wp-email.js picks
-	 * up, which keeps the markup free of executable attributes.
+	 * it up, which keeps the markup free of executable attributes.
+	 *
+	 * %EMAIL_POPUP% expands to this attribute's VALUE -- 1 or 0 -- rather than to
+	 * the whole attribute. It has to: wp_kses_post() runs over every saved
+	 * template, and a bare %EMAIL_POPUP% sitting where an attribute name goes is
+	 * not an attribute kses allows, so it was stripped out of any template saved
+	 * through the settings screen and the popup silently stopped opening. A
+	 * data-* attribute with a token for its value survives kses intact.
 	 */
-	const POPUP_ATTRIBUTE = 'data-wp-email-popup="1"';
+	const POPUP_ATTRIBUTE = 'data-wp-email-popup';
 
 	/**
 	 * Build the link.
 	 *
-	 * @param string $post_text Override for the post link text.
-	 * @param string $page_text Override for the page link text.
+	 * One template rather than the four styles the plugin offered until 3.0.0:
+	 * three of those were this template with a piece left out, and the fourth
+	 * was this template.
 	 *
 	 * @return string
 	 */
-	public static function render( $post_text = '', $page_text = '' ) {
-		$link  = WP_Email_Options::all()['link'];
-		$style = (int) $link['style'];
-		$type  = (int) $link['type'];
+	public static function render() {
+		$link = WP_Email_Options::all()['link'];
+		$type = (int) $link['type'];
 
-		$text = is_page()
-			? ( '' !== $page_text ? $page_text : $link['page_text'] )
-			: ( '' !== $post_text ? $post_text : $link['post_text'] );
-
-		$url   = self::url( $type );
-		$popup = 2 === $type ? ' ' . self::POPUP_ATTRIBUTE . ' ' : '';
-
-		switch ( $style ) {
-			case 2:
-				return self::open_tag( $url, $text, $popup )
-					. self::icon( $text )
-					. '</a>';
-
-			case 3:
-				return self::open_tag( $url, $text, $popup ) . esc_html( $text ) . '</a>';
-
-			case 4:
-				return WP_Email_Template::expand(
-					$link['html'],
-					array(
-						'EMAIL_URL'   => esc_url( $url ),
-						'EMAIL_POPUP' => $popup,
-						'EMAIL_TEXT'  => esc_attr( $text ),
-						'EMAIL_ICON'  => self::icon( $text ),
-					)
-				);
-
-			case 1:
-			default:
-				return self::open_tag( $url, $text, $popup )
-					. self::icon()
-					. '</a>&nbsp;'
-					. self::open_tag( $url, $text, $popup )
-					. esc_html( $text )
-					. '</a>';
-		}
+		return WP_Email_Template::expand(
+			$link['html'],
+			array(
+				'EMAIL_URL'   => esc_url( self::url( $type ) ),
+				'EMAIL_POPUP' => 2 === $type ? '1' : '0',
+				'EMAIL_ICON'  => self::icon(),
+				// Escaped as an attribute rather than as text: the token is
+				// meant to be usable in the title as well as in the link text,
+				// and esc_attr() is safe in both.
+				'POST_TYPE'   => esc_attr( self::post_type_label() ),
+			)
+		);
 	}
 
 	/**
-	 * The opening anchor tag.
+	 * The singular label of the post type being viewed.
 	 *
-	 * @param string $url   Destination.
-	 * @param string $text  Link title.
-	 * @param string $popup Popup attribute, or an empty string.
+	 * "Post", "Page", or whatever a custom type calls one of itself, which is
+	 * what %POST_TYPE% resolves to. Falls back to the built-in post label when
+	 * there is no post in the loop to ask.
 	 *
 	 * @return string
 	 */
-	private static function open_tag( $url, $text, $popup ) {
-		return '<a href="' . esc_url( $url ) . '"' . $popup . ' title="' . esc_attr( $text ) . '" rel="nofollow">';
+	public static function post_type_label() {
+		$object = get_post_type_object( get_post_type() );
+
+		if ( $object && isset( $object->labels->singular_name ) && '' !== $object->labels->singular_name ) {
+			return (string) $object->labels->singular_name;
+		}
+
+		return __( 'Post', 'wp-email' );
 	}
 
 	/**
@@ -95,12 +84,15 @@ class WP_Email_Link {
 	 * sharp at any density, and costs no request. Two paths, an outline and the
 	 * flap, so it reads as an envelope at 16px.
 	 *
-	 * With visible link text beside it the glyph is decorative and hidden from
-	 * assistive technology; on its own it carries the link text as its
-	 * accessible name instead.
+	 * %EMAIL_ICON% expands to the unlabelled form, which is hidden from
+	 * assistive technology. A template that shows the glyph on its own therefore
+	 * takes its accessible name from the anchor's title attribute, which is what
+	 * the shipped templates carry -- and a labelled glyph inside a titled anchor
+	 * would announce the same words twice. The parameter remains for callers
+	 * placing the glyph somewhere the surrounding markup names nothing.
 	 *
-	 * @param string $label Accessible name, or an empty string when the glyph
-	 *                      sits beside the same text.
+	 * @param string $label Accessible name, or an empty string for a decorative
+	 *                      glyph.
 	 *
 	 * @return string
 	 */

@@ -17,7 +17,7 @@ WP-EMail puts an "Email This Post" link on your posts and pages. A visitor click
 Every message is logged, so you can see what was sent, to whom, from which address and whether it arrived. The page title, the subject line, the HTML body, the plain text body and every message the visitor sees are templates you can edit, each with its own list of variables and a button to put the original back.
 
 ### Features
-* An "Email This Post" link as an icon, as text, as both, or as HTML you write yourself
+* An "Email This Post" link built from an HTML template you edit, with the envelope glyph, the wording and the post type as variables
 * A standalone e-mail page or a popup window
 * HTML or plain text messages, with the article whole or cut to a word count
 * Image verification, and a minimum interval between sends, to keep the form off spammers' lists
@@ -55,7 +55,7 @@ Use one or the other, not both, or the link appears twice.
 
 If the link is there but clicking it gives a 404, re-save your permalinks under `WP-Admin -> Settings -> Permalinks`. The plugin registers its `/email/` endpoint on activation, but a site with unusual rewrite rules can need the nudge.
 
-Everything else is configured under `WP-Admin -> E-Mail -> Settings`, and the log of what has been sent is under `WP-Admin -> E-Mail -> Manage E-Mail`.
+Everything else is configured under `WP-Admin -> E-Mail -> Settings`, which has two tabs: **Settings** for the link, the form and delivery, and **Templates** for the eight message templates. The log of what has been sent is under `WP-Admin -> E-Mail -> Manage E-Mail`.
 
 ### Filters
 Use `wp_email_capability` to hand a screen to a capability other than the default. The logs screen is gated on `manage_email` and the settings screen on `manage_options`:
@@ -84,25 +84,32 @@ The other three are `wp_email_ipaddress` (the address a send is attributed to), 
 Through `wp_mail()`, so it uses whatever WordPress itself is configured to use. The plugin dropped its own SMTP settings in 2.68.0; if you need SMTP, install an SMTP plugin and WP-EMail will follow it.
 
 ### How can I customize my E-Mail link?
-Most of it comes from `WP-Admin -> E-Mail -> Settings`: the link text for posts and pages, whether it opens the standalone page or a popup, and whether it renders as an icon, as text, as both, or as HTML you write yourself.
+Edit the **E-Mail Link Template** under `WP-Admin -> E-Mail -> Settings`. It is the whole of the link's markup, and it ships as:
 
-You can also override the two text settings with the first two parameters of `email_link()`:
-
-```php
-if ( function_exists( 'email_link' ) ) {
-	email_link( 'E-Mail Text Link for Post', 'E-Mail Text Link for Page' );
-}
+```
+<a href="%EMAIL_URL%" data-wp-email-popup="%EMAIL_POPUP%" title="Email This %POST_TYPE%" rel="nofollow">%EMAIL_ICON% Email This %POST_TYPE%</a>
 ```
 
-Setting the third parameter to `false` returns the link instead of echoing it:
+Four variables are available:
+
+* `%EMAIL_URL%` — the e-mail page or popup for this post
+* `%EMAIL_POPUP%` — `1` when the **E-Mail Link Type** is the popup, `0` otherwise; it belongs inside the `data-wp-email-popup` attribute
+* `%EMAIL_ICON%` — the envelope glyph, drawn inline
+* `%POST_TYPE%` — the singular name of what is being viewed: `Post`, `Page`, or a custom post type's own label
+
+Leave one out to drop it. A template without `%EMAIL_ICON%` is a text link; one holding nothing but `%EMAIL_ICON%` is an icon, and the anchor's `title` is then what a screen reader announces. **Restore Default Template** puts the shipped markup back.
+
+An unrecognised variable is left in the markup as written rather than blanked, so a typo shows up on the page instead of silently emptying the link.
+
+Setting the third parameter of `email_link()` to `false` returns the link instead of echoing it:
 
 ```php
-$email_link = function_exists( 'email_link' )
-	? email_link( 'E-Mail Text Link for Post', 'E-Mail Text Link for Page', false )
-	: '';
+$email_link = function_exists( 'email_link' ) ? email_link( '', '', false ) : '';
 
 echo $email_link;
 ```
+
+The first two parameters are still accepted so that a theme written before 3.0.0 does not fatal, but they no longer do anything.
 
 ### How can I show my E-Mail stats?
 Two ways. Add the widget named "Email" under `WP-Admin -> Appearance -> Widgets`, or call one of the template tags from your theme.
@@ -185,8 +192,8 @@ Two option rows — `wp_email_options` for the settings and `wp_email_version` f
 ## Screenshots
 
 1. Admin - E-Mail Logs
-2. Admin - E-Mail Settings
-3. Admin - E-Mail Settings, template section
+2. Admin - E-Mail Settings, Settings tab
+3. Admin - E-Mail Settings, Templates tab
 4. Sample E-Mail Post link
 5. Sample E-Mail Post screen
 
@@ -200,6 +207,10 @@ Two option rows — `wp_email_options` for the settings and `wp_email_version` f
 * BREAKING: The settings screen moves from `?page=wp-email-options` to `?page=wp-email-settings` and is gated on `manage_options`; the logs screen keeps `manage_email`.
 * BREAKING: `email_wpstats_instance()`, `email_page_admin_general_stats()`, `email_page_admin_most_stats()`, `email_page_general_stats()` and `email_page_most_stats()` are removed, along with the global `email_popup()` in JavaScript.
 * BREAKING: The `%EMAIL_ICON_URL%` template variable is replaced by `%EMAIL_ICON%`, and the E-Mail Icon setting is removed.
+* BREAKING: The E-Mail Text Link For Post, E-Mail Text Link For Page and E-Mail Text Link Style settings are removed, and `%EMAIL_TEXT%` with them. The link is one HTML template, migrated from whatever those three said. The first two parameters of `email_link()` are accepted and ignored.
+* BREAKING: `%EMAIL_POPUP%` is now the *value* of a `data-wp-email-popup` attribute rather than the whole attribute, because a bare variable in attribute position did not survive the sanitizer.
+* NEW: A `%POST_TYPE%` link variable, which becomes the post type's singular label — `Post`, `Page`, or a custom type's own.
+* CHANGED: The settings screen is two tabs, Settings and Templates, rather than one page with the eight templates several screenfuls down.
 * BREAKING: The plugin no longer loads `email-css.css` from your theme directory.
 * NEW: Restructured into `includes/class-wp-email-*.php`. The template tags — `email_link()`, `get_emails()`, `get_mostemailed()` and the rest — keep their names and signatures.
 * NEW: The settings screen is built on the WordPress Settings API, and the e-mail log is a standard admin list table with sortable columns and a per-page screen option.
@@ -241,5 +252,15 @@ Removed: `email_wpstats_instance()`, `email_page_admin_general_stats()`, `email_
 **No images, one stylesheet, and no theme stylesheet override.** The two envelope icons and the loading GIF are gone: the link draws an inline SVG envelope taking its colour from your theme, and the loading indicator is drawn in CSS and holds still under `prefers-reduced-motion`. The **E-Mail Icon** setting is removed, and `%EMAIL_ICON_URL%` is replaced by `%EMAIL_ICON%`, which inserts the glyph itself. `email-css.css` and `email-css-rtl.css` become one `css/wp-email.css` written with logical properties.
 
 A theme copy of `email-css.css` is no longer loaded. Move those rules into your theme's own stylesheet: everything the plugin styles sits under `.wp-email`, so they keep working, and they now add to the plugin's rules rather than replacing the whole file. Custom link HTML using `%EMAIL_ICON_URL%` needs editing — an unrecognised variable is left in the markup as written rather than blanked, so you will see it.
+
+**The link is one template now.** **E-Mail Text Link For Post**, **E-Mail Text Link For Page** and **E-Mail Text Link Style** are gone, and so is the `%EMAIL_TEXT%` variable they fed. What is left is **E-Mail Link Template**, the anchor's markup, with `%EMAIL_URL%`, `%EMAIL_POPUP%`, `%EMAIL_ICON%` and the new `%POST_TYPE%` in it. Your template is built on upgrade from the style and the wording you had, so an icon-only link stays icon-only.
+
+Where the two link texts were still the shipped "Email This Post" and "Email This Page", they collapse to `Email This %POST_TYPE%`, which reads correctly on both — and on a custom post type, which the old pair could not do. **Where you had changed them and the two differ, the post wording is kept verbatim and the page wording is lost**: one template cannot carry two arbitrary strings. Check the template if this applies to you. A link already using the Custom style keeps its markup untouched.
+
+`%EMAIL_POPUP%` moved: it is the value of a `data-wp-email-popup` attribute rather than a bare variable standing in for the whole attribute, because a bare one was stripped by the sanitizer every time the screen was saved. Write `data-wp-email-popup="%EMAIL_POPUP%"` on the anchor. An unrecognised variable is left in the markup as written rather than blanked, so a template still holding `%EMAIL_TEXT%` shows it on the page rather than losing its link text in silence.
+
+The first two parameters of `email_link()` are accepted and ignored, so a theme calling `email_link( 'Send this on' )` still renders the link — from the template, not from the string.
+
+**The settings screen has two tabs**, `Settings` and `Templates`, at `?page=wp-email-settings&tab=…`. Both write the same option row and each saves without touching the other's values.
 
 **Proxy headers are no longer trusted unless you say so.** Until 3.0.0 the plugin read `HTTP_X_FORWARDED_FOR` and friends whenever they were present, and those headers are set by the visitor — so anyone could walk past the interval between e-mails by sending a different value on each request. If your site is behind a proxy, name the exact header it sets in `Header That Contains The IP`. Otherwise do nothing.

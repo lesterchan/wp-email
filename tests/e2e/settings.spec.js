@@ -27,13 +27,14 @@ const {
 } = require( './helpers.js' );
 
 /**
- * Open the settings screen.
+ * Open the settings screen, on one of its two tabs.
  *
- * @param {import('@playwright/test').Page} page Page under test.
+ * @param {import('@playwright/test').Page} page  Page under test.
+ * @param {string}                          [tab] Either 'settings' or 'templates'.
  * @return {Promise<void>} Resolves once the screen is up.
  */
-async function openSettings( page ) {
-	await page.goto( SETTINGS_URL );
+async function openSettings( page, tab = 'settings' ) {
+	await page.goto( `${ SETTINGS_URL }&tab=${ tab }` );
 
 	await expect( page.getByRole( 'heading', { name: 'E-Mail Settings' } ).first() ).toBeVisible();
 }
@@ -91,41 +92,87 @@ test.describe( 'E-mail settings', () => {
 		resetPlugin();
 	} );
 
-	test( 'the fixture really is one settings screen holding every section', async ( { page } ) => {
-		// The precondition: four sections registered against one page, which is
-		// what "one settings page per plugin" looks like when it is working.
-		await openSettings( page );
+	test( 'the fixture really is two tabs of one settings screen', async ( { page } ) => {
+		// The precondition: four sections registered across two tabs of one page,
+		// which is what "settings never span more than one page" looks like when
+		// it is working.
+		await openSettings( page, 'settings' );
 
 		// The section headings, by their own level: "E-Mail Settings" is both the
-		// page title and one of the four sections, so counting every heading of
-		// that name would be counting the h1 as well.
-		for ( const heading of [ 'E-Mail Link', 'E-Mail Settings', 'WP-Stats', 'E-Mail Templates' ] ) {
+		// page title and one of the sections, so counting every heading of that
+		// name would be counting the h1 as well.
+		for ( const heading of [ 'E-Mail Link', 'E-Mail Settings', 'WP-Stats' ] ) {
 			await expect(
 				page.locator( 'h2' ).filter( { hasText: heading } ).first(),
 				heading,
 			).toBeVisible();
 		}
 
-		await expect( page.locator( '#wp_email_link_post_text' ) ).toBeVisible();
+		await expect( page.locator( '#wp_email_link_html' ) ).toBeVisible();
+
+		// The templates are on the other tab, and only on the other tab.
+		await expect( page.locator( '#wp_email_template_body' ) ).toHaveCount( 0 );
+
+		await page.getByRole( 'link', { name: 'Templates', exact: true } ).click();
+
 		await expect( page.locator( '#wp_email_template_body' ) ).toBeVisible();
+		await expect( page.locator( '#wp_email_link_html' ) ).toHaveCount( 0 );
+		await expect( page.locator( '.nav-tab-active' ) ).toHaveText( 'Templates' );
 	} );
 
-	test( 'the link text saves and is what the post and the page say', async ( {
+	test( 'saving one tab leaves the other tab settings alone', async ( { page } ) => {
+		// The regression two tabs writing one option row invite: the Settings API
+		// hands the sanitizer only what the submitting form posted, so a screen
+		// that rebuilt the whole row would wipe eight written templates the first
+		// time anybody saved the other tab.
+		await openSettings( page, 'templates' );
+		await page.locator( '#wp_email_template_sentfailed' ).fill( '<p>Written by hand.</p>' );
+		await saveSettings( page );
+
+		await openSettings( page, 'settings' );
+		await page.locator( '#wp_email_sending_interval' ).fill( '3' );
+		await saveSettings( page );
+
+		expect( setting( 'sending', 'interval' ) ).toBe( '3' );
+		expect( template( 'sentfailed' ) ).toBe( '<p>Written by hand.</p>' );
+
+		// And back the other way, so neither tab is the privileged one.
+		await openSettings( page, 'templates' );
+		await page.locator( '#wp_email_template_sentfailed' ).fill( '<p>Written again.</p>' );
+		await saveSettings( page );
+
+		expect( template( 'sentfailed' ) ).toBe( '<p>Written again.</p>' );
+		expect( setting( 'sending', 'interval' ) ).toBe( '3' );
+	} );
+
+	test( 'a save comes back to the tab it was submitted from', async ( { page } ) => {
+		await openSettings( page, 'templates' );
+		await saveSettings( page );
+
+		await expect( page ).toHaveURL( /tab=templates/ );
+		await expect( page.locator( '.nav-tab-active' ) ).toHaveText( 'Templates' );
+	} );
+
+	test( 'the link template saves and is what the post and the page render', async ( {
 		page,
 		requestUtils,
 	} ) => {
 		await openSettings( page );
-		await page.locator( '#wp_email_link_post_text' ).fill( 'Send this article on' );
-		await page.locator( '#wp_email_link_page_text' ).fill( 'Send this page on' );
+		await page
+			.locator( '#wp_email_link_html' )
+			.fill( '<a class="my-own-link" href="%EMAIL_URL%">Send this %POST_TYPE% on</a>' );
 		await saveSettings( page );
 
-		expect( setting( 'link', 'post_text' ) ).toBe( 'Send this article on' );
-		expect( setting( 'link', 'page_text' ) ).toBe( 'Send this page on' );
+		expect( setting( 'link', 'html' ) ).toBe(
+			'<a class="my-own-link" href="%EMAIL_URL%">Send this %POST_TYPE% on</a>',
+		);
 
-		// Two settings because the two contexts are different, so both are asked:
-		// a plugin that used the post text everywhere would pass a one-sided test.
+		// Both contexts, because %POST_TYPE% is the whole reason one template can
+		// replace two settings: a plugin that resolved it once would pass a
+		// one-sided test.
 		await visitor.goto( post.link );
-		await expect( visitor.locator( '.entry-content' ) ).toContainText( 'Send this article on' );
+		await expect( visitor.locator( '.entry-content a.my-own-link' ) ).toHaveCount( 1 );
+		await expect( visitor.locator( '.entry-content' ) ).toContainText( 'Send this Post on' );
 
 		const page_ = await requestUtils.createPage( {
 			title: uniqueTitle( 'A page to send' ),
@@ -134,60 +181,93 @@ test.describe( 'E-mail settings', () => {
 		} );
 
 		await visitor.goto( page_.link );
-		await expect( visitor.locator( '.entry-content' ) ).toContainText( 'Send this page on' );
+		await expect( visitor.locator( '.entry-content' ) ).toContainText( 'Send this Page on' );
 	} );
 
-	test( 'each of the four link styles renders the shape it promises', async ( { page } ) => {
+	test( 'the template decides whether the link is an icon, some text, or both', async ( {
+		page,
+	} ) => {
 		const cases = [
-			{ style: '1', icons: 1, text: true },
-			{ style: '2', icons: 1, text: false },
-			{ style: '3', icons: 0, text: true },
+			{
+				name: 'icon and text',
+				html: '<a href="%EMAIL_URL%" title="Email This %POST_TYPE%">%EMAIL_ICON% Email This %POST_TYPE%</a>',
+				icons: 1,
+				text: true,
+			},
+			{
+				name: 'icon only',
+				html: '<a href="%EMAIL_URL%" title="Email This %POST_TYPE%">%EMAIL_ICON%</a>',
+				icons: 1,
+				text: false,
+			},
+			{
+				name: 'text only',
+				html: '<a href="%EMAIL_URL%" title="Email This %POST_TYPE%">Email This %POST_TYPE%</a>',
+				icons: 0,
+				text: true,
+			},
 		];
 
-		for ( const { style, icons, text } of cases ) {
+		for ( const { name, html, icons, text } of cases ) {
 			await openSettings( page );
-			await page.locator( '#wp_email_link_style' ).selectOption( style );
+			await page.locator( '#wp_email_link_html' ).fill( html );
 			await saveSettings( page );
 
 			await visitor.goto( post.link );
 
 			const links = visitor.locator( '.entry-content a[href$="/email/"]' );
 
-			await expect( links.locator( 'svg.wp-email-icon' ), `style ${ style }` ).toHaveCount(
-				icons,
-			);
+			await expect( links.locator( 'svg.wp-email-icon' ), name ).toHaveCount( icons );
 
 			if ( text ) {
 				await expect( visitor.locator( '.entry-content' ) ).toContainText(
 					'Email This Post',
 				);
 			} else {
-				// Icon only: the text is the link's accessible name rather than
+				// Icon only: the wording is the link's accessible name rather than
 				// anything printed beside it.
 				await expect( links.first() ).toHaveAttribute( 'title', 'Email This Post' );
 			}
 		}
+	} );
 
-		// The fourth is a template, and its textarea is hidden until it is chosen
-		// -- which is the one piece of behaviour on this screen that only exists
-		// in a browser.
+	test( 'an unrecognised variable is left in the markup rather than blanked', async ( {
+		page,
+	} ) => {
+		// %EMAIL_TEXT% was retired with the two link-text settings. A template
+		// nobody updated has to look wrong on the page, not lose its link text in
+		// silence -- which is the whole of the migration notice's promise.
 		await openSettings( page );
-		await expect( page.locator( '#wp_email_link_custom' ) ).toBeHidden();
-
-		await page.locator( '#wp_email_link_style' ).selectOption( '4' );
-		await expect( page.locator( '#wp_email_link_custom' ) ).toBeVisible();
-
-		await page.locator( '#wp_email_link_html' ).fill(
-			'<a class="my-own-link" href="%EMAIL_URL%">%EMAIL_TEXT%</a>',
-		);
+		await page
+			.locator( '#wp_email_link_html' )
+			.fill( '<a class="stale" href="%EMAIL_URL%">%EMAIL_TEXT%</a>' );
 		await saveSettings( page );
 
 		await visitor.goto( post.link );
-		await expect( visitor.locator( '.entry-content a.my-own-link' ) ).toHaveCount( 1 );
+
+		await expect( visitor.locator( '.entry-content a.stale' ) ).toHaveText( '%EMAIL_TEXT%' );
+	} );
+
+	test( 'the shipped template keeps its popup marker through a save', async ( { page } ) => {
+		// wp_kses_post() runs over every saved template, and it strips anything
+		// in attribute position that is not an attribute it allows. A bare
+		// %EMAIL_POPUP% was exactly that, so the popup stopped opening the moment
+		// the screen was saved. As a data attribute's value it survives.
+		await openSettings( page );
+		await page.locator( '#wp_email_link_type' ).selectOption( '2' );
+		await saveSettings( page );
+
+		expect( setting( 'link', 'html' ) ).toContain( 'data-wp-email-popup="%EMAIL_POPUP%"' );
+
+		await visitor.goto( post.link );
+
+		await expect(
+			visitor.locator( '.entry-content a[href$="/emailpopup/"]' ).first(),
+		).toHaveAttribute( 'data-wp-email-popup', '1' );
 	} );
 
 	test( 'the popup link type opens a window rather than navigating', async ( { page } ) => {
-		await openSettings( page );
+		await openSettings( page, 'settings' );
 		await page.locator( '#wp_email_link_type' ).selectOption( '2' );
 		await saveSettings( page );
 
@@ -331,7 +411,7 @@ test.describe( 'E-mail settings', () => {
 	test( 'a template saved on the screen is the template that is sent', async ( { page } ) => {
 		const marker = uniqueTitle( 'Subject from the settings screen' );
 
-		await openSettings( page );
+		await openSettings( page, 'templates' );
 		await page.locator( '#wp_email_template_subject' ).fill( `${ marker } %EMAIL_POST_TITLE%` );
 		await page.locator( '#wp_email_template_sentsuccess' ).fill( '<p>Off it goes.</p>' );
 		await saveSettings( page );
@@ -346,7 +426,7 @@ test.describe( 'E-mail settings', () => {
 	} );
 
 	test( 'the subject template may not carry markup and the body may', async ( { page } ) => {
-		await openSettings( page );
+		await openSettings( page, 'templates' );
 
 		// The subject lands in a mail header, where a tag is either meaningless
 		// or an injection; the body is HTML by design.
@@ -361,7 +441,7 @@ test.describe( 'E-mail settings', () => {
 	} );
 
 	test( 'Restore Default Template puts the shipped text back in the field', async ( { page } ) => {
-		await openSettings( page );
+		await openSettings( page, 'templates' );
 
 		await page.locator( '#wp_email_template_sentfailed' ).fill( 'nothing here' );
 		await page

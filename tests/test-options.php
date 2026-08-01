@@ -59,17 +59,17 @@ class WP_Email_Options_Test extends WP_Email_TestCase {
 		delete_option( WP_Email_Options::OPTION );
 		WP_Email_Options::flush();
 
-		$this->assertSame( 'Email This Post', WP_Email_Options::get( 'link', 'post_text' ) );
+		$this->assertStringContainsString( '%POST_TYPE%', WP_Email_Options::get( 'link', 'html' ) );
 		$this->assertSame( 1, WP_Email_Options::get( 'link', 'type' ) );
 		$this->assertSame( 'text/html', WP_Email_Options::get( 'sending', 'contenttype' ) );
 		$this->assertSame( 10, WP_Email_Options::get( 'sending', 'interval' ) );
 	}
 
 	public function test_stored_values_merge_over_defaults_group_by_group() {
-		update_option( WP_Email_Options::OPTION, array( 'link' => array( 'post_text' => 'Mine' ) ) );
+		update_option( WP_Email_Options::OPTION, array( 'link' => array( 'html' => '<a href="%EMAIL_URL%">Mine</a>' ) ) );
 		WP_Email_Options::flush();
 
-		$this->assertSame( 'Mine', WP_Email_Options::get( 'link', 'post_text' ) );
+		$this->assertSame( '<a href="%EMAIL_URL%">Mine</a>', WP_Email_Options::get( 'link', 'html' ) );
 		// Untouched keys in the same group still resolve.
 		$this->assertSame( 1, WP_Email_Options::get( 'link', 'type' ) );
 		// So do whole groups the stored value never mentioned.
@@ -81,10 +81,49 @@ class WP_Email_Options_Test extends WP_Email_TestCase {
 		$this->assertNull( WP_Email_Options::get( 'nope', 'nope' ) );
 	}
 
-	public function test_sanitize_rejects_an_out_of_range_link_style() {
-		$clean = WP_Email_Options::sanitize( array( 'link' => array( 'style' => 99 ) ) );
+	public function test_sanitize_rejects_an_out_of_range_link_type() {
+		$clean = WP_Email_Options::sanitize( array( 'link' => array( 'type' => 99 ) ) );
 
-		$this->assertSame( 1, $clean['link']['style'] );
+		$this->assertSame( 1, $clean['link']['type'] );
+	}
+
+	/**
+	 * The three settings one template replaced. A row still carrying them -- a
+	 * restored backup, or a plugin written against the old shape -- must not be
+	 * able to post them back into the stored settings.
+	 */
+	public function test_sanitize_drops_the_three_retired_link_settings() {
+		$clean = WP_Email_Options::sanitize(
+			array(
+				'link' => array(
+					'post_text' => 'Email This Post',
+					'page_text' => 'Email This Page',
+					'style'     => 2,
+					'html'      => '<a href="%EMAIL_URL%">go</a>',
+				),
+			)
+		);
+
+		foreach ( WP_Email_Options::RETIRED_LINK_KEYS as $key ) {
+			$this->assertArrayNotHasKey( $key, $clean['link'], "{$key} is retired and must not be stored." );
+		}
+
+		$this->assertSame( array( 'type', 'html' ), array_keys( $clean['link'] ) );
+	}
+
+	/**
+	 * The template is the whole of the link's appearance now, so a submission
+	 * that did not carry the field must leave what is stored alone rather than
+	 * resetting it to the shipped default.
+	 */
+	public function test_sanitize_keeps_the_stored_template_when_the_form_posts_none() {
+		$options                 = WP_Email_Options::defaults();
+		$options['link']['html'] = '<a href="%EMAIL_URL%">Mine</a>';
+		WP_Email_Options::update( $options );
+
+		$clean = WP_Email_Options::sanitize( array( 'link' => array( 'type' => 1 ) ) );
+
+		$this->assertSame( '<a href="%EMAIL_URL%">Mine</a>', $clean['link']['html'] );
 	}
 
 	public function test_sanitize_drops_the_retired_icon_setting() {
@@ -104,7 +143,14 @@ class WP_Email_Options_Test extends WP_Email_TestCase {
 	}
 
 	public function test_sanitize_keeps_the_friend_email_field_mandatory() {
-		$clean = WP_Email_Options::sanitize( array( 'fields' => array() ) );
+		$clean = WP_Email_Options::sanitize(
+			array(
+				'fields' => array(
+					'yourname'    => 0,
+					'friendemail' => 0,
+				),
+			)
+		);
 
 		$this->assertSame( 1, $clean['fields']['friendemail'] );
 		$this->assertSame( 0, $clean['fields']['yourname'] );
@@ -141,10 +187,13 @@ class WP_Email_Options_Test extends WP_Email_TestCase {
 		WP_Email_Options::flush();
 		WP_Email_Options::maybe_upgrade();
 
-		$this->assertSame( 'Legacy Post Text', WP_Email_Options::get( 'link', 'post_text' ) );
-		$this->assertSame( 'Legacy Page Text', WP_Email_Options::get( 'link', 'page_text' ) );
+		// email_style 3 was "text link only" and the two texts were customised and
+		// differ, so the post wording wins verbatim and no icon token appears.
+		$html = WP_Email_Options::get( 'link', 'html' );
+
+		$this->assertStringContainsString( 'Legacy Post Text', $html );
+		$this->assertStringNotContainsString( '%EMAIL_ICON%', $html );
 		$this->assertSame( 2, WP_Email_Options::get( 'link', 'type' ) );
-		$this->assertSame( 3, WP_Email_Options::get( 'link', 'style' ) );
 
 		$this->assertSame( 'HTTP_X_REAL_IP', WP_Email_Options::get( 'sending', 'ip_header' ) );
 		$this->assertSame( 'text/plain', WP_Email_Options::get( 'sending', 'contenttype' ) );
@@ -215,7 +264,7 @@ class WP_Email_Options_Test extends WP_Email_TestCase {
 
 		// The failure mode is a second run finding no legacy rows and writing
 		// defaults straight over the settings it migrated a moment ago.
-		$this->assertSame( 'Legacy Post Text', WP_Email_Options::get( 'link', 'post_text' ) );
+		$this->assertStringContainsString( 'Legacy Post Text', WP_Email_Options::get( 'link', 'html' ) );
 		$this->assertSame( 7, WP_Email_Options::get( 'sending', 'interval' ) );
 	}
 
@@ -232,7 +281,7 @@ class WP_Email_Options_Test extends WP_Email_TestCase {
 		WP_Email_Options::flush();
 		WP_Email_Options::maybe_upgrade();
 
-		$this->assertSame( 'Already Nested', WP_Email_Options::get( 'link', 'post_text' ) );
+		$this->assertStringContainsString( 'Already Nested', WP_Email_Options::get( 'link', 'html' ) );
 		$this->assertSame( 'Mine', WP_Email_Options::template( 'subject' ) );
 	}
 
@@ -251,7 +300,7 @@ class WP_Email_Options_Test extends WP_Email_TestCase {
 
 		WP_Email::get_instance()->maybe_upgrade();
 
-		$this->assertSame( 'Legacy Post Text', WP_Email_Options::get( 'link', 'post_text' ) );
+		$this->assertStringContainsString( 'Legacy Post Text', WP_Email_Options::get( 'link', 'html' ) );
 	}
 
 	public function test_the_plugin_owns_at_most_two_option_rows_after_upgrading() {
@@ -283,14 +332,14 @@ class WP_Email_Options_Test extends WP_Email_TestCase {
 
 		update_option(
 			WP_Email_Options::OPTION,
-			array( 'link' => array( 'style' => 99 ) )
+			array( 'link' => array( 'type' => 99 ) )
 		);
 
 		// register_setting()'s sanitize_callback only runs through the Settings
 		// API, so apply it the way options.php would.
-		$clean = apply_filters( 'sanitize_option_' . WP_Email_Options::OPTION, array( 'link' => array( 'style' => 99 ) ), WP_Email_Options::OPTION, '' );
+		$clean = apply_filters( 'sanitize_option_' . WP_Email_Options::OPTION, array( 'link' => array( 'type' => 99 ) ), WP_Email_Options::OPTION, '' );
 
-		$this->assertSame( 1, $clean['link']['style'] );
+		$this->assertSame( 1, $clean['link']['type'] );
 	}
 
 	public function test_sanitize_keeps_the_wp_stats_settings() {
@@ -305,10 +354,85 @@ class WP_Email_Options_Test extends WP_Email_TestCase {
 		$this->assertSame( 25, $clean['stats_most_limit'] );
 	}
 
-	public function test_sanitize_reads_an_absent_stats_checkbox_as_off() {
-		$clean = WP_Email_Options::sanitize( array() );
+	/**
+	 * The hidden 0 the screen prints in front of the box is what makes this
+	 * expressible: an unticked checkbox on its own posts nothing, and nothing
+	 * has to mean "the other tab was saved" rather than "switch this off".
+	 */
+	public function test_sanitize_reads_a_posted_zero_as_off() {
+		$clean = WP_Email_Options::sanitize( array( 'stats_display' => '0' ) );
 
 		$this->assertFalse( $clean['stats_display'] );
+	}
+
+	public function test_sanitize_leaves_a_setting_the_submission_never_mentioned() {
+		$options                  = WP_Email_Options::defaults();
+		$options['stats_display'] = false;
+		WP_Email_Options::update( $options );
+
+		$clean = WP_Email_Options::sanitize( array( 'link' => array( 'type' => 1 ) ) );
+
+		$this->assertFalse( $clean['stats_display'] );
+	}
+
+	/**
+	 * The regression this screen's two tabs most easily introduce, and the
+	 * expensive one: the Settings API hands the sanitizer only what the
+	 * submitting form posted, so a sanitizer rebuilding the whole shape wipes
+	 * eight written templates the first time somebody saves the other tab.
+	 */
+	public function test_saving_one_tab_leaves_the_other_tab_settings_alone() {
+		$options                          = WP_Email_Options::defaults();
+		$options['templates']['subject']  = 'A subject somebody wrote';
+		$options['templates']['body']     = '<p>A body somebody wrote</p>';
+		$options['link']['html']          = '<a href="%EMAIL_URL%">Mine</a>';
+		$options['sending']['interval']   = 42;
+		$options['fields']['yourremarks'] = 0;
+		WP_Email_Options::update( $options );
+
+		// What the Settings tab posts: no templates key at all.
+		$clean = WP_Email_Options::sanitize(
+			array(
+				'link'             => array(
+					'type' => 2,
+					'html' => '<a href="%EMAIL_URL%">Mine</a>',
+				),
+				'fields'           => array(
+					'yourname'    => 1,
+					'youremail'   => 1,
+					'yourremarks' => 0,
+					'friendname'  => 1,
+				),
+				'sending'          => array(
+					'contenttype' => 'text/html',
+					'snippet'     => 0,
+					'interval'    => 42,
+					'multiple'    => 5,
+					'imageverify' => 1,
+					'ip_header'   => '',
+				),
+				'stats_display'    => '1',
+				'stats_most_limit' => 10,
+			)
+		);
+
+		$this->assertSame( 'A subject somebody wrote', $clean['templates']['subject'] );
+		$this->assertSame( '<p>A body somebody wrote</p>', $clean['templates']['body'] );
+
+		// And the other way round: what the Templates tab posts, with none of
+		// the Settings tab's fields in it.
+		WP_Email_Options::update( $clean );
+
+		$clean = WP_Email_Options::sanitize(
+			array( 'templates' => array( 'subject' => 'A newer subject' ) )
+		);
+
+		$this->assertSame( 'A newer subject', $clean['templates']['subject'] );
+		$this->assertSame( 2, $clean['link']['type'] );
+		$this->assertSame( '<a href="%EMAIL_URL%">Mine</a>', $clean['link']['html'] );
+		$this->assertSame( 42, $clean['sending']['interval'] );
+		$this->assertSame( 0, $clean['fields']['yourremarks'] );
+		$this->assertSame( '<p>A body somebody wrote</p>', $clean['templates']['body'] );
 	}
 
 	public function test_sanitize_never_lowers_the_stats_limit_below_one() {
@@ -404,13 +528,13 @@ class WP_Email_Options_Test extends WP_Email_TestCase {
 	}
 
 	public function test_the_cache_is_dropped_when_the_settings_are_written() {
-		$this->assertSame( 'Email This Post', WP_Email_Options::get( 'link', 'post_text' ) );
+		$this->assertStringContainsString( '%POST_TYPE%', WP_Email_Options::get( 'link', 'html' ) );
 
-		$options                      = WP_Email_Options::defaults();
-		$options['link']['post_text'] = 'Send This';
+		$options                 = WP_Email_Options::defaults();
+		$options['link']['html'] = '<a href="%EMAIL_URL%">Send This</a>';
 
 		WP_Email_Options::update( $options );
 
-		$this->assertSame( 'Send This', WP_Email_Options::get( 'link', 'post_text' ) );
+		$this->assertSame( '<a href="%EMAIL_URL%">Send This</a>', WP_Email_Options::get( 'link', 'html' ) );
 	}
 }

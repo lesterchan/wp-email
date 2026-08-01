@@ -1,6 +1,6 @@
 <?php
 /**
- * The "Email This Post" link in each of its four styles.
+ * The "Email This Post" link, built from the site's one link template.
  *
  * @package WP-EMail
  */
@@ -95,36 +95,21 @@ class WP_Email_Link_Test extends WP_Email_TestCase {
 	}
 
 
-	public function test_style_one_renders_icon_and_text() {
+	public function test_the_default_template_draws_the_icon_beside_the_text() {
 		$this->set_permalink_structure( '/%postname%/' );
-		$this->set_link(
-			array(
-				'style' => 1,
-				'type'  => 1,
-			)
-		);
-		$this->loop( $this->post_id );
-
-		$link = WP_Email_Link::render();
-
-		$this->assertSame( 2, substr_count( $link, '<a href=' ) );
-		$this->assertStringContainsString( 'wp-email-icon', $link );
-		$this->assertStringContainsString( 'Email This Post', $link );
-		$this->assertStringContainsString( 'rel="nofollow"', $link );
-	}
-
-	public function test_style_two_is_icon_only() {
-		$this->set_link( array( 'style' => 2 ) );
 		$this->loop( $this->post_id );
 
 		$link = WP_Email_Link::render();
 
 		$this->assertSame( 1, substr_count( $link, '<a href=' ) );
 		$this->assertStringContainsString( 'wp-email-icon', $link );
+		$this->assertStringContainsString( 'Email This Post', $link );
+		$this->assertStringContainsString( 'rel="nofollow"', $link );
+		$this->assertStringContainsString( '/email/', $link );
 	}
 
-	public function test_style_three_is_text_only() {
-		$this->set_link( array( 'style' => 3 ) );
+	public function test_a_template_without_the_icon_token_is_a_text_link() {
+		$this->set_link( array( 'html' => '<a href="%EMAIL_URL%">Email This %POST_TYPE%</a>' ) );
 		$this->loop( $this->post_id );
 
 		$link = WP_Email_Link::render();
@@ -133,53 +118,83 @@ class WP_Email_Link_Test extends WP_Email_TestCase {
 		$this->assertStringContainsString( 'Email This Post', $link );
 	}
 
-	public function test_style_four_expands_every_token() {
+	public function test_a_template_holding_only_the_icon_token_is_an_icon_link() {
+		$this->set_link( array( 'html' => '<a href="%EMAIL_URL%" title="Email This %POST_TYPE%">%EMAIL_ICON%</a>' ) );
+		$this->loop( $this->post_id );
+
+		$link = WP_Email_Link::render();
+
+		$this->assertSame( 1, substr_count( $link, '<a href=' ) );
+		$this->assertStringContainsString( 'wp-email-icon', $link );
+		// Icon only: the wording is the link's accessible name rather than
+		// anything printed beside it.
+		$this->assertStringContainsString( 'title="Email This Post"', $link );
+	}
+
+	public function test_the_template_expands_every_token() {
 		$this->set_permalink_structure( '/%postname%/' );
 		$this->set_link(
-			array(
-				'style' => 4,
-				'html'  => '<a href="%EMAIL_URL%" title="%EMAIL_TEXT%">%EMAIL_ICON% %EMAIL_TEXT%</a>',
-			)
+			array( 'html' => '<a href="%EMAIL_URL%" data-wp-email-popup="%EMAIL_POPUP%" title="%POST_TYPE%">%EMAIL_ICON% %POST_TYPE%</a>' )
 		);
 		$this->loop( $this->post_id );
 
 		$link = WP_Email_Link::render();
 
 		$this->assertStringContainsString( '/email/', $link );
-		$this->assertStringContainsString( 'Email This Post', $link );
 		$this->assertStringContainsString( '<svg class="wp-email-icon"', $link );
 		$this->assertStringNotContainsString( '%EMAIL_', $link );
+		$this->assertStringNotContainsString( '%POST_TYPE%', $link );
 	}
 
-	public function test_an_unknown_style_falls_back() {
-		$this->set_link( array( 'style' => 99 ) );
+	/**
+	 * The property the retired %EMAIL_TEXT% relies on for its own migration
+	 * notice: a template nobody updated has to look wrong rather than empty.
+	 */
+	public function test_an_unrecognised_token_is_left_in_the_markup_as_written() {
+		$this->set_link( array( 'html' => '<a href="%EMAIL_URL%">%EMAIL_TEXT%</a>' ) );
 		$this->loop( $this->post_id );
 
-		$this->assertStringContainsString( 'wp-email-icon', WP_Email_Link::render() );
+		$this->assertStringContainsString( '%EMAIL_TEXT%', WP_Email_Link::render() );
 	}
 
 
 	public function test_popup_uses_a_data_attribute() {
-		$this->set_link(
-			array(
-				'style' => 3,
-				'type'  => 2,
-			)
-		);
+		$this->set_link( array( 'type' => 2 ) );
 		$this->loop( $this->post_id );
 
 		$link = WP_Email_Link::render();
 
 		// The pre-3.0.0 markup was onclick="email_popup(this.href); return false;".
-		$this->assertStringContainsString( 'data-wp-email-popup', $link );
+		$this->assertStringContainsString( 'data-wp-email-popup="1"', $link );
 		$this->assertStringNotContainsString( 'onclick', $link );
 	}
 
-	public function test_standalone_has_no_popup_marker() {
+	public function test_standalone_says_so_rather_than_dropping_the_attribute() {
+		$this->set_link( array( 'type' => 1 ) );
+		$this->loop( $this->post_id );
+
+		$link = WP_Email_Link::render();
+
+		// The attribute is always written and carries 1 or 0. A bare token in
+		// attribute position is stripped by wp_kses_post() on save, so the marker
+		// has to be a value if it is to survive being saved on the settings screen.
+		$this->assertStringContainsString( 'data-wp-email-popup="0"', $link );
+		$this->assertStringNotContainsString( 'data-wp-email-popup="1"', $link );
+	}
+
+	public function test_the_shipped_template_keeps_its_popup_marker_through_the_sanitizer() {
+		$clean = WP_Email_Options::sanitize(
+			array( 'link' => array( 'html' => WP_Email_Options::default_link_html() ) )
+		);
+
+		$this->assertStringContainsString( '%EMAIL_POPUP%', $clean['link']['html'] );
+	}
+
+	public function test_a_template_that_omits_the_popup_token_gets_no_marker() {
 		$this->set_link(
 			array(
-				'style' => 3,
-				'type'  => 1,
+				'type' => 2,
+				'html' => '<a href="%EMAIL_URL%">go</a>',
 			)
 		);
 		$this->loop( $this->post_id );
@@ -187,23 +202,8 @@ class WP_Email_Link_Test extends WP_Email_TestCase {
 		$this->assertStringNotContainsString( 'data-wp-email-popup', WP_Email_Link::render() );
 	}
 
-	public function test_custom_template_receives_the_popup_marker() {
-		$this->set_link(
-			array(
-				'style' => 4,
-				'type'  => 2,
-				'html'  => '<a href="%EMAIL_URL%" %EMAIL_POPUP%>go</a>',
-			)
-		);
-		$this->loop( $this->post_id );
 
-		$this->assertStringContainsString( 'data-wp-email-popup', WP_Email_Link::render() );
-	}
-
-
-	public function test_page_and_post_use_their_own_text() {
-		$this->set_link( array( 'style' => 3 ) );
-
+	public function test_the_post_type_token_becomes_the_singular_label() {
 		$this->loop( $this->post_id );
 		$this->assertStringContainsString( 'Email This Post', WP_Email_Link::render() );
 
@@ -211,47 +211,81 @@ class WP_Email_Link_Test extends WP_Email_TestCase {
 		$this->assertStringContainsString( 'Email This Page', WP_Email_Link::render() );
 	}
 
-	public function test_an_override_wins() {
-		$this->set_link( array( 'style' => 3 ) );
+	public function test_the_post_type_token_becomes_a_custom_type_own_label() {
+		register_post_type(
+			'email_book',
+			array(
+				'public'  => true,
+				'labels'  => array(
+					'name'          => 'Books',
+					'singular_name' => 'Book',
+				),
+				'rewrite' => array( 'slug' => 'wp-email-book' ),
+			)
+		);
 
-		$this->loop( $this->post_id );
-		$this->assertStringContainsString( 'Send this along', WP_Email_Link::render( 'Send this along' ) );
+		$this->set_permalink_structure( '/%postname%/' );
 
-		$this->loop( $this->page_id );
-		$this->assertStringContainsString( 'Share this page', WP_Email_Link::render( '', 'Share this page' ) );
+		$book_id = self::factory()->post->create(
+			array(
+				'post_title' => 'Harness Book',
+				'post_type'  => 'email_book',
+			)
+		);
+
+		$this->loop( $book_id );
+
+		$link = WP_Email_Link::render();
+
+		$this->assertStringContainsString( 'Email This Book', $link );
+		$this->assertStringNotContainsString( 'Email This Post', $link );
+
+		unregister_post_type( 'email_book' );
 	}
 
-	public function test_the_post_override_does_not_apply_to_a_page() {
-		$this->set_link( array( 'style' => 3 ) );
-		$this->loop( $this->page_id );
+	public function test_the_post_type_label_falls_back_when_there_is_no_post() {
+		unset( $GLOBALS['post'] );
 
-		$this->assertStringNotContainsString( 'Post Only Text', WP_Email_Link::render( 'Post Only Text' ) );
+		$this->assertSame( 'Post', WP_Email_Link::post_type_label() );
 	}
 
+	public function test_the_post_type_label_cannot_break_out_of_the_title_attribute() {
+		register_post_type(
+			'email_hostile',
+			array(
+				'public' => true,
+				'labels' => array(
+					'name'          => 'Hostiles',
+					'singular_name' => 'Say "hi" <script>alert(1)</script>',
+				),
+			)
+		);
 
-	public function test_hostile_link_text_is_escaped() {
-		// wp_kses_post() on save would normally have caught this; the option
-		// could still have been written directly, so the sink escapes too.
-		$options                      = WP_Email_Options::all();
-		$options['link']['post_text'] = 'Bad <script>alert(1)</script>';
-		WP_Email_Options::update( $options );
+		$hostile_id = self::factory()->post->create( array( 'post_type' => 'email_hostile' ) );
 
-		$this->set_link( array( 'style' => 1 ) );
-		$this->loop( $this->post_id );
+		// Straight into the loop's global rather than through a request: the type
+		// is registered inside the test, so no rewrite rule matches a permalink
+		// for it and the request would be a 404 with nothing in the loop.
+		$GLOBALS['post'] = get_post( $hostile_id );
 
 		$link = WP_Email_Link::render();
 
 		$this->assertStringNotContainsString( '<script>alert(1)</script>', $link );
+		$this->assertStringNotContainsString( 'title="Email This Say "hi"', $link );
+		$this->assertStringContainsString( '&quot;', $link );
+
+		unset( $GLOBALS['post'] );
+		unregister_post_type( 'email_hostile' );
 	}
 
-	public function test_a_quote_in_the_text_cannot_break_the_attribute() {
-		$this->set_link( array( 'style' => 1 ) );
-		$this->loop( $this->post_id );
+	public function test_hostile_stored_markup_in_the_template_is_dropped_on_save() {
+		// The template is echoed as written, so it is cleaned on the way in.
+		$clean = WP_Email_Options::sanitize(
+			array( 'link' => array( 'html' => '<a href="%EMAIL_URL%">go</a><script>alert(1)</script>' ) )
+		);
 
-		$link = WP_Email_Link::render( 'Say "hi" now' );
-
-		$this->assertStringNotContainsString( 'title="Say "hi" now"', $link );
-		$this->assertStringContainsString( '&quot;', $link );
+		$this->assertStringNotContainsString( '<script>', $clean['link']['html'] );
+		$this->assertStringContainsString( '%EMAIL_URL%', $clean['link']['html'] );
 	}
 
 	public function test_the_icon_is_an_inline_svg_taking_the_theme_colour() {

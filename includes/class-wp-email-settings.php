@@ -20,6 +20,13 @@ defined( 'ABSPATH' ) || exit;
  * register_setting(), the sections, the field_<name>() callbacks and the
  * sanitiser, per STANDARDS.md 4.2.
  *
+ * Two tabs of one page, not two submenu entries, per STANDARDS.md 4.1. One
+ * register_setting() and one option row serve both; each tab is its own
+ * Settings API page only so that do_settings_sections() draws one tab's
+ * sections at a time. Because a tab therefore posts only its own fields,
+ * WP_Email_Options::sanitize() keeps whatever the submission did not mention --
+ * without that, saving the Settings tab would blank eight written templates.
+ *
  * @since 3.0.0
  */
 class WP_Email_Settings {
@@ -102,6 +109,50 @@ class WP_Email_Settings {
 	}
 
 	/**
+	 * The tabs on the settings screen.
+	 *
+	 * Two, because the eight templates are a different job from the rest and
+	 * sat several screenfuls below it. Named for what they are rather than for
+	 * the plugin, which the heading above them already says.
+	 *
+	 * @return array
+	 */
+	public static function tabs() {
+		return array(
+			'settings'  => __( 'Settings', 'wp-email' ),
+			'templates' => __( 'Templates', 'wp-email' ),
+		);
+	}
+
+	/**
+	 * Which tab is being shown.
+	 *
+	 * @return string
+	 */
+	public static function current_tab() {
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Chooses which tab to draw; nothing is read from the request beyond that and nothing is written.
+		$tab = isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET['tab'] ) ) : 'settings';
+
+		return array_key_exists( $tab, self::tabs() ) ? $tab : 'settings';
+	}
+
+	/**
+	 * The Settings API page a tab's sections are registered against.
+	 *
+	 * Each tab is its own page as far as do_settings_sections() is concerned,
+	 * which is what stops one tab drawing the other's fields. It is not a second
+	 * settings group and not a second option row -- one register_setting() still
+	 * owns both tabs, per STANDARDS.md 4.1.
+	 *
+	 * @param string $tab Tab slug.
+	 *
+	 * @return string
+	 */
+	public static function tab_page( $tab ) {
+		return self::PAGE . '-' . $tab;
+	}
+
+	/**
 	 * Register the setting, its sections and its fields.
 	 *
 	 * @return void
@@ -117,10 +168,13 @@ class WP_Email_Settings {
 			)
 		);
 
-		add_settings_section( self::SECTION_STYLES, __( 'E-Mail Link', 'wp-email' ), '__return_false', self::GROUP );
-		add_settings_section( self::SECTION_SENDING, __( 'E-Mail Settings', 'wp-email' ), '__return_false', self::GROUP );
-		add_settings_section( self::SECTION_STATS, __( 'WP-Stats', 'wp-email' ), array( $this, 'describe_stats_section' ), self::GROUP );
-		add_settings_section( self::SECTION_TEMPLATES, __( 'E-Mail Templates', 'wp-email' ), array( $this, 'describe_templates_section' ), self::GROUP );
+		$settings  = self::tab_page( 'settings' );
+		$templates = self::tab_page( 'templates' );
+
+		add_settings_section( self::SECTION_STYLES, __( 'E-Mail Link', 'wp-email' ), '__return_false', $settings );
+		add_settings_section( self::SECTION_SENDING, __( 'E-Mail Settings', 'wp-email' ), '__return_false', $settings );
+		add_settings_section( self::SECTION_STATS, __( 'WP-Stats', 'wp-email' ), array( $this, 'describe_stats_section' ), $settings );
+		add_settings_section( self::SECTION_TEMPLATES, __( 'E-Mail Templates', 'wp-email' ), array( $this, 'describe_templates_section' ), $templates );
 
 		$this->add_fields();
 	}
@@ -134,34 +188,46 @@ class WP_Email_Settings {
 	 * @return void
 	 */
 	protected function add_fields() {
+		$settings  = self::tab_page( 'settings' );
+		$templates = self::tab_page( 'templates' );
+
 		$fields = array(
 			self::SECTION_STYLES    => array(
-				'post_text'  => array( __( 'E-Mail Text Link For Post', 'wp-email' ), 'wp_email_link_post_text' ),
-				'page_text'  => array( __( 'E-Mail Text Link For Page', 'wp-email' ), 'wp_email_link_page_text' ),
-				'link_type'  => array( __( 'E-Mail Link Type', 'wp-email' ), 'wp_email_link_type' ),
-				'link_style' => array( __( 'E-Mail Text Link Style', 'wp-email' ), 'wp_email_link_style' ),
+				$settings,
+				array(
+					'link_type' => array( __( 'E-Mail Link Type', 'wp-email' ), 'wp_email_link_type' ),
+					'link_html' => array( __( 'E-Mail Link Template', 'wp-email' ), 'wp_email_link_html' ),
+				),
 			),
 			self::SECTION_SENDING   => array(
-				'form_fields' => array( __( 'E-Mail Fields', 'wp-email' ), '' ),
-				'contenttype' => array( __( 'E-Mail Content Type', 'wp-email' ), 'wp_email_sending_contenttype' ),
-				'snippet'     => array( __( 'No. Of Words Before Cutting Off', 'wp-email' ), 'wp_email_sending_snippet' ),
-				'interval'    => array( __( 'Interval Between E-Mails', 'wp-email' ), 'wp_email_sending_interval' ),
-				'ip_header'   => array( __( 'Header That Contains The IP', 'wp-email' ), 'wp_email_sending_ip_header' ),
-				'multiple'    => array( __( 'Max Number Of Multiple E-Mails', 'wp-email' ), 'wp_email_sending_multiple' ),
-				'imageverify' => array( __( 'Enable Image Verification', 'wp-email' ), 'wp_email_sending_imageverify' ),
+				$settings,
+				array(
+					'form_fields' => array( __( 'E-Mail Fields', 'wp-email' ), '' ),
+					'contenttype' => array( __( 'E-Mail Content Type', 'wp-email' ), 'wp_email_sending_contenttype' ),
+					'snippet'     => array( __( 'No. Of Words Before Cutting Off', 'wp-email' ), 'wp_email_sending_snippet' ),
+					'interval'    => array( __( 'Interval Between E-Mails', 'wp-email' ), 'wp_email_sending_interval' ),
+					'ip_header'   => array( __( 'Header That Contains The IP', 'wp-email' ), 'wp_email_sending_ip_header' ),
+					'multiple'    => array( __( 'Max Number Of Multiple E-Mails', 'wp-email' ), 'wp_email_sending_multiple' ),
+					'imageverify' => array( __( 'Enable Image Verification', 'wp-email' ), 'wp_email_sending_imageverify' ),
+				),
 			),
 			self::SECTION_STATS     => array(
-				'stats_display'    => array( __( 'Show WP-EMail On The WP-Stats Page', 'wp-email' ), '' ),
-				'stats_most_limit' => array( __( 'No. Of Most Emailed Entries', 'wp-email' ), 'wp_email_stats_most_limit' ),
+				$settings,
+				array(
+					'stats_display'    => array( __( 'Show WP-EMail On The WP-Stats Page', 'wp-email' ), '' ),
+					'stats_most_limit' => array( __( 'No. Of Most Emailed Entries', 'wp-email' ), 'wp_email_stats_most_limit' ),
+				),
 			),
-			self::SECTION_TEMPLATES => array(),
+			self::SECTION_TEMPLATES => array( $templates, array() ),
 		);
 
 		foreach ( self::template_meta() as $key => $meta ) {
-			$fields[ self::SECTION_TEMPLATES ][ 'template_' . $key ] = array( $meta['label'], 'wp_email_template_' . $key );
+			$fields[ self::SECTION_TEMPLATES ][1][ 'template_' . $key ] = array( $meta['label'], 'wp_email_template_' . $key );
 		}
 
 		foreach ( $fields as $section => $section_fields ) {
+			list( $page, $section_fields ) = $section_fields;
+
 			foreach ( $section_fields as $key => $field ) {
 				list( $label, $label_for ) = $field;
 
@@ -169,7 +235,7 @@ class WP_Email_Settings {
 					'wp_email_' . $key,
 					$label,
 					array( $this, 'field_' . $key ),
-					self::GROUP,
+					$page,
 					$section,
 					'' === $label_for ? array() : array( 'label_for' => $label_for )
 				);
@@ -236,24 +302,6 @@ class WP_Email_Settings {
 	// ------------------------------------------------------ the link fields --
 
 	/**
-	 * The link text shown on a post.
-	 *
-	 * @return void
-	 */
-	public function field_post_text() {
-		$this->text( 'wp_email_link_post_text', $this->name( 'link', 'post_text' ), WP_Email_Options::get( 'link', 'post_text' ) );
-	}
-
-	/**
-	 * The link text shown on a page.
-	 *
-	 * @return void
-	 */
-	public function field_page_text() {
-		$this->text( 'wp_email_link_page_text', $this->name( 'link', 'page_text' ), WP_Email_Options::get( 'link', 'page_text' ) );
-	}
-
-	/**
 	 * Whether the link opens the standalone page or the popup.
 	 *
 	 * @return void
@@ -271,58 +319,36 @@ class WP_Email_Settings {
 	}
 
 	/**
-	 * Which of the four link layouts is used.
+	 * The markup the link is built from.
+	 *
+	 * The whole of the link's appearance since 3.0.0. It replaces a style picker
+	 * whose three fixed layouts were this template with a piece left out, and the
+	 * two text settings that fed them.
 	 *
 	 * @return void
 	 */
-	public function field_link_style() {
-		$this->select(
-			'wp_email_link_style',
-			$this->name( 'link', 'style' ),
-			(int) WP_Email_Options::get( 'link', 'style' ),
-			array(
-				1 => __( 'E-Mail Icon With Text Link', 'wp-email' ),
-				2 => __( 'E-Mail Icon Only', 'wp-email' ),
-				3 => __( 'E-Mail Text Link Only', 'wp-email' ),
-				4 => __( 'Custom', 'wp-email' ),
-			),
-			'data-wp-email-toggle="wp_email_link_custom" data-wp-email-toggle-value="4"'
-		);
-
-		$this->render_custom_link_markup();
-	}
-
-	/**
-	 * The custom-HTML box shown when the link style is "Custom".
-	 *
-	 * Hidden with the hidden attribute rather than an inline style, so the
-	 * screen carries no style attributes at all (STANDARDS.md 4.4).
-	 *
-	 * @return void
-	 */
-	protected function render_custom_link_markup() {
+	public function field_link_html() {
 		$defaults = WP_Email_Options::defaults();
-		$hidden   = 4 === (int) WP_Email_Options::get( 'link', 'style' ) ? '' : ' hidden';
 		?>
-		<div id="wp_email_link_custom"<?php echo esc_attr( $hidden ); ?>>
-			<p>
-				<textarea rows="3" cols="80" class="large-text code" id="wp_email_link_html" name="<?php echo esc_attr( $this->name( 'link', 'html' ) ); ?>"><?php echo esc_textarea( WP_Email_Options::get( 'link', 'html' ) ); ?></textarea>
-			</p>
-			<p class="description"><?php esc_html_e( 'HTML is allowed. Available variables:', 'wp-email' ); ?></p>
-			<ul>
-				<li><code>%EMAIL_URL%</code> &mdash; <?php esc_html_e( 'URL to the email post/page.', 'wp-email' ); ?></li>
-				<li><code>%EMAIL_POPUP%</code> &mdash; <?php esc_html_e( 'Marks the link as opening the popup.', 'wp-email' ); ?></li>
-				<li><code>%EMAIL_TEXT%</code> &mdash; <?php esc_html_e( 'The link text you typed above.', 'wp-email' ); ?></li>
-				<li><code>%EMAIL_ICON%</code> &mdash; <?php esc_html_e( 'The envelope glyph, drawn inline.', 'wp-email' ); ?></li>
-			</ul>
-			<p class="description">
-				<?php esc_html_e( 'Example popup template:', 'wp-email' ); ?>
-				<br />
-				<code dir="ltr">&lt;a href="%EMAIL_URL%" %EMAIL_POPUP% rel="nofollow" title="%EMAIL_TEXT%"&gt;%EMAIL_TEXT%&lt;/a&gt;</code>
-			</p>
-			<?php $this->restore_button( 'wp_email_link_html', $defaults['link']['html'] ); ?>
-		</div>
+		<textarea rows="3" cols="80" class="large-text code" id="wp_email_link_html" name="<?php echo esc_attr( $this->name( 'link', 'html' ) ); ?>"><?php echo esc_textarea( WP_Email_Options::get( 'link', 'html' ) ); ?></textarea>
+		<p class="description"><?php esc_html_e( 'HTML is allowed. Available variables:', 'wp-email' ); ?></p>
+		<ul>
+			<li><code>%EMAIL_URL%</code> &mdash; <?php esc_html_e( 'URL to the email post/page.', 'wp-email' ); ?></li>
+			<li><code>%EMAIL_POPUP%</code> &mdash; <?php esc_html_e( '1 when the link opens the popup and 0 when it does not. Belongs inside the data-wp-email-popup attribute, as the shipped template shows.', 'wp-email' ); ?></li>
+			<li><code>%EMAIL_ICON%</code> &mdash; <?php esc_html_e( 'The envelope glyph, drawn inline.', 'wp-email' ); ?></li>
+			<li><code>%POST_TYPE%</code> &mdash; <?php esc_html_e( "The singular name of what is being viewed: Post, Page, or a custom post type's own label.", 'wp-email' ); ?></li>
+		</ul>
+		<p class="description">
+			<?php
+			printf(
+				/* translators: 1: the %EMAIL_ICON% template token, in a code span. */
+				esc_html__( 'Leave a variable out to drop it: a template without %1$s is a text link, and one holding nothing else is an icon.', 'wp-email' ),
+				'<code>%EMAIL_ICON%</code>'
+			);
+			?>
+		</p>
 		<?php
+		$this->restore_button( 'wp_email_link_html', $defaults['link']['html'] );
 	}
 
 	// --------------------------------------------------- the sending fields --
@@ -341,8 +367,14 @@ class WP_Email_Settings {
 		);
 
 		foreach ( $labels as $key => $label ) {
+			// A hidden 0 in front of each box, sharing its name. An unticked
+			// checkbox posts nothing at all, and the sanitizer keeps whatever the
+			// submission did not mention -- deliberately, because two tabs write
+			// one option row and neither may blank the other. Together those would
+			// make a box that could be ticked and never unticked. PHP keeps the
+			// last of a repeated name, so ticked posts 1 and unticked posts 0.
 			printf(
-				'<p><label><input type="checkbox" name="%1$s" value="1" %2$s /> %3$s</label></p>',
+				'<p><input type="hidden" name="%1$s" value="0" /><label><input type="checkbox" name="%1$s" value="1" %2$s /> %3$s</label></p>',
 				esc_attr( $this->name( 'fields', $key ) ),
 				checked( 1, (int) WP_Email_Options::get( 'fields', $key ), false ),
 				esc_html( $label )
@@ -448,8 +480,9 @@ class WP_Email_Settings {
 	public function field_imageverify() {
 		$available = WP_Email_Captcha::is_available();
 
+		// The hidden 0 is explained on field_form_fields().
 		printf(
-			'<label><input type="checkbox" id="%1$s" name="%2$s" value="1" %3$s %4$s /> %5$s</label>',
+			'<input type="hidden" name="%2$s" value="0" /><label><input type="checkbox" id="%1$s" name="%2$s" value="1" %3$s %4$s /> %5$s</label>',
 			'wp_email_sending_imageverify',
 			esc_attr( $this->name( 'sending', 'imageverify' ) ),
 			checked( 1, (int) WP_Email_Options::get( 'sending', 'imageverify' ), false ),
@@ -479,8 +512,9 @@ class WP_Email_Settings {
 	 * @return void
 	 */
 	public function field_stats_display() {
+		// The hidden 0 is explained on field_form_fields().
 		printf(
-			'<label><input type="checkbox" id="%1$s" name="%2$s" value="1" %3$s /> %4$s</label>',
+			'<input type="hidden" name="%2$s" value="0" /><label><input type="checkbox" id="%1$s" name="%2$s" value="1" %3$s /> %4$s</label>',
 			'wp_email_stats_display',
 			esc_attr( WP_Email_Options::OPTION . '[stats_display]' ),
 			checked( true, WP_Email_Options::stats_display(), false ),
@@ -687,40 +721,20 @@ class WP_Email_Settings {
 	}
 
 	/**
-	 * Render a text input.
-	 *
-	 * @param string $id    Element ID.
-	 * @param string $name  Field name.
-	 * @param string $value Current value.
-	 *
-	 * @return void
-	 */
-	protected function text( $id, $name, $value ) {
-		printf(
-			'<input type="text" id="%1$s" name="%2$s" value="%3$s" size="30" class="regular-text" />',
-			esc_attr( $id ),
-			esc_attr( $name ),
-			esc_attr( $value )
-		);
-	}
-
-	/**
 	 * Render a select.
 	 *
 	 * @param string $id      Element ID.
 	 * @param string $name    Field name.
 	 * @param mixed  $current Selected value.
 	 * @param array  $choices Value => label.
-	 * @param string $extra   Extra attributes.
 	 *
 	 * @return void
 	 */
-	protected function select( $id, $name, $current, array $choices, $extra = '' ) {
+	protected function select( $id, $name, $current, array $choices ) {
 		printf(
-			'<select id="%1$s" name="%2$s" %3$s>',
+			'<select id="%1$s" name="%2$s">',
 			esc_attr( $id ),
-			esc_attr( $name ),
-			$extra // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Literal data attributes written in this class; there is no caller-supplied value to escape.
+			esc_attr( $name )
 		);
 
 		foreach ( $choices as $value => $label ) {
@@ -764,16 +778,61 @@ class WP_Email_Settings {
 		if ( ! current_user_can( self::capability() ) ) {
 			wp_die( esc_html__( 'You do not have permission to change these settings.', 'wp-email' ) );
 		}
+
+		$tab = self::current_tab();
 		?>
 		<div class="wrap">
 			<h1><?php esc_html_e( 'E-Mail Settings', 'wp-email' ); ?></h1>
 
-			<?php settings_errors(); ?>
+			<?php
+			/*
+			 * Unscoped, and on both tabs: options.php registers "Settings saved."
+			 * against the 'general' slug rather than against this screen, so
+			 * settings_errors( self::PAGE ) would filter out the one message the
+			 * save exists to show.
+			 */
+			settings_errors();
+			?>
 
-			<form method="post" action="options.php">
+			<nav class="nav-tab-wrapper">
+				<?php foreach ( self::tabs() as $slug => $label ) : ?>
+					<?php
+					$tab_url = add_query_arg(
+						array(
+							'page' => self::PAGE,
+							'tab'  => $slug,
+						),
+						admin_url( 'admin.php' )
+					);
+					?>
+					<a href="<?php echo esc_url( $tab_url ); ?>"
+						class="nav-tab<?php echo $slug === $tab ? ' nav-tab-active' : ''; ?>">
+						<?php echo esc_html( $label ); ?>
+					</a>
+				<?php endforeach; ?>
+			</nav>
+
+			<form method="post" action="<?php echo esc_url( admin_url( 'options.php' ) ); ?>">
 				<?php
 				settings_fields( self::GROUP );
-				do_settings_sections( self::GROUP );
+
+				// The tab is carried through the save, so options.php sends the
+				// browser back to the tab it was submitted from rather than to
+				// the first one.
+				printf(
+					'<input type="hidden" name="_wp_http_referer" value="%s" />',
+					esc_url(
+						add_query_arg(
+							array(
+								'page' => self::PAGE,
+								'tab'  => $tab,
+							),
+							admin_url( 'admin.php' )
+						)
+					)
+				);
+
+				do_settings_sections( self::tab_page( $tab ) );
 				submit_button();
 				?>
 			</form>
