@@ -171,10 +171,10 @@ class WP_Email_Settings {
 		$settings  = self::tab_page( 'settings' );
 		$templates = self::tab_page( 'templates' );
 
-		add_settings_section( self::SECTION_STYLES, __( 'E-Mail Link', 'wp-email' ), '__return_false', $settings );
-		add_settings_section( self::SECTION_SENDING, __( 'E-Mail Settings', 'wp-email' ), '__return_false', $settings );
+		add_settings_section( self::SECTION_STYLES, __( 'Link', 'wp-email' ), '__return_false', $settings );
+		add_settings_section( self::SECTION_SENDING, __( 'Sending', 'wp-email' ), '__return_false', $settings );
 		add_settings_section( self::SECTION_STATS, __( 'WP-Stats', 'wp-email' ), array( $this, 'describe_stats_section' ), $settings );
-		add_settings_section( self::SECTION_TEMPLATES, __( 'E-Mail Templates', 'wp-email' ), array( $this, 'describe_templates_section' ), $templates );
+		add_settings_section( self::SECTION_TEMPLATES, '', array( $this, 'describe_templates_section' ), $templates );
 
 		$this->add_fields();
 	}
