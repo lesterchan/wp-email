@@ -408,14 +408,23 @@ class WP_Email_Settings {
 			esc_attr( WP_Email_Options::get( 'sending', 'ip_header' ) )
 		);
 
+		// Worded exactly as wp-polls and wp-postratings word it. A visitor
+		// meeting the same setting in three of these plugins should not have to
+		// work out three times whether it means the same thing.
 		echo '<p class="description">';
-		esc_html_e( 'Leave blank to use REMOTE_ADDR. Only set this if a proxy in front of WordPress always overwrites the header, otherwise a visitor can forge it and bypass the interval above.', 'wp-email' );
+		esc_html_e( 'Leave this blank unless the site is behind a reverse proxy or CDN. Blank means the address the web server saw is used.', 'wp-email' );
 		echo '<br />';
 		printf(
-			/* translators: 1: The WP_EMAIL_TRUST_PROXY constant, 2: the wp_email_trust_proxy filter, both in code spans. */
-			esc_html__( 'Alternatively define %1$s, or return true from the %2$s filter, to trust the usual proxy headers.', 'wp-email' ),
+			/* translators: 1: an example header name, 2: the WP_EMAIL_TRUST_PROXY constant, 3: the wp_email_trust_proxy filter, all in code spans. */
+			esc_html__( 'Example: %1$s. You can also opt in with the %2$s constant or the %3$s filter, which trust the usual proxy headers instead of one you name.', 'wp-email' ),
+			'<code>HTTP_X_FORWARDED_FOR</code>',
 			'<code>WP_EMAIL_TRUST_PROXY</code>',
 			'<code>wp_email_trust_proxy</code>'
+		);
+		echo '<br />';
+		printf(
+			'<strong>%s</strong>',
+			esc_html__( 'Only name a header your proxy sets and overwrites. A visitor can send any header they like, so trusting one your stack does not control lets anyone send as often as they wish.', 'wp-email' )
 		);
 		echo '</p>';
 	}
