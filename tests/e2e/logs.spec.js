@@ -131,14 +131,22 @@ test.describe( 'The e-mail log', () => {
 		await expect( page.locator( '.tablenav-pages .total-pages' ).first() ).toHaveText( '2' );
 
 		// Per user, not per site, which is what makes it worth putting back.
+		//
+		// The administrator looked up by login rather than get_current_user_id():
+		// wpEval() is `wp eval` in the CLI container, which has no logged-in
+		// user, so get_current_user_id() is 0 there and this read was always
+		// get_user_meta( 0, ... ) -- the empty string, whatever the screen had
+		// stored.
 		expect(
 			wpEval(
-				`echo '<<<' . get_user_meta( get_current_user_id(), 'wp_email_logs_per_page', true ) . '>>>';`,
+				`$admin = get_user_by( 'login', 'admin' );
+				echo '<<<' . get_user_meta( $admin->ID, 'wp_email_logs_per_page', true ) . '>>>';`,
 			),
 		).toBe( '2' );
 
 		wpEval(
-			`delete_user_meta( get_current_user_id(), 'wp_email_logs_per_page' );
+			`$admin = get_user_by( 'login', 'admin' );
+			delete_user_meta( $admin->ID, 'wp_email_logs_per_page' );
 			echo '<<<done>>>';`,
 		);
 	} );

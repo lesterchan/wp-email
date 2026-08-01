@@ -98,10 +98,13 @@ test.describe( 'E-mail settings', () => {
 		// it is working.
 		await openSettings( page, 'settings' );
 
-		// The section headings, by their own level: "E-Mail Settings" is both the
-		// page title and one of the sections, so counting every heading of that
-		// name would be counting the h1 as well.
-		for ( const heading of [ 'E-Mail Link', 'E-Mail Settings', 'WP-Stats' ] ) {
+		// The section headings, by their own level. The h1 is "E-Mail Settings"
+		// and the sections beneath it are named for what they hold rather than
+		// repeating the plugin's name in each one -- so this list is Link,
+		// Sending and WP-Stats. It used to read "E-Mail Link" and
+		// "E-Mail Settings"; those are the pre-rename titles
+		// (class-wp-email-settings.php:174-176).
+		for ( const heading of [ 'Link', 'Sending', 'WP-Stats' ] ) {
 			await expect(
 				page.locator( 'h2' ).filter( { hasText: heading } ).first(),
 				heading,
@@ -293,8 +296,13 @@ test.describe( 'E-mail settings', () => {
 	test( 'unticking a field takes it off the form and out of the rules', async ( { page } ) => {
 		await openSettings( page );
 
+		// input[type="checkbox"], because a Settings API checkbox is two inputs
+		// under one name -- the hidden "0" that makes an unticked box post at
+		// all, plus the box itself -- and the bare name selector matches both.
 		for ( const key of [ 'yourname', 'youremail', 'yourremarks', 'friendname' ] ) {
-			await page.locator( `input[name="wp_email_options[fields][${ key }]"]` ).uncheck();
+			await page
+				.locator( `input[type="checkbox"][name="wp_email_options[fields][${ key }]"]` )
+				.uncheck();
 		}
 
 		await saveSettings( page );
