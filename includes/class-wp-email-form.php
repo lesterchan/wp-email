@@ -52,7 +52,7 @@ class WP_Email_Form {
 		$header = (string) WP_Email_Options::get( 'sending', 'ip_header' );
 
 		/**
-		 * Filters whether the usual proxy headers may be trusted.
+		 * Filters whether HTTP_X_FORWARDED_FOR may be trusted.
 		 *
 		 * Lets the decision be made per request -- trusting the header only when
 		 * the request actually arrives from a known load balancer, say -- rather
