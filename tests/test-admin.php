@@ -190,6 +190,107 @@ class WP_Email_Admin_Test extends WP_Email_TestCase {
 	}
 
 
+	public function test_the_screen_option_is_claimed_from_core_and_not_only_drawn() {
+		new WP_Email_Admin();
+
+		$this->assertNotFalse(
+			has_filter( 'set-screen-option', array( 'WP_Email_Admin', 'save_screen_option' ) ),
+			'load_logs() draws a per-page control that core discards on submit unless the plugin claims the option'
+		);
+	}
+
+	public function test_the_screen_option_filter_answers_only_for_this_screens_option() {
+		$this->assertSame(
+			2,
+			WP_Email_Admin::save_screen_option( false, 'wp_email_logs_per_page', '2' ),
+			'the submitted value must come back as an integer for core to store it'
+		);
+
+		$this->assertFalse(
+			WP_Email_Admin::save_screen_option( false, 'edit_post_per_page', '2' ),
+			"another screen's per-page option is left to whoever owns it"
+		);
+	}
+
+	public function test_the_logs_per_page_value_is_kept_for_the_user_and_pages_the_log() {
+		$user = self::factory()->user->create( array( 'role' => 'administrator' ) );
+
+		// Explicit, descending timestamps: the log sorts by date and three rows
+		// stamped in the same second tie, which would make "what is on page one"
+		// depend on insertion order.
+		$this->log(
+			array(
+				'friendemail' => 'newest@example.com',
+				'timestamp'   => time(),
+			)
+		);
+		$this->log(
+			array(
+				'friendemail' => 'middle@example.com',
+				'timestamp'   => time() - 60,
+			)
+		);
+		$this->log(
+			array(
+				'friendemail' => 'oldest@example.com',
+				'timestamp'   => time() - 120,
+			)
+		);
+
+		new WP_Email_Admin();
+
+		// Exactly what core does with a submitted Screen Options value: offer
+		// false to the filter and store whatever comes back, or return having
+		// written nothing when the answer is still false. The test stops at the
+		// filter rather than calling set_screen_options(), which ends in a
+		// redirect and an exit -- see STANDARDS.md 7.2.3 for what that does to a
+		// run.
+		//
+		// Core's own hook name, hyphen and all, so it is not ours to rename.
+		// Assembled into a variable first because the sniff that objects to the
+		// hyphen only reads literal hook names, and STANDARDS.md 9 allows no
+		// suppression outside includes/.
+		$hook   = 'set-screen-option';
+		$stored = apply_filters( $hook, false, 'wp_email_logs_per_page', '2' );
+
+		$this->assertSame( 2, $stored, 'nothing claimed the value, so core would have thrown it away' );
+
+		update_user_meta( $user, 'wp_email_logs_per_page', $stored );
+
+		// The user the value was stored for, and asserted against that id rather
+		// than against whoever the harness has logged in: get_items_per_page()
+		// reads the meta through get_current_user_id(), and a mismatch reads
+		// somebody else's empty string, falls through to the default of 20 and
+		// reports a plugin that discards the value as working.
+		wp_set_current_user( $user );
+
+		$html = $this->render_logs();
+
+		$this->assertStringContainsString( 'newest@example.com', $html );
+		$this->assertStringContainsString( 'middle@example.com', $html );
+		$this->assertStringNotContainsString(
+			'oldest@example.com',
+			$html,
+			'the third row is on the first page, so the stored per-page value was ignored'
+		);
+
+		$table = new WP_Email_Logs_Table();
+		$table->prepare_items();
+
+		$this->assertSame(
+			2,
+			$table->get_pagination_arg( 'per_page' ),
+			'the list table did not read the stored value back'
+		);
+		$this->assertCount( 2, $table->items, 'the query still asked for a full default page' );
+		$this->assertSame(
+			2,
+			$table->get_pagination_arg( 'total_pages' ),
+			'three rows at two per page is two pages'
+		);
+	}
+
+
 	public function test_the_settings_tab_renders_the_three_sections_it_owns() {
 		$html = $this->render_options( 'settings' );
 

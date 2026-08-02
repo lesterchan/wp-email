@@ -230,6 +230,7 @@ Two option rows — `wp_email_options` for the settings and `wp_email_version` f
 * FIXED: `[email_link]` and `[donotemail]` stopped working for the rest of the page once an e-mail body had been rendered.
 * FIXED: The library the form used to load on every page of the site, whether or not anything on that page used it.
 * FIXED: The e-mail status was stored translated, so changing your site language orphaned old log rows from the totals. Existing rows are corrected on upgrade.
+* FIXED: The e-mail log's `Logs per page` setting under Screen Options was thrown away when applied, so the log always paged at twenty whatever you set it to.
 
 ## Upgrade Notice
 
