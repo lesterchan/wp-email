@@ -40,7 +40,7 @@ class WP_Email_Admin_Test extends WP_Email_TestCase {
 		// admin request always has it set.
 		$GLOBALS['hook_suffix'] = 'toplevel_page_wp-email';
 
-		$this->admin = self::factory()->user->create( array( 'role' => 'administrator' ) );
+		$this->admin = $this->create_admin();
 		wp_set_current_user( $this->admin );
 	}
 
@@ -213,7 +213,7 @@ class WP_Email_Admin_Test extends WP_Email_TestCase {
 	}
 
 	public function test_the_logs_per_page_value_is_kept_for_the_user_and_pages_the_log() {
-		$user = self::factory()->user->create( array( 'role' => 'administrator' ) );
+		$user = $this->create_admin();
 
 		// Explicit, descending timestamps: the log sorts by date and three rows
 		// stamped in the same second tie, which would make "what is on page one"

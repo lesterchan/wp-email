@@ -38,7 +38,7 @@ class WP_Email_Admin_Actions_Test extends WP_Email_TestCase {
 		// admin request always has it set.
 		$GLOBALS['hook_suffix'] = 'toplevel_page_wp-email';
 
-		wp_set_current_user( self::factory()->user->create( array( 'role' => 'administrator' ) ) );
+		wp_set_current_user( $this->create_admin() );
 		set_current_screen( 'toplevel_page_wp-email' );
 
 		$this->redirected_to = '';
