@@ -35,7 +35,7 @@ class WP_Email_Uninstall_Test extends WP_Email_TestCase {
 		// get_sites() defaults 'number' to 100, so without this the options and
 		// the table are left behind on every site past the hundredth and the
 		// uninstall still reports success.
-		$this->assertMatchesRegularExpression( "/'number'\s*=>\s*0/", $this->source() );
+		$this->assertMatchesRegularExpression( "/'number'\s*=>\s*0/", $this->source(), 'uninstall.php lifts the site query cap, or a network past the default is half-uninstalled.' );
 	}
 
 	public function test_it_does_not_call_the_deprecated_wp_get_sites() {
@@ -59,7 +59,7 @@ class WP_Email_Uninstall_Test extends WP_Email_TestCase {
 	}
 
 	public function test_it_only_fetches_the_ids_it_needs() {
-		$this->assertMatchesRegularExpression( "/'fields'\s*=>\s*'ids'/", $this->source() );
+		$this->assertMatchesRegularExpression( "/'fields'\s*=>\s*'ids'/", $this->source(), 'uninstall.php asks for ids only, which is what makes the unlimited query affordable.' );
 	}
 
 	public function test_it_drops_the_table_once_per_site_not_once_per_option() {

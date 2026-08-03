@@ -121,23 +121,23 @@ class WP_Email_WPStats_Test extends WP_Email_TestCase {
 	public function test_the_section_is_keyed_by_the_plugin_slug_with_underscores() {
 		$sections = $this->stats->register_section( array() );
 
-		$this->assertArrayHasKey( 'wp_email', $sections );
+		$this->assertArrayHasKey( 'wp_email', $sections, 'This plugin adds its own section entry.' );
 	}
 
 	public function test_the_entry_carries_a_title_a_priority_and_a_callable_render() {
 		$section = $this->stats->register_section( array() )['wp_email'];
 
-		$this->assertIsString( $section['title'] );
+		$this->assertIsString( $section['title'], 'The section entry carries a title string.' );
 		$this->assertNotSame( '', $section['title'] );
-		$this->assertIsInt( $section['priority'] );
-		$this->assertTrue( is_callable( $section['render'] ) );
+		$this->assertIsInt( $section['priority'], 'The section entry carries an integer priority.' );
+		$this->assertTrue( is_callable( $section['render'] ), 'The section entry carries something callable to render with.' );
 	}
 
 	public function test_other_contributors_survive() {
 		$sections = $this->stats->register_section( array( 'wp_polls' => array( 'title' => 'Polls' ) ) );
 
-		$this->assertArrayHasKey( 'wp_polls', $sections );
-		$this->assertArrayHasKey( 'wp_email', $sections );
+		$this->assertArrayHasKey( 'wp_polls', $sections, 'A sibling plugin entry survives this one being added.' );
+		$this->assertArrayHasKey( 'wp_email', $sections, 'This plugin entry is added alongside it.' );
 	}
 
 	public function test_an_opted_out_site_contributes_nothing() {
@@ -147,21 +147,21 @@ class WP_Email_WPStats_Test extends WP_Email_TestCase {
 	}
 
 	public function test_a_non_array_filter_value_is_tolerated() {
-		$this->assertArrayHasKey( 'wp_email', $this->stats->register_section( 'nonsense' ) );
+		$this->assertArrayHasKey( 'wp_email', $this->stats->register_section( 'nonsense' ), 'A non-array from an earlier filter is replaced rather than fatal.' );
 	}
 
 	public function test_the_constructor_registers_only_the_sections_filter() {
 		$stats = new WP_Email_WPStats();
 
-		$this->assertNotFalse( has_filter( 'wp_stats_sections', array( $stats, 'register_section' ) ) );
+		$this->assertNotFalse( has_filter( 'wp_stats_sections', array( $stats, 'register_section' ) ), 'The constructor registers the sections filter.' );
 
 		foreach ( array( 'wp_stats_display_defaults', 'wp_stats_page_plugins', 'wp_stats_page_most', 'wp_stats_page_admin_plugins', 'wp_stats_page_admin_most' ) as $retired ) {
-			$this->assertFalse( has_filter( $retired, array( $stats, 'register_section' ) ) );
+			$this->assertFalse( has_filter( $retired, array( $stats, 'register_section' ) ), 'The constructor registers ' . $retired . ', which was retired.' );
 		}
 	}
 
 	public function test_the_filter_is_hooked_without_probing_for_wp_stats() {
-		$this->assertNotFalse( has_filter( 'wp_stats_sections' ) );
+		$this->assertNotFalse( has_filter( 'wp_stats_sections' ), 'The sections filter is attached once the plugin is constructed.' );
 		$this->assertStringNotContainsString( 'class_exists', file_get_contents( dirname( __DIR__ ) . '/includes/class-wp-email-wpstats.php' ) );
 		$this->assertStringNotContainsString( 'function_exists', file_get_contents( dirname( __DIR__ ) . '/includes/class-wp-email-wpstats.php' ) );
 	}
@@ -172,7 +172,7 @@ class WP_Email_WPStats_Test extends WP_Email_TestCase {
 		$returned = $this->stats->render();
 		$echoed   = (string) ob_get_clean();
 
-		$this->assertNull( $returned );
+		$this->assertNull( $returned, 'Rendering the section prints rather than returning, as WP-Stats expects.' );
 		$this->assertNotSame( '', $echoed );
 	}
 

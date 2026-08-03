@@ -272,7 +272,8 @@ class WP_Email_Template_Tags_Test extends WP_Email_TestCase {
 		global $wp_rewrite;
 
 		$this->assertNotFalse(
-			has_action( 'init', array( WP_Email::get_instance(), 'register_endpoints' ) )
+			has_action( 'init', array( WP_Email::get_instance(), 'register_endpoints' ) ),
+			'The endpoints are registered on init.'
 		);
 
 		// Any earlier set_permalink_structure() call in the run has already
@@ -295,7 +296,7 @@ class WP_Email_Template_Tags_Test extends WP_Email_TestCase {
 	}
 
 	public function test_jquery_is_not_forced_into_wp_head() {
-		$this->assertFalse( has_action( 'wp_head', 'email_javascripts_header' ) );
+		$this->assertFalse( has_action( 'wp_head', 'email_javascripts_header' ), 'The withdrawn header printer is not hooked; the script is enqueued instead.' );
 	}
 
 	public function test_the_script_does_not_depend_on_jquery() {
@@ -303,7 +304,7 @@ class WP_Email_Template_Tags_Test extends WP_Email_TestCase {
 
 		$script = wp_scripts()->query( 'wp-email' );
 
-		$this->assertNotFalse( $script );
+		$this->assertNotFalse( $script, 'The script is registered at all, or the jQuery assertion below is vacuous.' );
 		$this->assertSame( array(), $script->deps );
 	}
 }

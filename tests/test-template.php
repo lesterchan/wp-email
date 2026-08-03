@@ -108,7 +108,7 @@ class WP_Email_Template_Test extends WP_Email_TestCase {
 		$this->assertSame( get_bloginfo( 'name' ), $vars['EMAIL_BLOG_NAME'] );
 		$this->assertSame( get_bloginfo( 'url' ), $vars['EMAIL_BLOG_URL'] );
 		$this->assertSame( get_permalink( $this->post_id ), $vars['EMAIL_PERMALINK'] );
-		$this->assertNotEmpty( $vars['EMAIL_POST_DATE'] );
+		$this->assertNotEmpty( $vars['EMAIL_POST_DATE'], 'The post date token resolves to something rather than an empty string.' );
 	}
 
 	public function test_post_vars_supplies_everything_the_screen_advertises() {

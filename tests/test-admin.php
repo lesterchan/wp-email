@@ -119,13 +119,13 @@ class WP_Email_Admin_Test extends WP_Email_TestCase {
 
 
 	public function test_the_administrator_gains_the_capability_on_install() {
-		$this->assertTrue( get_role( 'administrator' )->has_cap( 'manage_email' ) );
+		$this->assertTrue( get_role( 'administrator' )->has_cap( 'manage_email' ), 'Install grants the capability to the administrator role.' );
 	}
 
 	public function test_a_subscriber_does_not_have_the_capability() {
 		wp_set_current_user( self::factory()->user->create( array( 'role' => 'subscriber' ) ) );
 
-		$this->assertFalse( current_user_can( WP_Email_Admin::CAPABILITY ) );
+		$this->assertFalse( current_user_can( WP_Email_Admin::CAPABILITY ), 'A subscriber really does lack the capability, or the refusals elsewhere prove nothing.' );
 	}
 
 
@@ -170,7 +170,7 @@ class WP_Email_Admin_Test extends WP_Email_TestCase {
 		$table = new WP_Email_Logs_Table();
 
 		foreach ( array_values( $table->get_sortable_columns() ) as $sortable ) {
-			$this->assertArrayHasKey( $sortable[0], WP_Email_Logs::sortable_columns() );
+			$this->assertArrayHasKey( $sortable[0], WP_Email_Logs::sortable_columns(), 'The table sorts on a column it does not declare sortable.' );
 		}
 	}
 
@@ -330,7 +330,7 @@ class WP_Email_Admin_Test extends WP_Email_TestCase {
 		$this->assertStringContainsString( 'nav-tab-wrapper', $html );
 		$this->assertStringContainsString( 'tab=settings', $html );
 		$this->assertStringContainsString( 'tab=templates', $html );
-		$this->assertMatchesRegularExpression( '/nav-tab nav-tab-active[^>]*>\s*Templates/', $html );
+		$this->assertMatchesRegularExpression( '/nav-tab nav-tab-active[^>]*>\s*Templates/', $html, 'The tab being viewed is the one marked active.' );
 	}
 
 	public function test_an_unknown_tab_falls_back_to_the_first_one() {
@@ -348,7 +348,7 @@ class WP_Email_Admin_Test extends WP_Email_TestCase {
 		$html = $this->render_options( 'templates' );
 
 		$this->assertStringContainsString( 'name="_wp_http_referer"', $html );
-		$this->assertMatchesRegularExpression( '/_wp_http_referer" value="[^"]*tab=templates/', $html );
+		$this->assertMatchesRegularExpression( '/_wp_http_referer" value="[^"]*tab=templates/', $html, 'The referer field carries the tab, so a save returns to the tab it was made on.' );
 	}
 
 	public function test_the_options_screen_posts_to_the_settings_api() {
@@ -415,7 +415,7 @@ class WP_Email_Admin_Test extends WP_Email_TestCase {
 
 		$registered = get_registered_settings();
 
-		$this->assertArrayHasKey( WP_Email_Options::OPTION, $registered );
+		$this->assertArrayHasKey( WP_Email_Options::OPTION, $registered, 'The settings row is registered, so its sanitise callback is attached.' );
 		$this->assertSame(
 			array( 'WP_Email_Options', 'sanitize' ),
 			$registered[ WP_Email_Options::OPTION ]['sanitize_callback']
@@ -426,9 +426,9 @@ class WP_Email_Admin_Test extends WP_Email_TestCase {
 		$settings = new WP_Email_Settings();
 
 		$settings->enqueue( 'index.php' );
-		$this->assertFalse( wp_script_is( 'wp-email-admin', 'enqueued' ) );
+		$this->assertFalse( wp_script_is( 'wp-email-admin', 'enqueued' ), 'The admin script is not enqueued off its own screen.' );
 
 		$settings->enqueue( 'toplevel_page_wp-email' );
-		$this->assertTrue( wp_script_is( 'wp-email-admin', 'enqueued' ) );
+		$this->assertTrue( wp_script_is( 'wp-email-admin', 'enqueued' ), 'The admin script is enqueued on its own screen.' );
 	}
 }

@@ -112,14 +112,14 @@ class WP_Email_Deprecated_Test extends WP_Email_TestCase {
 	}
 
 	public function test_the_validators_delegate() {
-		$this->assertTrue( is_valid_name( 'Mary Jane' ) );
-		$this->assertFalse( is_valid_name( 'Mary <b>' ) );
+		$this->assertTrue( is_valid_name( 'Mary Jane' ), 'The deprecated name check still accepts an ordinary name.' );
+		$this->assertFalse( is_valid_name( 'Mary <b>' ), 'The deprecated name check still rejects markup.' );
 
-		$this->assertTrue( (bool) is_valid_email( 'a@example.com' ) );
-		$this->assertFalse( (bool) is_valid_email( 'nope' ) );
+		$this->assertTrue( (bool) is_valid_email( 'a@example.com' ), 'The deprecated address check still accepts a real address.' );
+		$this->assertFalse( (bool) is_valid_email( 'nope' ), 'The deprecated address check still rejects a non-address.' );
 
-		$this->assertTrue( is_valid_remarks( 'Hello there' ) );
-		$this->assertFalse( is_valid_remarks( "hi\ncontent-type: text/html" ) );
+		$this->assertTrue( is_valid_remarks( 'Hello there' ), 'The deprecated remarks check still accepts ordinary text.' );
+		$this->assertFalse( is_valid_remarks( "hi\ncontent-type: text/html" ), 'The deprecated remarks check still rejects a header injection.' );
 	}
 
 	public function test_the_snippet_helpers_delegate() {
@@ -131,10 +131,10 @@ class WP_Email_Deprecated_Test extends WP_Email_TestCase {
 		$this->go_to( get_permalink( $this->post_id ) );
 
 		email_addfilters( $GLOBALS['wp_query'] );
-		$this->assertNotFalse( has_filter( 'the_title', array( 'WP_Email', 'filter_title' ) ) );
+		$this->assertNotFalse( has_filter( 'the_title', array( 'WP_Email', 'filter_title' ) ), 'The deprecated wrapper attaches the filter as the real one does.' );
 
 		email_removefilters();
-		$this->assertFalse( has_filter( 'the_title', array( 'WP_Email', 'filter_title' ) ) );
+		$this->assertFalse( has_filter( 'the_title', array( 'WP_Email', 'filter_title' ) ), 'The deprecated wrapper leaves it off when the real one would.' );
 	}
 
 	public function test_the_robots_helper_delegates() {
@@ -221,7 +221,7 @@ class WP_Email_Deprecated_Test extends WP_Email_TestCase {
 	}
 
 	public function test_not_spamming_delegates() {
-		$this->assertTrue( not_spamming() );
+		$this->assertTrue( not_spamming(), 'The deprecated throttle wrapper still answers for a first send.' );
 	}
 
 	public function test_the_multiple_hint_delegates() {
@@ -250,7 +250,7 @@ class WP_Email_Deprecated_Test extends WP_Email_TestCase {
 		$this->assertStringContainsString( 'emailpopup/', $popup );
 
 		foreach ( array( $standalone, $popup ) as $header ) {
-			$this->assertStringContainsString( 'wp-email_nonce', $header );
+			$this->assertStringContainsString( 'wp-email_nonce', $header, 'The deprecated header helper still prints the nonce the form needs.' );
 		}
 	}
 

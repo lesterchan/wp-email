@@ -223,7 +223,7 @@ class WP_Email_Form_Test extends WP_Email_Ajax_TestCase {
 
 
 	public function test_flood_interval_blocks_a_repeat_from_the_same_ip() {
-		$this->assertTrue( WP_Email_Form::not_spamming() );
+		$this->assertTrue( WP_Email_Form::not_spamming(), 'A first send is not throttled.' );
 
 		WP_Email_Logs::insert(
 			array(
@@ -241,7 +241,7 @@ class WP_Email_Form_Test extends WP_Email_Ajax_TestCase {
 			)
 		);
 
-		$this->assertFalse( WP_Email_Form::not_spamming() );
+		$this->assertFalse( WP_Email_Form::not_spamming(), 'A second send inside the window is throttled.' );
 	}
 
 	public function test_a_zero_interval_disables_the_check() {
@@ -265,19 +265,19 @@ class WP_Email_Form_Test extends WP_Email_Ajax_TestCase {
 			)
 		);
 
-		$this->assertTrue( WP_Email_Form::not_spamming() );
+		$this->assertTrue( WP_Email_Form::not_spamming(), 'Once the window has passed, sending is allowed again.' );
 	}
 
 
 	public function test_valid_name_rejects_markup_characters() {
-		$this->assertTrue( WP_Email_Form::is_valid_name( 'Mary Jane' ) );
-		$this->assertFalse( WP_Email_Form::is_valid_name( 'Mary <b>' ) );
-		$this->assertFalse( WP_Email_Form::is_valid_name( 'Bad #Name$' ) );
+		$this->assertTrue( WP_Email_Form::is_valid_name( 'Mary Jane' ), 'An ordinary name is accepted.' );
+		$this->assertFalse( WP_Email_Form::is_valid_name( 'Mary <b>' ), 'A name carrying markup is rejected.' );
+		$this->assertFalse( WP_Email_Form::is_valid_name( 'Bad #Name$' ), 'A name carrying punctuation that does not belong is rejected.' );
 	}
 
 	public function test_valid_remarks_rejects_header_injection() {
-		$this->assertTrue( WP_Email_Form::is_valid_remarks( 'Hello there' ) );
-		$this->assertFalse( WP_Email_Form::is_valid_remarks( "hi\nbcc: x@y.com\ncontent-type: text/html" ) );
+		$this->assertTrue( WP_Email_Form::is_valid_remarks( 'Hello there' ), 'Ordinary remarks are accepted.' );
+		$this->assertFalse( WP_Email_Form::is_valid_remarks( "hi\nbcc: x@y.com\ncontent-type: text/html" ), 'Remarks carrying a header injection are rejected.' );
 	}
 
 
@@ -295,7 +295,7 @@ class WP_Email_Form_Test extends WP_Email_Ajax_TestCase {
 		$this->assertStringContainsString( 'OK: Harness Post', $response );
 		$this->assertStringNotContainsString( '%EMAIL_', $response );
 
-		$this->assertIsArray( $this->mail );
+		$this->assertIsArray( $this->mail, 'A valid submission sends mail.' );
 		$this->assertSame( 'S: Sender Name -> Harness Post', $this->mail['subject'] );
 		$this->assertStringContainsString( 'Worth a read', $this->mail['message'] );
 		$this->assertStringContainsString( 'One two three', $this->mail['message'] );
@@ -352,7 +352,7 @@ class WP_Email_Form_Test extends WP_Email_Ajax_TestCase {
 
 		$rows = WP_Email_Logs::query();
 
-		$this->assertCount( 1, $rows );
+		$this->assertCount( 1, $rows, 'The send logged exactly one row.' );
 
 		// addslashes() before $wpdb->insert() used to store a second layer of
 		// backslashes that the logs screen then had to strip back out.
@@ -377,7 +377,7 @@ class WP_Email_Form_Test extends WP_Email_Ajax_TestCase {
 		$this->assertStringContainsString( 'Your Remarks is invalid', $response );
 		$this->assertStringContainsString( 'Friend Email is invalid', $response );
 
-		$this->assertNull( $this->mail );
+		$this->assertNull( $this->mail, 'A validation failure sends nothing.' );
 		$this->assertSame( 0, WP_Email_Logs::count_all() );
 	}
 
@@ -436,7 +436,7 @@ class WP_Email_Form_Test extends WP_Email_Ajax_TestCase {
 		}
 
 		$this->assertStringContainsString( 'Failed To Verify Referrer', $this->_last_response );
-		$this->assertNull( $this->mail );
+		$this->assertNull( $this->mail, 'A bad nonce stops the handler before anything is sent.' );
 		$this->assertSame( 0, WP_Email_Logs::count_all() );
 	}
 
@@ -455,7 +455,7 @@ class WP_Email_Form_Test extends WP_Email_Ajax_TestCase {
 		);
 
 		$this->assertStringContainsString( 'Maximum', $response );
-		$this->assertNull( $this->mail );
+		$this->assertNull( $this->mail, 'Recipients beyond the maximum are refused rather than truncated.' );
 	}
 
 	public function test_a_send_for_an_unpublished_post_is_refused() {
@@ -472,7 +472,7 @@ class WP_Email_Form_Test extends WP_Email_Ajax_TestCase {
 		);
 
 		$this->assertStringContainsString( 'Invalid post', $response );
-		$this->assertNull( $this->mail );
+		$this->assertNull( $this->mail, 'A send for an unpublished post is refused.' );
 		$this->assertSame( 0, WP_Email_Logs::count_all() );
 	}
 
@@ -491,7 +491,7 @@ class WP_Email_Form_Test extends WP_Email_Ajax_TestCase {
 			)
 		);
 
-		$this->assertIsArray( $this->mail );
+		$this->assertIsArray( $this->mail, 'A plain text send goes out.' );
 		$this->assertStringContainsString( 'ALT:', $this->mail['message'] );
 		$this->assertStringNotContainsString( '<p>', $this->mail['message'] );
 
@@ -515,7 +515,7 @@ class WP_Email_Form_Test extends WP_Email_Ajax_TestCase {
 
 		$GLOBALS['wp_locale']->text_direction = 'ltr';
 
-		$this->assertIsArray( $this->mail );
+		$this->assertIsArray( $this->mail, 'An HTML send on an RTL site goes out.' );
 		$this->assertStringContainsString( 'direction: rtl', $this->mail['message'] );
 	}
 
@@ -578,7 +578,7 @@ class WP_Email_Form_Test extends WP_Email_Ajax_TestCase {
 			)
 		);
 
-		$this->assertIsArray( $this->mail );
+		$this->assertIsArray( $this->mail, 'A send without friend names still goes out.' );
 
 		$to = is_array( $this->mail['to'] ) ? implode( ', ', $this->mail['to'] ) : $this->mail['to'];
 
@@ -796,6 +796,6 @@ class WP_Email_Form_Test extends WP_Email_Ajax_TestCase {
 
 		remove_all_filters( 'wp_email_trust_proxy' );
 
-		$this->assertFalse( $seen );
+		$this->assertFalse( $seen, 'The proxy filter is handed false as its default, so headers are not trusted by accident.' );
 	}
 }

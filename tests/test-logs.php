@@ -127,7 +127,7 @@ class WP_Email_Logs_Test extends WP_Email_TestCase {
 		// against a fixed list; anything else must not reach the query.
 		$rows = WP_Email_Logs::query( array( 'orderby' => 'email_id; DROP TABLE wp_posts' ) );
 
-		$this->assertCount( 1, $rows );
+		$this->assertCount( 1, $rows, 'The query returns the one row that matches.' );
 	}
 
 	public function test_query_paginates() {
@@ -152,8 +152,8 @@ class WP_Email_Logs_Test extends WP_Email_TestCase {
 			)
 		);
 
-		$this->assertCount( 2, $page_one );
-		$this->assertCount( 2, $page_two );
+		$this->assertCount( 2, $page_one, 'The first page holds its two rows.' );
+		$this->assertCount( 2, $page_two, 'The second page holds the other two.' );
 		$this->assertSame( 'Name 0', $page_one[0]->email_yourname );
 		$this->assertSame( 'Name 2', $page_two[0]->email_yourname );
 	}
@@ -226,7 +226,7 @@ class WP_Email_Logs_Test extends WP_Email_TestCase {
 			$this->log( array( 'postid' => $id ) );
 		}
 
-		$this->assertCount( 2, WP_Email_Logs::most_emailed( 'post', 2 ) );
+		$this->assertCount( 2, WP_Email_Logs::most_emailed( 'post', 2 ), 'The limit caps the most-emailed listing.' );
 	}
 
 	public function test_most_emailed_skips_drafts_and_password_protected_posts() {

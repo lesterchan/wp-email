@@ -36,13 +36,13 @@ class WP_Email_Boot_Test extends WP_Email_TestCase {
 	}
 
 	public function test_the_ajax_endpoints_are_registered_for_both_audiences() {
-		$this->assertNotFalse( has_action( 'wp_ajax_email', array( 'WP_Email_Form', 'process' ) ) );
-		$this->assertNotFalse( has_action( 'wp_ajax_nopriv_email', array( 'WP_Email_Form', 'process' ) ) );
+		$this->assertNotFalse( has_action( 'wp_ajax_email', array( 'WP_Email_Form', 'process' ) ), 'The send endpoint is registered for logged-in callers.' );
+		$this->assertNotFalse( has_action( 'wp_ajax_nopriv_email', array( 'WP_Email_Form', 'process' ) ), 'The send endpoint is registered for logged out callers too; the form is public.' );
 
 		// The form is used by visitors who are not logged in, so the captcha
 		// image has to be reachable by them too.
-		$this->assertNotFalse( has_action( 'wp_ajax_wp_email_captcha', array( 'WP_Email_Captcha', 'serve' ) ) );
-		$this->assertNotFalse( has_action( 'wp_ajax_nopriv_wp_email_captcha', array( 'WP_Email_Captcha', 'serve' ) ) );
+		$this->assertNotFalse( has_action( 'wp_ajax_wp_email_captcha', array( 'WP_Email_Captcha', 'serve' ) ), 'The captcha endpoint is registered for logged-in callers.' );
+		$this->assertNotFalse( has_action( 'wp_ajax_nopriv_wp_email_captcha', array( 'WP_Email_Captcha', 'serve' ) ), 'The captcha endpoint is registered for logged out callers too.' );
 	}
 
 	public function test_query_vars_are_declared() {
@@ -65,8 +65,8 @@ class WP_Email_Boot_Test extends WP_Email_TestCase {
 			$found[ $endpoint[1] ] = $endpoint[0];
 		}
 
-		$this->assertArrayHasKey( 'email', $found );
-		$this->assertArrayHasKey( 'emailpopup', $found );
+		$this->assertArrayHasKey( 'email', $found, 'The email endpoint is registered as a query variable.' );
+		$this->assertArrayHasKey( 'emailpopup', $found, 'The emailpopup endpoint is registered as a query variable.' );
 
 		// EP_PERMALINK | EP_PAGES: one endpoint covers both, which is why the
 		// separate 'emailpage/' path was never needed.
@@ -83,15 +83,15 @@ class WP_Email_Boot_Test extends WP_Email_TestCase {
 
 		// Returns instead of require-ing the page and exiting, which is the
 		// documented way for a theme to render the form itself.
-		$this->assertNull( WP_Email::get_instance()->maybe_render_email_page() );
+		$this->assertNull( WP_Email::get_instance()->maybe_render_email_page(), 'Off an email request the page renderer does nothing at all.' );
 
 		remove_filter( 'wp_email_template_redirect', '__return_false' );
 	}
 
 
 	public function test_the_shortcodes_are_registered() {
-		$this->assertTrue( shortcode_exists( 'email_link' ) );
-		$this->assertTrue( shortcode_exists( 'donotemail' ) );
+		$this->assertTrue( shortcode_exists( 'email_link' ), 'The email_link shortcode is registered.' );
+		$this->assertTrue( shortcode_exists( 'donotemail' ), 'The donotemail shortcode is registered.' );
 	}
 
 	public function test_the_link_shortcode_renders_a_link() {
@@ -129,8 +129,8 @@ class WP_Email_Boot_Test extends WP_Email_TestCase {
 
 		WP_Email::add_filters();
 
-		$this->assertNotFalse( has_filter( 'the_title', array( 'WP_Email', 'filter_title' ) ) );
-		$this->assertNotFalse( has_filter( 'the_content', array( 'WP_Email_Form', 'render' ) ) );
+		$this->assertNotFalse( has_filter( 'the_title', array( 'WP_Email', 'filter_title' ) ), 'On an email request the title filter is attached.' );
+		$this->assertNotFalse( has_filter( 'the_content', array( 'WP_Email_Form', 'render' ) ), 'On an email request the content filter is attached.' );
 
 		WP_Email::remove_filters();
 	}
@@ -139,8 +139,8 @@ class WP_Email_Boot_Test extends WP_Email_TestCase {
 		WP_Email::add_filters();
 		WP_Email::remove_filters();
 
-		$this->assertFalse( has_filter( 'the_title', array( 'WP_Email', 'filter_title' ) ) );
-		$this->assertFalse( has_filter( 'the_content', array( 'WP_Email_Form', 'render' ) ) );
+		$this->assertFalse( has_filter( 'the_title', array( 'WP_Email', 'filter_title' ) ), 'Off an email request the title filter stays off.' );
+		$this->assertFalse( has_filter( 'the_content', array( 'WP_Email_Form', 'render' ) ), 'Off an email request the content filter stays off.' );
 	}
 
 	public function test_add_filters_ignores_a_secondary_query() {
@@ -151,8 +151,8 @@ class WP_Email_Boot_Test extends WP_Email_TestCase {
 		// related-posts loop running on the e-mail page.
 		WP_Email::add_filters( $secondary );
 
-		$this->assertFalse( has_filter( 'the_title', array( 'WP_Email', 'filter_title' ) ) );
-		$this->assertFalse( has_filter( 'the_content', array( 'WP_Email_Form', 'render' ) ) );
+		$this->assertFalse( has_filter( 'the_title', array( 'WP_Email', 'filter_title' ) ), 'Outside the main query the title filter stays off.' );
+		$this->assertFalse( has_filter( 'the_content', array( 'WP_Email_Form', 'render' ) ), 'Outside the main query the content filter stays off.' );
 
 		wp_reset_postdata();
 	}
@@ -164,7 +164,7 @@ class WP_Email_Boot_Test extends WP_Email_TestCase {
 		// any binding an earlier `global` statement made.
 		WP_Email::add_filters( $GLOBALS['wp_query'] );
 
-		$this->assertNotFalse( has_filter( 'the_title', array( 'WP_Email', 'filter_title' ) ) );
+		$this->assertNotFalse( has_filter( 'the_title', array( 'WP_Email', 'filter_title' ) ), 'add_filters() accepts the main query object and attaches.' );
 
 		WP_Email::remove_filters();
 	}
@@ -175,7 +175,7 @@ class WP_Email_Boot_Test extends WP_Email_TestCase {
 		// The pre-3.0.0 email_addfilters() was called bare in some themes.
 		WP_Email::add_filters();
 
-		$this->assertNotFalse( has_filter( 'the_title', array( 'WP_Email', 'filter_title' ) ) );
+		$this->assertNotFalse( has_filter( 'the_title', array( 'WP_Email', 'filter_title' ) ), 'add_filters() called with no argument still attaches.' );
 
 		WP_Email::remove_filters();
 	}
@@ -233,8 +233,8 @@ class WP_Email_Boot_Test extends WP_Email_TestCase {
 	public function test_the_assets_are_enqueued() {
 		do_action( 'wp_enqueue_scripts' );
 
-		$this->assertTrue( wp_style_is( 'wp-email', 'enqueued' ) );
-		$this->assertTrue( wp_script_is( 'wp-email', 'enqueued' ) );
+		$this->assertTrue( wp_style_is( 'wp-email', 'enqueued' ), 'The front-end stylesheet is enqueued.' );
+		$this->assertTrue( wp_script_is( 'wp-email', 'enqueued' ), 'The front-end script is enqueued.' );
 	}
 
 	public function test_the_script_is_localised() {
@@ -274,13 +274,13 @@ class WP_Email_Boot_Test extends WP_Email_TestCase {
 
 		WP_Email::get_instance()->install();
 
-		$this->assertTrue( get_role( 'administrator' )->has_cap( 'manage_email' ) );
+		$this->assertTrue( get_role( 'administrator' )->has_cap( 'manage_email' ), 'Activation grants the capability to the administrator role.' );
 	}
 
 	public function test_install_does_not_grant_the_capability_to_subscribers() {
 		WP_Email::get_instance()->install();
 
-		$this->assertFalse( get_role( 'subscriber' )->has_cap( 'manage_email' ) );
+		$this->assertFalse( get_role( 'subscriber' )->has_cap( 'manage_email' ), 'Activation grants it to the administrator only, not to every role.' );
 	}
 
 	public function test_install_records_the_data_version() {
@@ -316,7 +316,8 @@ class WP_Email_Boot_Test extends WP_Email_TestCase {
 
 		$this->assertMatchesRegularExpression(
 			"/add_action\(\s*'admin_init',\s*array\(\s*\\\$this,\s*'maybe_upgrade'\s*\)/",
-			$source
+			$source,
+			'The upgrade runs on admin_init, which is where register_setting has already run.'
 		);
 	}
 
@@ -359,8 +360,8 @@ class WP_Email_Boot_Test extends WP_Email_TestCase {
 
 		$GLOBALS['wp_locale']->text_direction = 'ltr';
 
-		$this->assertFalse( wp_style_is( 'wp-email-rtl', 'enqueued' ) );
-		$this->assertFalse( wp_style_is( 'wp-email-rtl', 'registered' ) );
+		$this->assertFalse( wp_style_is( 'wp-email-rtl', 'enqueued' ), 'No separate RTL stylesheet is enqueued; the one file uses logical properties.' );
+		$this->assertFalse( wp_style_is( 'wp-email-rtl', 'registered' ), 'No separate RTL stylesheet is even registered.' );
 		$this->assertSame( array(), (array) glob( dirname( __DIR__ ) . '/css/*-rtl.css' ) );
 	}
 
@@ -377,15 +378,16 @@ class WP_Email_Boot_Test extends WP_Email_TestCase {
 			(string) WP_Email_Options::markers()['db'],
 			'Activation did not record the schema version.'
 		);
-		$this->assertTrue( get_role( 'administrator' )->has_cap( 'manage_email' ) );
-		$this->assertNotNull( $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->email}" ) );
+		$this->assertTrue( get_role( 'administrator' )->has_cap( 'manage_email' ), 'Activation grants the capability.' );
+		$this->assertNotNull( $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->email}" ), 'Activation created the log table, so it can be counted.' );
 	}
 
 	public function test_the_activation_hook_is_registered() {
 		// register_activation_hook() has to run while the main file is loading,
 		// which is why the constructor does it rather than a later hook.
 		$this->assertNotFalse(
-			has_action( 'activate_' . plugin_basename( WP_EMAIL_MAIN_FILE ), array( WP_Email::get_instance(), 'activate' ) )
+			has_action( 'activate_' . plugin_basename( WP_EMAIL_MAIN_FILE ), array( WP_Email::get_instance(), 'activate' ) ),
+			'The activation hook is attached for this plugin basename.'
 		);
 	}
 
@@ -420,8 +422,8 @@ class WP_Email_Boot_Test extends WP_Email_TestCase {
 	public function test_network_activation_lifts_the_site_query_cap() {
 		$source = file_get_contents( dirname( __DIR__ ) . '/includes/class-wp-email.php' );
 
-		$this->assertMatchesRegularExpression( "/'number'\s*=>\s*0/", $source );
-		$this->assertMatchesRegularExpression( "/'fields'\s*=>\s*'ids'/", $source );
+		$this->assertMatchesRegularExpression( "/'number'\s*=>\s*0/", $source, 'The site loop lifts the query cap, or a network past the default is half-activated.' );
+		$this->assertMatchesRegularExpression( "/'fields'\s*=>\s*'ids'/", $source, 'The site loop asks for ids only, which is what makes the unlimited query affordable.' );
 	}
 
 	public function test_network_activation_restores_inside_the_loop() {
@@ -460,10 +462,10 @@ class WP_Email_Boot_Test extends WP_Email_TestCase {
 		foreach ( array( '', '/includes', '/tests', '/bin' ) as $dir ) {
 			$guard = dirname( __DIR__ ) . $dir . '/index.php';
 
-			$this->assertFileExists( $guard );
+			$this->assertFileExists( $guard, $dir . ' holds PHP but carries no silence guard.' );
 
 			// The docblock form: phpcbf cannot fix the bare one-liner.
-			$this->assertStringContainsString( '/**', file_get_contents( $guard ) );
+			$this->assertStringContainsString( '/**', file_get_contents( $guard ), $dir . ' has a silence guard with no docblock explaining what it is for.' );
 		}
 	}
 }

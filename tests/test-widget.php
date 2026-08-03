@@ -42,10 +42,11 @@ class WP_Email_Widget_Test extends WP_Email_TestCase {
 	}
 
 	public function test_the_widget_is_registered_under_its_new_name() {
-		$this->assertTrue( class_exists( 'WP_Email_Widget' ) );
+		$this->assertTrue( class_exists( 'WP_Email_Widget' ), 'The widget class is loaded.' );
 
 		$this->assertNotFalse(
-			has_action( 'widgets_init', array( WP_Email::get_instance(), 'register_widget' ) )
+			has_action( 'widgets_init', array( WP_Email::get_instance(), 'register_widget' ) ),
+			'The widget is registered on widgets_init.'
 		);
 
 		// Invoked directly: widgets_init has already fired by the time a test
@@ -59,7 +60,7 @@ class WP_Email_Widget_Test extends WP_Email_TestCase {
 		foreach ( $GLOBALS['wp_widget_factory']->widgets as $widget ) {
 			if ( $widget instanceof WP_Email_Widget ) {
 				$registered = true;
-				$this->assertSame( 'email', $widget->id_base );
+				$this->assertSame( 'email', $widget->id_base, 'The widget keeps its released id_base, so existing sidebars still find it.' );
 			}
 		}
 
@@ -69,7 +70,7 @@ class WP_Email_Widget_Test extends WP_Email_TestCase {
 	public function test_the_widget_supports_selective_refresh() {
 		$widget = new WP_Email_Widget();
 
-		$this->assertTrue( $widget->widget_options['customize_selective_refresh'] );
+		$this->assertTrue( $widget->widget_options['customize_selective_refresh'], 'The widget declares selective refresh, so the customizer does not reload the page.' );
 	}
 
 	public function test_the_widget_lists_the_most_emailed_post() {
@@ -149,7 +150,7 @@ class WP_Email_Widget_Test extends WP_Email_TestCase {
 		// posted, which the block widget editor never sends.
 		$instance = $widget->update( array( 'title' => 'Saved' ), array() );
 
-		$this->assertIsArray( $instance );
+		$this->assertIsArray( $instance, 'A save returns an instance rather than false.' );
 		$this->assertSame( 'Saved', $instance['title'] );
 	}
 

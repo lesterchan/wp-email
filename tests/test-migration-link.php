@@ -282,7 +282,7 @@ class WP_Email_Migration_Link_Test extends WP_Email_TestCase {
 		$this->assertStringContainsString( '%EMAIL_ICON%', $html );
 		$this->assertStringContainsString( 'title="Mail this on"', $html );
 		$this->assertStringNotContainsString( '%EMAIL_TEXT%', $html );
-		$this->assertArrayNotHasKey( 'style', get_option( WP_Email_Options::OPTION )['link'] );
+		$this->assertArrayNotHasKey( 'style', get_option( WP_Email_Options::OPTION )['link'], 'The retired link style key is not carried into the new row.' );
 	}
 
 	public function test_a_2x_install_on_the_custom_style_keeps_its_markup() {

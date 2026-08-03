@@ -51,7 +51,7 @@ class WP_Email_Captcha_Test extends WP_Email_TestCase {
 
 		$token = WP_Email_Captcha::issue();
 
-		$this->assertMatchesRegularExpression( '/^[A-Za-z0-9]{32}$/', $token );
+		$this->assertMatchesRegularExpression( '/^[A-Za-z0-9]{32}$/', $token, 'The token is a 32-character alphanumeric string, safe to use in a file name.' );
 		$this->assertSame( WP_Email_Captcha::LENGTH, strlen( $this->answer_for( $token ) ) );
 	}
 
@@ -67,8 +67,8 @@ class WP_Email_Captcha_Test extends WP_Email_TestCase {
 
 		// The session-backed version kept one site-wide answer, so opening a
 		// second form invalidated the first.
-		$this->assertNotFalse( $this->answer_for( $first ) );
-		$this->assertNotFalse( $this->answer_for( $second ) );
+		$this->assertNotFalse( $this->answer_for( $first ), 'The first challenge has an answer stored.' );
+		$this->assertNotFalse( $this->answer_for( $second ), 'The second challenge has its own answer, so the two are independent.' );
 	}
 
 	public function test_the_right_answer_verifies() {
@@ -78,7 +78,7 @@ class WP_Email_Captcha_Test extends WP_Email_TestCase {
 
 		$token = WP_Email_Captcha::issue();
 
-		$this->assertTrue( WP_Email_Captcha::verify( $token, $this->answer_for( $token ) ) );
+		$this->assertTrue( WP_Email_Captcha::verify( $token, $this->answer_for( $token ) ), 'The right answer verifies.' );
 	}
 
 	public function test_verification_is_case_insensitive() {
@@ -88,7 +88,7 @@ class WP_Email_Captcha_Test extends WP_Email_TestCase {
 
 		$token = WP_Email_Captcha::issue();
 
-		$this->assertTrue( WP_Email_Captcha::verify( $token, strtolower( $this->answer_for( $token ) ) ) );
+		$this->assertTrue( WP_Email_Captcha::verify( $token, strtolower( $this->answer_for( $token ) ) ), 'The answer is compared case insensitively.' );
 	}
 
 	public function test_a_challenge_can_only_be_answered_once() {
@@ -99,8 +99,8 @@ class WP_Email_Captcha_Test extends WP_Email_TestCase {
 		$token  = WP_Email_Captcha::issue();
 		$answer = $this->answer_for( $token );
 
-		$this->assertTrue( WP_Email_Captcha::verify( $token, $answer ) );
-		$this->assertFalse( WP_Email_Captcha::verify( $token, $answer ) );
+		$this->assertTrue( WP_Email_Captcha::verify( $token, $answer ), 'The answer verifies the first time.' );
+		$this->assertFalse( WP_Email_Captcha::verify( $token, $answer ), 'The same answer does not verify twice; the challenge is burned.' );
 	}
 
 	public function test_a_wrong_answer_burns_the_challenge() {
@@ -111,17 +111,17 @@ class WP_Email_Captcha_Test extends WP_Email_TestCase {
 		$token  = WP_Email_Captcha::issue();
 		$answer = $this->answer_for( $token );
 
-		$this->assertFalse( WP_Email_Captcha::verify( $token, 'WRONG' ) );
+		$this->assertFalse( WP_Email_Captcha::verify( $token, 'WRONG' ), 'A wrong answer does not verify.' );
 
 		// Otherwise a five-character code could be brute-forced against a
 		// challenge that stays alive for ten minutes.
-		$this->assertFalse( WP_Email_Captcha::verify( $token, $answer ) );
+		$this->assertFalse( WP_Email_Captcha::verify( $token, $answer ), 'A wrong answer burns the challenge, so even the right one no longer verifies.' );
 	}
 
 	public function test_an_unknown_token_never_verifies() {
-		$this->assertFalse( WP_Email_Captcha::verify( str_repeat( 'a', 32 ), 'ABCDE' ) );
-		$this->assertFalse( WP_Email_Captcha::verify( '', 'ABCDE' ) );
-		$this->assertFalse( WP_Email_Captcha::verify( '../../etc/passwd', 'ABCDE' ) );
+		$this->assertFalse( WP_Email_Captcha::verify( str_repeat( 'a', 32 ), 'ABCDE' ), 'A token that was never issued does not verify.' );
+		$this->assertFalse( WP_Email_Captcha::verify( '', 'ABCDE' ), 'An empty token does not verify.' );
+		$this->assertFalse( WP_Email_Captcha::verify( '../../etc/passwd', 'ABCDE' ), 'A token that is a path does not verify, and never reaches the filesystem.' );
 	}
 
 	public function test_token_sanitizing_rejects_anything_off_shape() {
@@ -173,7 +173,7 @@ class WP_Email_Captcha_Test extends WP_Email_TestCase {
 		$options['sending']['imageverify'] = 0;
 		WP_Email_Options::update( $options );
 
-		$this->assertFalse( WP_Email_Captcha::is_enabled() );
+		$this->assertFalse( WP_Email_Captcha::is_enabled(), 'With no GD the captcha reports itself off rather than rendering a broken image.' );
 
 		$options['sending']['imageverify'] = 1;
 		WP_Email_Options::update( $options );
@@ -222,11 +222,11 @@ class WP_Email_Captcha_Test extends WP_Email_TestCase {
 		// A reload or a caching proxy re-fetching the <img> must not invalidate
 		// the form the visitor is still filling in. Only verify() spends it.
 		$this->assertSame( $answer, $this->answer_for( $token ) );
-		$this->assertTrue( WP_Email_Captcha::verify( $token, $answer ) );
+		$this->assertTrue( WP_Email_Captcha::verify( $token, $answer ), 'A challenge inside its lifetime still verifies.' );
 	}
 
 	public function test_a_challenge_has_a_bounded_lifetime() {
-		$this->assertLessThanOrEqual( 900, WP_Email_Captcha::TTL );
-		$this->assertGreaterThan( 0, WP_Email_Captcha::TTL );
+		$this->assertLessThanOrEqual( 900, WP_Email_Captcha::TTL, 'The captcha lifetime is short enough to be worth having.' );
+		$this->assertGreaterThan( 0, WP_Email_Captcha::TTL, 'The captcha lifetime is positive, or every challenge expires on issue.' );
 	}
 }

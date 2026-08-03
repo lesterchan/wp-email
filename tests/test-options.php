@@ -77,8 +77,8 @@ class WP_Email_Options_Test extends WP_Email_TestCase {
 	}
 
 	public function test_unknown_setting_is_null_rather_than_a_warning() {
-		$this->assertNull( WP_Email_Options::get( 'link', 'nope' ) );
-		$this->assertNull( WP_Email_Options::get( 'nope', 'nope' ) );
+		$this->assertNull( WP_Email_Options::get( 'link', 'nope' ), 'An unknown key inside a known group reads back null.' );
+		$this->assertNull( WP_Email_Options::get( 'nope', 'nope' ), 'An unknown group reads back null rather than raising a notice.' );
 	}
 
 	public function test_sanitize_rejects_an_out_of_range_link_type() {
@@ -129,7 +129,7 @@ class WP_Email_Options_Test extends WP_Email_TestCase {
 	public function test_sanitize_drops_the_retired_icon_setting() {
 		$clean = WP_Email_Options::sanitize( array( 'link' => array( 'icon' => '../../../wp-config.php' ) ) );
 
-		$this->assertArrayNotHasKey( 'icon', $clean['link'] );
+		$this->assertArrayNotHasKey( 'icon', $clean['link'], 'The retired icon key is dropped by the sanitiser.' );
 	}
 
 	public function test_sanitize_rejects_a_bogus_ip_header() {
@@ -248,8 +248,8 @@ class WP_Email_Options_Test extends WP_Email_TestCase {
 		WP_Email_Options::maybe_upgrade();
 
 		$this->assertSame( 'wp_email_options', WP_Email_Options::OPTION );
-		$this->assertIsArray( get_option( WP_Email_Options::OPTION ) );
-		$this->assertFalse( get_option( 'email_options' ) );
+		$this->assertIsArray( get_option( WP_Email_Options::OPTION ), 'The migration writes the new row.' );
+		$this->assertFalse( get_option( 'email_options' ), 'The migration deletes the legacy row once it has been folded in.' );
 	}
 
 	public function test_migration_is_idempotent() {
@@ -322,8 +322,8 @@ class WP_Email_Options_Test extends WP_Email_TestCase {
 
 		$stored = get_option( WP_Email_Options::OPTION );
 
-		$this->assertArrayNotHasKey( 'version', $stored );
-		$this->assertArrayNotHasKey( 'versions', $stored );
+		$this->assertArrayNotHasKey( 'version', $stored, 'The version marker is not stored inside the settings array.' );
+		$this->assertArrayNotHasKey( 'versions', $stored, 'No plural version key is stored inside the settings array either.' );
 	}
 
 	public function test_the_registered_sanitize_callback_runs_on_save() {
@@ -350,7 +350,7 @@ class WP_Email_Options_Test extends WP_Email_TestCase {
 			)
 		);
 
-		$this->assertTrue( $clean['stats_display'] );
+		$this->assertTrue( $clean['stats_display'], 'A ticked WP-Stats checkbox stores as boolean true.' );
 		$this->assertSame( 25, $clean['stats_most_limit'] );
 	}
 
@@ -362,7 +362,7 @@ class WP_Email_Options_Test extends WP_Email_TestCase {
 	public function test_sanitize_reads_a_posted_zero_as_off() {
 		$clean = WP_Email_Options::sanitize( array( 'stats_display' => '0' ) );
 
-		$this->assertFalse( $clean['stats_display'] );
+		$this->assertFalse( $clean['stats_display'], 'An unticked WP-Stats checkbox stores as boolean false.' );
 	}
 
 	public function test_sanitize_leaves_a_setting_the_submission_never_mentioned() {
@@ -372,7 +372,7 @@ class WP_Email_Options_Test extends WP_Email_TestCase {
 
 		$clean = WP_Email_Options::sanitize( array( 'link' => array( 'type' => 1 ) ) );
 
-		$this->assertFalse( $clean['stats_display'] );
+		$this->assertFalse( $clean['stats_display'], 'An absent WP-Stats checkbox stores as false rather than being left out.' );
 	}
 
 	/**
@@ -455,7 +455,7 @@ class WP_Email_Options_Test extends WP_Email_TestCase {
 		WP_Email_Options::flush();
 		WP_Email_Options::maybe_upgrade();
 
-		$this->assertTrue( WP_Email_Options::stats_display() );
+		$this->assertTrue( WP_Email_Options::stats_display(), 'With the shared row missing, the block stays switched on.' );
 	}
 
 	public function test_the_shared_stats_row_is_carried_across_when_it_is_still_there() {
@@ -466,7 +466,7 @@ class WP_Email_Options_Test extends WP_Email_TestCase {
 		WP_Email_Options::flush();
 		WP_Email_Options::maybe_upgrade();
 
-		$this->assertTrue( WP_Email_Options::stats_display() );
+		$this->assertTrue( WP_Email_Options::stats_display(), 'The shared row is carried across while it is still there.' );
 		$this->assertSame( 25, WP_Email_Options::stats_most_limit() );
 	}
 
@@ -481,7 +481,7 @@ class WP_Email_Options_Test extends WP_Email_TestCase {
 		WP_Email_Options::flush();
 		WP_Email_Options::maybe_upgrade();
 
-		$this->assertTrue( WP_Email_Options::stats_display() );
+		$this->assertTrue( WP_Email_Options::stats_display(), 'Any one of the three old toggles keeps the block on.' );
 	}
 
 	public function test_all_three_old_toggles_off_switches_the_block_off() {
@@ -498,7 +498,7 @@ class WP_Email_Options_Test extends WP_Email_TestCase {
 		WP_Email_Options::flush();
 		WP_Email_Options::maybe_upgrade();
 
-		$this->assertFalse( WP_Email_Options::stats_display() );
+		$this->assertFalse( WP_Email_Options::stats_display(), 'All three old toggles off switches the block off.' );
 	}
 
 	/**
@@ -513,8 +513,8 @@ class WP_Email_Options_Test extends WP_Email_TestCase {
 		WP_Email_Options::flush();
 		WP_Email_Options::maybe_upgrade();
 
-		$this->assertFalse( get_option( 'stats_display' ) );
-		$this->assertFalse( get_option( 'stats_mostlimit' ) );
+		$this->assertFalse( get_option( 'stats_display' ), 'The shared stats_display row is deleted by the migration that folded it in.' );
+		$this->assertFalse( get_option( 'stats_mostlimit' ), 'The shared stats_mostlimit row is deleted by the migration that folded it in.' );
 	}
 
 	public function test_the_stats_limit_never_falls_below_one() {

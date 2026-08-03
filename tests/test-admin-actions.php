@@ -125,7 +125,7 @@ class WP_Email_Admin_Actions_Test extends WP_Email_TestCase {
 
 		$_REQUEST = $_POST;
 
-		$this->assertTrue( $this->load() );
+		$this->assertTrue( $this->load(), 'The confirmed delete request was accepted.' );
 		$this->assertSame( 0, WP_Email_Logs::count_all() );
 
 		// Redirecting rather than re-rendering means a refresh cannot replay
@@ -143,7 +143,7 @@ class WP_Email_Admin_Actions_Test extends WP_Email_TestCase {
 
 		$_REQUEST = $_POST;
 
-		$this->assertTrue( $this->load() );
+		$this->assertTrue( $this->load(), 'The screen loaded, so the rows below survived a real request rather than none.' );
 		$this->assertSame( 1, WP_Email_Logs::count_all() );
 		$this->assertStringContainsString( 'wp-email-notice=not-confirmed', $this->redirected_to );
 	}
@@ -169,7 +169,7 @@ class WP_Email_Admin_Actions_Test extends WP_Email_TestCase {
 	public function test_no_delete_request_leaves_the_rows_alone() {
 		$this->log();
 
-		$this->assertFalse( $this->load() );
+		$this->assertFalse( $this->load(), 'With no delete request the handler declines to act.' );
 		$this->assertSame( 1, WP_Email_Logs::count_all() );
 	}
 
@@ -186,7 +186,7 @@ class WP_Email_Admin_Actions_Test extends WP_Email_TestCase {
 
 		$_REQUEST = $_POST;
 
-		$this->assertFalse( $this->load() );
+		$this->assertFalse( $this->load(), 'A user without the capability is refused before anything is deleted.' );
 		$this->assertSame( 1, WP_Email_Logs::count_all() );
 	}
 
