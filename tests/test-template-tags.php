@@ -94,31 +94,31 @@ class WP_Email_Template_Tags_Test extends WP_Email_TestCase {
 	}
 
 	public function test_counters() {
-		$this->assertSame( '5', get_emails( false ) );
-		$this->assertSame( '4', get_emails_success( false ) );
-		$this->assertSame( '1', get_emails_failed( false ) );
-		$this->assertSame( '4', get_email_count( $this->post_id, false ) );
-		$this->assertSame( '1', get_email_count( $this->page_id, false ) );
+		$this->assertSame( '5', get_emails( false ), 'The total is every row.' );
+		$this->assertSame( '4', get_emails_success( false ), 'The successes.' );
+		$this->assertSame( '1', get_emails_failed( false ), 'And the failures.' );
+		$this->assertSame( '4', get_email_count( $this->post_id, false ), 'A post is counted on its own.' );
+		$this->assertSame( '1', get_email_count( $this->page_id, false ), 'And so is a page, so the two are not sharing a count.' );
 	}
 
 	public function test_most_emailed_filters_by_post_type() {
 		$posts = get_mostemailed( 'post', 10, 0, false );
 
-		$this->assertStringContainsString( 'Harness Post', $posts );
-		$this->assertStringNotContainsString( 'Harness Page', $posts );
+		$this->assertStringContainsString( 'Harness Post', $posts, 'Asked for posts, the post is listed.' );
+		$this->assertStringNotContainsString( 'Harness Page', $posts, 'And the page is not.' );
 
 		$both = get_mostemailed( 'both', 10, 0, false );
 
-		$this->assertStringContainsString( 'Harness Post', $both );
-		$this->assertStringContainsString( 'Harness Page', $both );
+		$this->assertStringContainsString( 'Harness Post', $both, 'Asked for both, the post is listed.' );
+		$this->assertStringContainsString( 'Harness Page', $both, 'And the page too.' );
 	}
 
 	public function test_most_emailed_shows_the_count() {
-		$this->assertStringContainsString( '4 emails', get_mostemailed( 'post', 10, 0, false ) );
+		$this->assertStringContainsString( '4 emails', get_mostemailed( 'post', 10, 0, false ), 'The listing carries the count it ranked on.' );
 	}
 
 	public function test_most_emailed_says_not_available_when_there_is_nothing() {
-		$this->assertStringContainsString( 'N/A', get_mostemailed( 'attachment', 10, 0, false ) );
+		$this->assertStringContainsString( 'N/A', get_mostemailed( 'attachment', 10, 0, false ), 'An empty listing says so rather than rendering an empty list.' );
 	}
 
 	public function test_most_emailed_escapes_a_hostile_post_title() {
@@ -147,7 +147,7 @@ class WP_Email_Template_Tags_Test extends WP_Email_TestCase {
 
 		$output = get_mostemailed( 'post', 10, 0, false );
 
-		$this->assertStringNotContainsString( '<script>alert(1)</script>', $output );
+		$this->assertStringNotContainsString( '<script>alert(1)</script>', $output, 'A hostile post title is escaped rather than rendered.' );
 	}
 
 	public function test_most_emailed_does_not_clobber_the_global_post() {
@@ -158,7 +158,7 @@ class WP_Email_Template_Tags_Test extends WP_Email_TestCase {
 
 		get_mostemailed( 'both', 10, 0, false );
 
-		$this->assertSame( $before, $GLOBALS['post']->ID );
+		$this->assertSame( $before, $GLOBALS['post']->ID, 'The listing leaves the global post where it found it.' );
 	}
 
 	public function test_email_link_renders_the_shipped_template() {
@@ -167,9 +167,9 @@ class WP_Email_Template_Tags_Test extends WP_Email_TestCase {
 
 		$link = email_link( '', '', false );
 
-		$this->assertStringContainsString( 'wp-email-icon', $link );
-		$this->assertStringContainsString( 'Email This Post', $link );
-		$this->assertStringContainsString( 'rel="nofollow"', $link );
+		$this->assertStringContainsString( 'wp-email-icon', $link, 'The shipped template draws the icon.' );
+		$this->assertStringContainsString( 'Email This Post', $link, 'The text.' );
+		$this->assertStringContainsString( 'rel="nofollow"', $link, 'And a nofollow.' );
 	}
 
 	public function test_email_link_expands_every_token_of_a_custom_template() {
@@ -182,10 +182,10 @@ class WP_Email_Template_Tags_Test extends WP_Email_TestCase {
 
 		$link = email_link( '', '', false );
 
-		$this->assertStringContainsString( 'title="Post"', $link );
-		$this->assertStringContainsString( '<svg class="wp-email-icon"', $link );
-		$this->assertStringNotContainsString( '%EMAIL_', $link );
-		$this->assertStringNotContainsString( '%POST_TYPE%', $link );
+		$this->assertStringContainsString( 'title="Post"', $link, 'The post type token becomes the label.' );
+		$this->assertStringContainsString( '<svg class="wp-email-icon"', $link, 'The icon token becomes the icon.' );
+		$this->assertStringNotContainsString( '%EMAIL_', $link, 'And nothing of the plugin is left unexpanded.' );
+		$this->assertStringNotContainsString( '%POST_TYPE%', $link, 'Nor the post type token.' );
 	}
 
 	public function test_email_link_popup_uses_a_data_attribute_not_an_onclick() {
@@ -198,8 +198,8 @@ class WP_Email_Template_Tags_Test extends WP_Email_TestCase {
 
 		$link = email_link( '', '', false );
 
-		$this->assertStringContainsString( 'data-wp-email-popup="1"', $link );
-		$this->assertStringNotContainsString( 'onclick', $link );
+		$this->assertStringContainsString( 'data-wp-email-popup="1"', $link, 'The popup is asked for with a data attribute.' );
+		$this->assertStringNotContainsString( 'onclick', $link, 'Rather than with an inline handler.' );
 	}
 
 	/**
@@ -213,8 +213,8 @@ class WP_Email_Template_Tags_Test extends WP_Email_TestCase {
 
 		$link = email_link( 'Send this along', 'Share this page', false );
 
-		$this->assertStringNotContainsString( 'Send this along', $link );
-		$this->assertStringContainsString( 'Email This Post', $link );
+		$this->assertStringNotContainsString( 'Send this along', $link, 'The two retired parameters are accepted and then ignored.' );
+		$this->assertStringContainsString( 'Email This Post', $link, 'The stored template is what decides the text.' );
 	}
 
 	public function test_title_template_expands() {
@@ -227,12 +227,12 @@ class WP_Email_Template_Tags_Test extends WP_Email_TestCase {
 
 		$title = email_title( 'ignored' );
 
-		$this->assertStringContainsString( 'T: Harness Post', $title );
-		$this->assertStringNotContainsString( '%EMAIL_', $title );
+		$this->assertStringContainsString( 'T: Harness Post', $title, 'The title template expands.' );
+		$this->assertStringNotContainsString( '%EMAIL_', $title, 'With no token left behind.' );
 	}
 
 	public function test_title_filter_is_a_passthrough_outside_the_loop() {
-		$this->assertSame( 'untouched', email_title( 'untouched' ) );
+		$this->assertSame( 'untouched', email_title( 'untouched' ), 'Outside the loop the title filter hands its input straight back.' );
 	}
 
 	public function test_snippet_cuts_the_content_at_the_word_limit() {
@@ -245,8 +245,8 @@ class WP_Email_Template_Tags_Test extends WP_Email_TestCase {
 
 		$content = email_content();
 
-		$this->assertStringContainsString( 'One two three ...', $content );
-		$this->assertStringNotContainsString( 'ten', $content );
+		$this->assertStringContainsString( 'One two three ...', $content, 'The content is cut at the word limit.' );
+		$this->assertStringNotContainsString( 'ten', $content, 'So what is past it is not sent.' );
 	}
 
 	public function test_email_content_restores_the_shortcodes_it_neuters() {
@@ -257,15 +257,15 @@ class WP_Email_Template_Tags_Test extends WP_Email_TestCase {
 
 		// Before 3.0.0 both were left swapped for no-op callbacks, so any
 		// [email_link] later in the request silently rendered nothing.
-		$this->assertStringContainsString( '<a href=', do_shortcode( '[email_link]' ) );
-		$this->assertSame( 'keep me', do_shortcode( '[donotemail]keep me[/donotemail]' ) );
+		$this->assertStringContainsString( '<a href=', do_shortcode( '[email_link]' ), 'The link shortcode works again after the content was built.' );
+		$this->assertSame( 'keep me', do_shortcode( '[donotemail]keep me[/donotemail]' ), 'And so does the exclusion shortcode.' );
 	}
 
 	public function test_alternate_content_is_plain_text() {
 		$this->go_to( get_permalink( $this->post_id ) );
 		the_post();
 
-		$this->assertStringNotContainsString( '<p>', email_content_alt() );
+		$this->assertStringNotContainsString( '<p>', email_content_alt(), 'The alternate content is plain text.' );
 	}
 
 	public function test_endpoints_are_registered() {
@@ -284,15 +284,15 @@ class WP_Email_Template_Tags_Test extends WP_Email_TestCase {
 
 		$names = wp_list_pluck( $wp_rewrite->endpoints, 1 );
 
-		$this->assertContains( 'email', $names );
-		$this->assertContains( 'emailpopup', $names );
+		$this->assertContains( 'email', $names, 'The standalone endpoint is registered.' );
+		$this->assertContains( 'emailpopup', $names, 'And the popup endpoint.' );
 	}
 
 	public function test_query_vars_are_public() {
 		$vars = apply_filters( 'query_vars', array() );
 
-		$this->assertContains( 'wp_email', $vars );
-		$this->assertContains( 'wp_email_popup', $vars );
+		$this->assertContains( 'wp_email', $vars, 'The form var is public.' );
+		$this->assertContains( 'wp_email_popup', $vars, 'And the popup var.' );
 	}
 
 	public function test_jquery_is_not_forced_into_wp_head() {
@@ -305,6 +305,6 @@ class WP_Email_Template_Tags_Test extends WP_Email_TestCase {
 		$script = wp_scripts()->query( 'wp-email' );
 
 		$this->assertNotFalse( $script, 'The script is registered at all, or the jQuery assertion below is vacuous.' );
-		$this->assertSame( array(), $script->deps );
+		$this->assertSame( array(), $script->deps, 'The script declares no dependencies, so jQuery is not pulled in behind it.' );
 	}
 }

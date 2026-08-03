@@ -126,11 +126,11 @@ class WP_Email_Admin_Actions_Test extends WP_Email_TestCase {
 		$_REQUEST = $_POST;
 
 		$this->assertTrue( $this->load(), 'The confirmed delete request was accepted.' );
-		$this->assertSame( 0, WP_Email_Logs::count_all() );
+		$this->assertSame( 0, WP_Email_Logs::count_all(), 'A confirmed delete empties the table.' );
 
 		// Redirecting rather than re-rendering means a refresh cannot replay
 		// the deletion.
-		$this->assertStringContainsString( 'wp-email-notice=deleted', $this->redirected_to );
+		$this->assertStringContainsString( 'wp-email-notice=deleted', $this->redirected_to, 'And says so on the way back.' );
 	}
 
 	public function test_an_unconfirmed_delete_keeps_the_rows() {
@@ -144,8 +144,8 @@ class WP_Email_Admin_Actions_Test extends WP_Email_TestCase {
 		$_REQUEST = $_POST;
 
 		$this->assertTrue( $this->load(), 'The screen loaded, so the rows below survived a real request rather than none.' );
-		$this->assertSame( 1, WP_Email_Logs::count_all() );
-		$this->assertStringContainsString( 'wp-email-notice=not-confirmed', $this->redirected_to );
+		$this->assertSame( 1, WP_Email_Logs::count_all(), 'An unconfirmed delete keeps the rows.' );
+		$this->assertStringContainsString( 'wp-email-notice=not-confirmed', $this->redirected_to, 'And says why on the way back.' );
 	}
 
 	public function test_a_delete_without_a_nonce_is_refused() {
@@ -170,7 +170,7 @@ class WP_Email_Admin_Actions_Test extends WP_Email_TestCase {
 		$this->log();
 
 		$this->assertFalse( $this->load(), 'With no delete request the handler declines to act.' );
-		$this->assertSame( 1, WP_Email_Logs::count_all() );
+		$this->assertSame( 1, WP_Email_Logs::count_all(), 'With no delete asked for the rows are left alone.' );
 	}
 
 	public function test_a_user_without_the_capability_cannot_delete() {
@@ -187,7 +187,7 @@ class WP_Email_Admin_Actions_Test extends WP_Email_TestCase {
 		$_REQUEST = $_POST;
 
 		$this->assertFalse( $this->load(), 'A user without the capability is refused before anything is deleted.' );
-		$this->assertSame( 1, WP_Email_Logs::count_all() );
+		$this->assertSame( 1, WP_Email_Logs::count_all(), 'And a user without the capability deletes nothing.' );
 	}
 
 
@@ -196,8 +196,8 @@ class WP_Email_Admin_Actions_Test extends WP_Email_TestCase {
 
 		$html = $this->render_logs();
 
-		$this->assertStringContainsString( 'notice-success', $html );
-		$this->assertStringContainsString( 'All E-Mail Logs Have Been Deleted.', $html );
+		$this->assertStringContainsString( 'notice-success', $html, 'The deleted notice is a success notice.' );
+		$this->assertStringContainsString( 'All E-Mail Logs Have Been Deleted.', $html, 'Saying what went.' );
 	}
 
 	public function test_the_not_confirmed_notice_renders() {
@@ -205,8 +205,8 @@ class WP_Email_Admin_Actions_Test extends WP_Email_TestCase {
 
 		$html = $this->render_logs();
 
-		$this->assertStringContainsString( 'notice-warning', $html );
-		$this->assertStringContainsString( 'confirmation box was not ticked', $html );
+		$this->assertStringContainsString( 'notice-warning', $html, 'The not confirmed notice is a warning.' );
+		$this->assertStringContainsString( 'confirmation box was not ticked', $html, 'Saying what was missed.' );
 	}
 
 	public function test_an_unknown_notice_renders_nothing() {
@@ -214,8 +214,8 @@ class WP_Email_Admin_Actions_Test extends WP_Email_TestCase {
 
 		$html = $this->render_logs();
 
-		$this->assertStringNotContainsString( 'notice-success', $html );
-		$this->assertStringNotContainsString( 'notice-warning', $html );
+		$this->assertStringNotContainsString( 'notice-success', $html, 'An unknown notice key renders no success notice.' );
+		$this->assertStringNotContainsString( 'notice-warning', $html, 'And no warning either.' );
 	}
 
 	/**
@@ -269,7 +269,8 @@ class WP_Email_Admin_Actions_Test extends WP_Email_TestCase {
 		// the settings screen takes manage_options (4.2, 2.7).
 		$this->assertSame(
 			array( WP_Email_Settings::CAPABILITY, WP_Email_Admin::CAPABILITY ),
-			$capabilities
+			$capabilities,
+			'Each screen is registered with its own capability.'
 		);
 	}
 

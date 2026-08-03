@@ -41,7 +41,7 @@ class WP_Email_Captcha_Test extends WP_Email_TestCase {
 		$options['sending']['imageverify'] = 0;
 		WP_Email_Options::update( $options );
 
-		$this->assertSame( '', WP_Email_Captcha::issue() );
+		$this->assertSame( '', WP_Email_Captcha::issue(), 'With verification off there is no challenge to issue.' );
 	}
 
 	public function test_issue_produces_a_token_and_stores_an_answer() {
@@ -52,7 +52,7 @@ class WP_Email_Captcha_Test extends WP_Email_TestCase {
 		$token = WP_Email_Captcha::issue();
 
 		$this->assertMatchesRegularExpression( '/^[A-Za-z0-9]{32}$/', $token, 'The token is a 32-character alphanumeric string, safe to use in a file name.' );
-		$this->assertSame( WP_Email_Captcha::LENGTH, strlen( $this->answer_for( $token ) ) );
+		$this->assertSame( WP_Email_Captcha::LENGTH, strlen( $this->answer_for( $token ) ), 'The stored answer is as long as the challenge asks for.' );
 	}
 
 	public function test_each_challenge_is_independent() {
@@ -63,7 +63,7 @@ class WP_Email_Captcha_Test extends WP_Email_TestCase {
 		$first  = WP_Email_Captcha::issue();
 		$second = WP_Email_Captcha::issue();
 
-		$this->assertNotSame( $first, $second );
+		$this->assertNotSame( $first, $second, 'Each challenge is its own, so one answer cannot solve another.' );
 
 		// The session-backed version kept one site-wide answer, so opening a
 		// second form invalidated the first.
@@ -125,10 +125,10 @@ class WP_Email_Captcha_Test extends WP_Email_TestCase {
 	}
 
 	public function test_token_sanitizing_rejects_anything_off_shape() {
-		$this->assertSame( '', WP_Email_Captcha::sanitize_token( 'short' ) );
-		$this->assertSame( '', WP_Email_Captcha::sanitize_token( str_repeat( 'a', 33 ) ) );
-		$this->assertSame( '', WP_Email_Captcha::sanitize_token( str_repeat( '-', 32 ) ) );
-		$this->assertSame( str_repeat( 'a', 32 ), WP_Email_Captcha::sanitize_token( str_repeat( 'a', 32 ) ) );
+		$this->assertSame( '', WP_Email_Captcha::sanitize_token( 'short' ), 'A token too short is refused.' );
+		$this->assertSame( '', WP_Email_Captcha::sanitize_token( str_repeat( 'a', 33 ) ), 'One too long is refused.' );
+		$this->assertSame( '', WP_Email_Captcha::sanitize_token( str_repeat( '-', 32 ) ), 'One of the wrong alphabet is refused.' );
+		$this->assertSame( str_repeat( 'a', 32 ), WP_Email_Captcha::sanitize_token( str_repeat( 'a', 32 ) ), 'And one of the right shape is accepted.' );
 	}
 
 	public function test_the_plugin_no_longer_touches_php_sessions() {
@@ -159,13 +159,13 @@ class WP_Email_Captcha_Test extends WP_Email_TestCase {
 	public function test_the_image_url_targets_the_public_endpoint() {
 		$url = WP_Email_Captcha::image_url( str_repeat( 'a', 32 ) );
 
-		$this->assertStringContainsString( 'admin-ajax.php', $url );
-		$this->assertStringContainsString( 'action=wp_email_captcha', $url );
-		$this->assertStringContainsString( 'token=' . str_repeat( 'a', 32 ), $url );
+		$this->assertStringContainsString( 'admin-ajax.php', $url, 'The image URL is the public endpoint.' );
+		$this->assertStringContainsString( 'action=wp_email_captcha', $url, 'Naming the action.' );
+		$this->assertStringContainsString( 'token=' . str_repeat( 'a', 32 ), $url, 'And carrying the token.' );
 	}
 
 	public function test_the_image_url_encodes_its_token() {
-		$this->assertStringNotContainsString( '&foo=bar', WP_Email_Captcha::image_url( 'x&foo=bar' ) );
+		$this->assertStringNotContainsString( '&foo=bar', WP_Email_Captcha::image_url( 'x&foo=bar' ), 'The token is encoded, so it cannot add arguments of its own.' );
 	}
 
 	public function test_is_enabled_follows_the_setting() {
@@ -178,7 +178,7 @@ class WP_Email_Captcha_Test extends WP_Email_TestCase {
 		$options['sending']['imageverify'] = 1;
 		WP_Email_Options::update( $options );
 
-		$this->assertSame( WP_Email_Captcha::is_available(), WP_Email_Captcha::is_enabled() );
+		$this->assertSame( WP_Email_Captcha::is_available(), WP_Email_Captcha::is_enabled(), 'The setting can only turn on what the server can actually draw.' );
 	}
 
 	/**
@@ -221,7 +221,7 @@ class WP_Email_Captcha_Test extends WP_Email_TestCase {
 
 		// A reload or a caching proxy re-fetching the <img> must not invalidate
 		// the form the visitor is still filling in. Only verify() spends it.
-		$this->assertSame( $answer, $this->answer_for( $token ) );
+		$this->assertSame( $answer, $this->answer_for( $token ), 'Requesting the image does not spend the answer, so it can still be checked.' );
 		$this->assertTrue( WP_Email_Captcha::verify( $token, $answer ), 'A challenge inside its lifetime still verifies.' );
 	}
 

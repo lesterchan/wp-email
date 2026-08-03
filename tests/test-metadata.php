@@ -169,7 +169,7 @@ class WP_Email_Metadata_Test extends Plugin_Metadata_TestCase {
 	 * @return void
 	 */
 	public function test_the_gpl_block_is_the_or_later_variant() {
-		$this->assertSame( 'GPLv2 or later', $this->header_field( 'License' ) );
+		$this->assertSame( 'GPLv2 or later', $this->header_field( 'License' ), 'The header licence is the or-later variant.' );
 		$this->assertStringContainsString(
 			'either version 2 of the License, or',
 			$this->plugin_file(),
@@ -187,7 +187,8 @@ class WP_Email_Metadata_Test extends Plugin_Metadata_TestCase {
 			"### Donations\nI spent most of my free time creating, updating, maintaining and supporting"
 			. ' these plugins, if you really love my plugins and could spare me a couple of bucks,'
 			. ' I will really appreciate it. If not feel free to use it without any obligations.',
-			$this->readme()
+			$this->readme(),
+			'The readme carries the shared donations paragraph.'
 		);
 	}
 

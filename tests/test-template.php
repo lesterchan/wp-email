@@ -58,14 +58,16 @@ class WP_Email_Template_Test extends WP_Email_TestCase {
 					'NAME' => 'Bob',
 					'SITE' => 'Site',
 				)
-			)
+			),
+			'Every token in the map is substituted.'
 		);
 	}
 
 	public function test_expand_replaces_every_occurrence() {
 		$this->assertSame(
 			'Bob and Bob',
-			WP_Email_Template::expand( '%NAME% and %NAME%', array( 'NAME' => 'Bob' ) )
+			WP_Email_Template::expand( '%NAME% and %NAME%', array( 'NAME' => 'Bob' ) ),
+			'A token is replaced everywhere it appears, not only the first time.'
 		);
 	}
 
@@ -74,7 +76,8 @@ class WP_Email_Template_Test extends WP_Email_TestCase {
 		// silently swallowed.
 		$this->assertSame(
 			'%NOPE% Bob',
-			WP_Email_Template::expand( '%NOPE% %NAME%', array( 'NAME' => 'Bob' ) )
+			WP_Email_Template::expand( '%NOPE% %NAME%', array( 'NAME' => 'Bob' ) ),
+			'A token with no value is left visible rather than blanked.'
 		);
 	}
 
@@ -87,15 +90,15 @@ class WP_Email_Template_Test extends WP_Email_TestCase {
 			)
 		);
 
-		$this->assertSame( '%B%', $out );
+		$this->assertSame( '%B%', $out, 'A replacement is not rescanned, so a value that looks like a token stays a value.' );
 	}
 
 	public function test_expand_casts_non_strings() {
-		$this->assertSame( '42', WP_Email_Template::expand( '%N%', array( 'N' => 42 ) ) );
+		$this->assertSame( '42', WP_Email_Template::expand( '%N%', array( 'N' => 42 ) ), 'A value that is not a string is cast rather than dropped.' );
 	}
 
 	public function test_expand_handles_an_empty_template() {
-		$this->assertSame( '', WP_Email_Template::expand( '', array( 'A' => 'b' ) ) );
+		$this->assertSame( '', WP_Email_Template::expand( '', array( 'A' => 'b' ) ), 'An empty template expands to nothing.' );
 	}
 
 
@@ -104,10 +107,10 @@ class WP_Email_Template_Test extends WP_Email_TestCase {
 
 		$vars = WP_Email_Template::post_vars();
 
-		$this->assertSame( 'Harness Post', $vars['EMAIL_POST_TITLE'] );
-		$this->assertSame( get_bloginfo( 'name' ), $vars['EMAIL_BLOG_NAME'] );
-		$this->assertSame( get_bloginfo( 'url' ), $vars['EMAIL_BLOG_URL'] );
-		$this->assertSame( get_permalink( $this->post_id ), $vars['EMAIL_PERMALINK'] );
+		$this->assertSame( 'Harness Post', $vars['EMAIL_POST_TITLE'], 'The post title is described.' );
+		$this->assertSame( get_bloginfo( 'name' ), $vars['EMAIL_BLOG_NAME'], 'The site name.' );
+		$this->assertSame( get_bloginfo( 'url' ), $vars['EMAIL_BLOG_URL'], 'The site URL.' );
+		$this->assertSame( get_permalink( $this->post_id ), $vars['EMAIL_PERMALINK'], 'And the permalink.' );
 		$this->assertNotEmpty( $vars['EMAIL_POST_DATE'], 'The post date token resolves to something rather than an empty string.' );
 	}
 
@@ -142,7 +145,7 @@ class WP_Email_Template_Test extends WP_Email_TestCase {
 	public function test_title_uses_the_post_title() {
 		$this->loop();
 
-		$this->assertSame( 'Harness Post', WP_Email_Template::title() );
+		$this->assertSame( 'Harness Post', WP_Email_Template::title(), 'The title is the post title.' );
 	}
 
 	public function test_title_honours_the_meta_override() {
@@ -150,7 +153,7 @@ class WP_Email_Template_Test extends WP_Email_TestCase {
 
 		$this->loop();
 
-		$this->assertSame( 'Override Title', WP_Email_Template::title() );
+		$this->assertSame( 'Override Title', WP_Email_Template::title(), 'Unless the meta overrides it, which is what the override is for.' );
 	}
 
 	public function test_title_marks_a_protected_post() {
@@ -163,8 +166,8 @@ class WP_Email_Template_Test extends WP_Email_TestCase {
 
 		$this->loop( $protected );
 
-		$this->assertStringContainsString( 'Protected:', WP_Email_Template::title() );
-		$this->assertStringContainsString( 'Secret', WP_Email_Template::title() );
+		$this->assertStringContainsString( 'Protected:', WP_Email_Template::title(), 'A protected post is marked as protected.' );
+		$this->assertStringContainsString( 'Secret', WP_Email_Template::title(), 'With its title after the marker.' );
 	}
 
 	public function test_title_marks_a_private_post() {
@@ -177,13 +180,13 @@ class WP_Email_Template_Test extends WP_Email_TestCase {
 
 		$GLOBALS['post'] = get_post( $private );
 
-		$this->assertStringContainsString( 'Private:', WP_Email_Template::title() );
+		$this->assertStringContainsString( 'Private:', WP_Email_Template::title(), 'And a private post is marked as private.' );
 	}
 
 	public function test_title_without_a_post_is_empty() {
 		$GLOBALS['post'] = null;
 
-		$this->assertSame( '', WP_Email_Template::title() );
+		$this->assertSame( '', WP_Email_Template::title(), 'With no post in scope there is no title.' );
 	}
 
 
@@ -192,13 +195,13 @@ class WP_Email_Template_Test extends WP_Email_TestCase {
 
 		$this->loop();
 
-		$this->assertSame( 'Worth a read', WP_Email_Template::remark() );
+		$this->assertSame( 'Worth a read', WP_Email_Template::remark(), 'The remark is read from the post meta.' );
 	}
 
 	public function test_remark_is_empty_when_unset() {
 		$this->loop();
 
-		$this->assertSame( '', WP_Email_Template::remark() );
+		$this->assertSame( '', WP_Email_Template::remark(), 'And is empty when there is none, rather than a notice.' );
 	}
 
 
@@ -208,8 +211,8 @@ class WP_Email_Template_Test extends WP_Email_TestCase {
 
 		$this->loop();
 
-		$this->assertStringContainsString( 'Reviews', WP_Email_Template::category() );
-		$this->assertStringContainsString( '<a href=', WP_Email_Template::category() );
+		$this->assertStringContainsString( 'Reviews', WP_Email_Template::category(), 'The category list names the term.' );
+		$this->assertStringContainsString( '<a href=', WP_Email_Template::category(), 'And links to it.' );
 	}
 
 	public function test_category_accepts_a_separator() {
@@ -219,15 +222,15 @@ class WP_Email_Template_Test extends WP_Email_TestCase {
 
 		$this->loop();
 
-		$this->assertStringContainsString( ' | ', WP_Email_Template::category( ' | ' ) );
+		$this->assertStringContainsString( ' | ', WP_Email_Template::category( ' | ' ), 'The separator is what goes between them.' );
 	}
 
 
 	public function test_content_returns_the_whole_body() {
 		$this->loop();
 
-		$this->assertStringContainsString( 'One two three', WP_Email_Template::content() );
-		$this->assertStringContainsString( 'ten', WP_Email_Template::content() );
+		$this->assertStringContainsString( 'One two three', WP_Email_Template::content(), 'The content starts at the beginning.' );
+		$this->assertStringContainsString( 'ten', WP_Email_Template::content(), 'And runs to the end, because no snippet is configured.' );
 	}
 
 	public function test_content_respects_the_snippet_setting() {
@@ -239,12 +242,12 @@ class WP_Email_Template_Test extends WP_Email_TestCase {
 
 		$content = WP_Email_Template::content();
 
-		$this->assertStringContainsString( 'One two three ...', $content );
-		$this->assertStringNotContainsString( 'ten', $content );
+		$this->assertStringContainsString( 'One two three ...', $content, 'With a snippet configured the content is cut at the limit.' );
+		$this->assertStringNotContainsString( 'ten', $content, 'So what is past it is not sent.' );
 	}
 
 	public function test_content_alt_strips_markup() {
-		$this->assertStringNotContainsString( '<p>', WP_Email_Template::content_alt() );
+		$this->assertStringNotContainsString( '<p>', WP_Email_Template::content_alt(), 'The alternate content carries no markup.' );
 	}
 
 	public function test_raw_content_refuses_a_protected_post() {
@@ -259,8 +262,8 @@ class WP_Email_Template_Test extends WP_Email_TestCase {
 
 		$content = WP_Email_Template::raw_content();
 
-		$this->assertStringNotContainsString( 'Secret body text', $content );
-		$this->assertStringContainsString( 'Password Protected Post', $content );
+		$this->assertStringNotContainsString( 'Secret body text', $content, 'A protected post does not give up its body.' );
+		$this->assertStringContainsString( 'Password Protected Post', $content, 'It says it is protected instead.' );
 	}
 
 	public function test_raw_content_flattens_a_multipage_post() {
@@ -274,8 +277,8 @@ class WP_Email_Template_Test extends WP_Email_TestCase {
 
 		// The e-mail carries the whole article, never a single <!--nextpage-->
 		// slice.
-		$this->assertStringContainsString( 'Page one body.', $content );
-		$this->assertStringContainsString( 'Page two body.', $content );
+		$this->assertStringContainsString( 'Page one body.', $content, 'The first page of a multipage post is included.' );
+		$this->assertStringContainsString( 'Page two body.', $content, 'And the second, so the whole post is sent.' );
 	}
 
 	public function test_raw_content_neuters_its_own_shortcodes() {
@@ -289,9 +292,9 @@ class WP_Email_Template_Test extends WP_Email_TestCase {
 
 		// An e-mail must not carry the "email this" link that produced it, nor
 		// content the author marked as not-for-email.
-		$this->assertStringNotContainsString( 'hidden', $content );
-		$this->assertStringContainsString( 'Before', $content );
-		$this->assertStringContainsString( 'after', $content );
+		$this->assertStringNotContainsString( 'hidden', $content, 'What the exclusion shortcode wraps is not sent.' );
+		$this->assertStringContainsString( 'Before', $content, 'What comes before it is.' );
+		$this->assertStringContainsString( 'after', $content, 'And what comes after.' );
 	}
 
 	public function test_raw_content_restores_the_shortcodes() {
@@ -299,8 +302,8 @@ class WP_Email_Template_Test extends WP_Email_TestCase {
 
 		WP_Email_Template::raw_content();
 
-		$this->assertSame( 'kept', do_shortcode( '[donotemail]kept[/donotemail]' ) );
-		$this->assertStringContainsString( '<a href=', do_shortcode( '[email_link]' ) );
+		$this->assertSame( 'kept', do_shortcode( '[donotemail]kept[/donotemail]' ), 'The exclusion shortcode works again afterwards.' );
+		$this->assertStringContainsString( '<a href=', do_shortcode( '[email_link]' ), 'And so does the link shortcode.' );
 	}
 
 	public function test_raw_content_does_not_disturb_other_shortcodes() {
@@ -309,33 +312,33 @@ class WP_Email_Template_Test extends WP_Email_TestCase {
 		$this->loop();
 		WP_Email_Template::raw_content();
 
-		$this->assertSame( 'OTHER', do_shortcode( '[harness_other]' ) );
+		$this->assertSame( 'OTHER', do_shortcode( '[harness_other]' ), 'While a shortcode of somebody else is never disturbed at all.' );
 
 		remove_shortcode( 'harness_other' );
 	}
 
 
 	public function test_words_trims_to_the_word_count() {
-		$this->assertSame( 'one two three ...', WP_Email_Template::words( 'one two three four five', 3 ) );
+		$this->assertSame( 'one two three ...', WP_Email_Template::words( 'one two three four five', 3 ), 'A text past the word limit is cut and given an ellipsis.' );
 	}
 
 	public function test_words_handles_a_length_beyond_the_text() {
-		$this->assertSame( 'one two ...', WP_Email_Template::words( 'one two', 10 ) );
+		$this->assertSame( 'one two ...', WP_Email_Template::words( 'one two', 10 ), 'And one within it is returned whole.' );
 	}
 
 
 	public function test_characters_trims_to_the_character_count() {
-		$this->assertSame( 'abcde...', WP_Email_Template::characters( 'abcdefghij', 5 ) );
+		$this->assertSame( 'abcde...', WP_Email_Template::characters( 'abcdefghij', 5 ), 'A text past the character limit is cut and given an ellipsis.' );
 	}
 
 	public function test_characters_leaves_short_text_alone() {
-		$this->assertSame( 'abc', WP_Email_Template::characters( 'abc', 10 ) );
+		$this->assertSame( 'abc', WP_Email_Template::characters( 'abc', 10 ), 'And one within it is returned whole.' );
 	}
 
 	public function test_characters_encodes_markup() {
 		$out = WP_Email_Template::characters( 'Bad <script>alert(1)</script>', 100 );
 
-		$this->assertStringNotContainsString( '<script>', $out );
-		$this->assertStringContainsString( '&lt;script&gt;', $out );
+		$this->assertStringNotContainsString( '<script>', $out, 'Markup in the text is not passed through.' );
+		$this->assertStringContainsString( '&lt;script&gt;', $out, 'It is encoded instead.' );
 	}
 }

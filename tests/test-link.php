@@ -73,8 +73,8 @@ class WP_Email_Link_Test extends WP_Email_TestCase {
 		$this->set_permalink_structure( '/%postname%/' );
 		$this->loop( $this->post_id );
 
-		$this->assertStringEndsWith( '/email/', WP_Email_Link::url( 1 ) );
-		$this->assertStringEndsWith( '/emailpopup/', WP_Email_Link::url( 2 ) );
+		$this->assertStringEndsWith( '/email/', WP_Email_Link::url( 1 ), 'The standalone link is the standalone endpoint.' );
+		$this->assertStringEndsWith( '/emailpopup/', WP_Email_Link::url( 2 ), 'And the popup link is the popup endpoint.' );
 	}
 
 	public function test_url_falls_back_to_a_query_var_without_permalinks() {
@@ -83,15 +83,15 @@ class WP_Email_Link_Test extends WP_Email_TestCase {
 
 		// 'wp_email_popup' is the registered query var; an earlier version
 		// emitted 'emailpopup', which nothing ever answered to.
-		$this->assertStringContainsString( 'wp_email=1', WP_Email_Link::url( 1 ) );
-		$this->assertStringContainsString( 'wp_email_popup=1', WP_Email_Link::url( 2 ) );
+		$this->assertStringContainsString( 'wp_email=1', WP_Email_Link::url( 1 ), 'Without permalinks the standalone link falls back to the query var.' );
+		$this->assertStringContainsString( 'wp_email_popup=1', WP_Email_Link::url( 2 ), 'And so does the popup link.' );
 	}
 
 	public function test_url_without_permalinks_keeps_the_post_id() {
 		$this->set_permalink_structure( '' );
 		$this->loop( $this->post_id );
 
-		$this->assertStringContainsString( 'p=' . $this->post_id, WP_Email_Link::url( 1 ) );
+		$this->assertStringContainsString( 'p=' . $this->post_id, WP_Email_Link::url( 1 ), 'Keeping the post id, which is all the query form has to go on.' );
 	}
 
 
@@ -101,11 +101,11 @@ class WP_Email_Link_Test extends WP_Email_TestCase {
 
 		$link = WP_Email_Link::render();
 
-		$this->assertSame( 1, substr_count( $link, '<a href=' ) );
-		$this->assertStringContainsString( 'wp-email-icon', $link );
-		$this->assertStringContainsString( 'Email This Post', $link );
-		$this->assertStringContainsString( 'rel="nofollow"', $link );
-		$this->assertStringContainsString( '/email/', $link );
+		$this->assertSame( 1, substr_count( $link, '<a href=' ), 'The default template draws one link, not one per token.' );
+		$this->assertStringContainsString( 'wp-email-icon', $link, 'Carrying the icon.' );
+		$this->assertStringContainsString( 'Email This Post', $link, 'The text.' );
+		$this->assertStringContainsString( 'rel="nofollow"', $link, 'A nofollow, because there is nothing here to crawl.' );
+		$this->assertStringContainsString( '/email/', $link, 'And the endpoint it points at.' );
 	}
 
 	public function test_a_template_without_the_icon_token_is_a_text_link() {
@@ -114,8 +114,8 @@ class WP_Email_Link_Test extends WP_Email_TestCase {
 
 		$link = WP_Email_Link::render();
 
-		$this->assertStringNotContainsString( 'wp-email-icon', $link );
-		$this->assertStringContainsString( 'Email This Post', $link );
+		$this->assertStringNotContainsString( 'wp-email-icon', $link, 'A template with no icon token draws no icon.' );
+		$this->assertStringContainsString( 'Email This Post', $link, 'And is a text link.' );
 	}
 
 	public function test_a_template_holding_only_the_icon_token_is_an_icon_link() {
@@ -124,11 +124,11 @@ class WP_Email_Link_Test extends WP_Email_TestCase {
 
 		$link = WP_Email_Link::render();
 
-		$this->assertSame( 1, substr_count( $link, '<a href=' ) );
-		$this->assertStringContainsString( 'wp-email-icon', $link );
+		$this->assertSame( 1, substr_count( $link, '<a href=' ), 'A template with only the icon token still draws one link.' );
+		$this->assertStringContainsString( 'wp-email-icon', $link, 'Which is the icon.' );
 		// Icon only: the wording is the link's accessible name rather than
 		// anything printed beside it.
-		$this->assertStringContainsString( 'title="Email This Post"', $link );
+		$this->assertStringContainsString( 'title="Email This Post"', $link, 'With the text as its title, because there is no text to read.' );
 	}
 
 	public function test_the_template_expands_every_token() {
@@ -140,10 +140,10 @@ class WP_Email_Link_Test extends WP_Email_TestCase {
 
 		$link = WP_Email_Link::render();
 
-		$this->assertStringContainsString( '/email/', $link );
-		$this->assertStringContainsString( '<svg class="wp-email-icon"', $link );
-		$this->assertStringNotContainsString( '%EMAIL_', $link );
-		$this->assertStringNotContainsString( '%POST_TYPE%', $link );
+		$this->assertStringContainsString( '/email/', $link, 'The URL token becomes the link.' );
+		$this->assertStringContainsString( '<svg class="wp-email-icon"', $link, 'The icon token becomes the icon.' );
+		$this->assertStringNotContainsString( '%EMAIL_', $link, 'And nothing of the plugin is left unexpanded.' );
+		$this->assertStringNotContainsString( '%POST_TYPE%', $link, 'Nor the post type token.' );
 	}
 
 	/**
@@ -154,7 +154,7 @@ class WP_Email_Link_Test extends WP_Email_TestCase {
 		$this->set_link( array( 'html' => '<a href="%EMAIL_URL%">%EMAIL_TEXT%</a>' ) );
 		$this->loop( $this->post_id );
 
-		$this->assertStringContainsString( '%EMAIL_TEXT%', WP_Email_Link::render() );
+		$this->assertStringContainsString( '%EMAIL_TEXT%', WP_Email_Link::render(), 'A token the plugin does not know is left in the markup as written.' );
 	}
 
 
@@ -165,8 +165,8 @@ class WP_Email_Link_Test extends WP_Email_TestCase {
 		$link = WP_Email_Link::render();
 
 		// The pre-3.0.0 markup was onclick="email_popup(this.href); return false;".
-		$this->assertStringContainsString( 'data-wp-email-popup="1"', $link );
-		$this->assertStringNotContainsString( 'onclick', $link );
+		$this->assertStringContainsString( 'data-wp-email-popup="1"', $link, 'The popup is asked for with a data attribute.' );
+		$this->assertStringNotContainsString( 'onclick', $link, 'Rather than with an inline handler.' );
 	}
 
 	public function test_standalone_says_so_rather_than_dropping_the_attribute() {
@@ -178,8 +178,8 @@ class WP_Email_Link_Test extends WP_Email_TestCase {
 		// The attribute is always written and carries 1 or 0. A bare token in
 		// attribute position is stripped by wp_kses_post() on save, so the marker
 		// has to be a value if it is to survive being saved on the settings screen.
-		$this->assertStringContainsString( 'data-wp-email-popup="0"', $link );
-		$this->assertStringNotContainsString( 'data-wp-email-popup="1"', $link );
+		$this->assertStringContainsString( 'data-wp-email-popup="0"', $link, 'A standalone link says so.' );
+		$this->assertStringNotContainsString( 'data-wp-email-popup="1"', $link, 'Rather than dropping the attribute and leaving the script to guess.' );
 	}
 
 	public function test_the_shipped_template_keeps_its_popup_marker_through_the_sanitizer() {
@@ -187,7 +187,7 @@ class WP_Email_Link_Test extends WP_Email_TestCase {
 			array( 'link' => array( 'html' => WP_Email_Options::default_link_html() ) )
 		);
 
-		$this->assertStringContainsString( '%EMAIL_POPUP%', $clean['link']['html'] );
+		$this->assertStringContainsString( '%EMAIL_POPUP%', $clean['link']['html'], 'The shipped template keeps its popup marker through the sanitizer.' );
 	}
 
 	public function test_a_template_that_omits_the_popup_token_gets_no_marker() {
@@ -199,16 +199,16 @@ class WP_Email_Link_Test extends WP_Email_TestCase {
 		);
 		$this->loop( $this->post_id );
 
-		$this->assertStringNotContainsString( 'data-wp-email-popup', WP_Email_Link::render() );
+		$this->assertStringNotContainsString( 'data-wp-email-popup', WP_Email_Link::render(), 'A template that omits the token gets no marker at all.' );
 	}
 
 
 	public function test_the_post_type_token_becomes_the_singular_label() {
 		$this->loop( $this->post_id );
-		$this->assertStringContainsString( 'Email This Post', WP_Email_Link::render() );
+		$this->assertStringContainsString( 'Email This Post', WP_Email_Link::render(), 'On a post the token becomes the post label.' );
 
 		$this->loop( $this->page_id );
-		$this->assertStringContainsString( 'Email This Page', WP_Email_Link::render() );
+		$this->assertStringContainsString( 'Email This Page', WP_Email_Link::render(), 'And on a page the page label.' );
 	}
 
 	public function test_the_post_type_token_becomes_a_custom_type_own_label() {
@@ -237,8 +237,8 @@ class WP_Email_Link_Test extends WP_Email_TestCase {
 
 		$link = WP_Email_Link::render();
 
-		$this->assertStringContainsString( 'Email This Book', $link );
-		$this->assertStringNotContainsString( 'Email This Post', $link );
+		$this->assertStringContainsString( 'Email This Book', $link, 'A custom type gets its own label.' );
+		$this->assertStringNotContainsString( 'Email This Post', $link, 'Rather than the post one.' );
 
 		unregister_post_type( 'email_book' );
 	}
@@ -246,7 +246,7 @@ class WP_Email_Link_Test extends WP_Email_TestCase {
 	public function test_the_post_type_label_falls_back_when_there_is_no_post() {
 		unset( $GLOBALS['post'] );
 
-		$this->assertSame( 'Post', WP_Email_Link::post_type_label() );
+		$this->assertSame( 'Post', WP_Email_Link::post_type_label(), 'With no post in scope the label falls back rather than being empty.' );
 	}
 
 	public function test_the_post_type_label_cannot_break_out_of_the_title_attribute() {
@@ -270,9 +270,9 @@ class WP_Email_Link_Test extends WP_Email_TestCase {
 
 		$link = WP_Email_Link::render();
 
-		$this->assertStringNotContainsString( '<script>alert(1)</script>', $link );
-		$this->assertStringNotContainsString( 'title="Email This Say "hi"', $link );
-		$this->assertStringContainsString( '&quot;', $link );
+		$this->assertStringNotContainsString( '<script>alert(1)</script>', $link, 'A hostile label cannot carry a script into the link.' );
+		$this->assertStringNotContainsString( 'title="Email This Say "hi"', $link, 'Nor close the title attribute early.' );
+		$this->assertStringContainsString( '&quot;', $link, 'Its quotes are escaped for the attribute instead.' );
 
 		unset( $GLOBALS['post'] );
 		unregister_post_type( 'email_hostile' );
@@ -284,37 +284,38 @@ class WP_Email_Link_Test extends WP_Email_TestCase {
 			array( 'link' => array( 'html' => '<a href="%EMAIL_URL%">go</a><script>alert(1)</script>' ) )
 		);
 
-		$this->assertStringNotContainsString( '<script>', $clean['link']['html'] );
-		$this->assertStringContainsString( '%EMAIL_URL%', $clean['link']['html'] );
+		$this->assertStringNotContainsString( '<script>', $clean['link']['html'], 'A hostile template loses its script on save.' );
+		$this->assertStringContainsString( '%EMAIL_URL%', $clean['link']['html'], 'And keeps the tokens that make it a link.' );
 	}
 
 	public function test_the_icon_is_an_inline_svg_taking_the_theme_colour() {
 		$icon = WP_Email_Link::icon();
 
-		$this->assertStringStartsWith( '<svg class="wp-email-icon"', $icon );
-		$this->assertStringContainsString( 'stroke="currentColor"', $icon );
-		$this->assertStringNotContainsString( '<img', $icon );
-		$this->assertStringNotContainsString( 'images/', $icon );
+		$this->assertStringStartsWith( '<svg class="wp-email-icon"', $icon, 'The icon is an inline SVG.' );
+		$this->assertStringContainsString( 'stroke="currentColor"', $icon, 'Taking the colour of the text around it.' );
+		$this->assertStringNotContainsString( '<img', $icon, 'Not an image element.' );
+		$this->assertStringNotContainsString( 'images/', $icon, 'And nothing under the images directory the plugin no longer ships.' );
 	}
 
 	public function test_a_decorative_icon_is_hidden_from_assistive_technology() {
 		$icon = WP_Email_Link::icon();
 
-		$this->assertStringContainsString( 'aria-hidden="true"', $icon );
-		$this->assertStringNotContainsString( '<title>', $icon );
+		$this->assertStringContainsString( 'aria-hidden="true"', $icon, 'Beside text the icon is decorative, so it is hidden.' );
+		$this->assertStringNotContainsString( '<title>', $icon, 'And carries no name of its own to be read out twice.' );
 	}
 
 	public function test_an_icon_standing_alone_carries_the_link_text_as_its_name() {
 		$icon = WP_Email_Link::icon( 'Email This Post' );
 
-		$this->assertStringContainsString( '<title>Email This Post</title>', $icon );
-		$this->assertStringNotContainsString( 'aria-hidden', $icon );
+		$this->assertStringContainsString( '<title>Email This Post</title>', $icon, 'Standing alone it carries the link text as its name.' );
+		$this->assertStringNotContainsString( 'aria-hidden', $icon, 'And is not hidden, because it is the only thing to read.' );
 	}
 
 	public function test_the_icon_escapes_its_accessible_name() {
 		$this->assertStringContainsString(
 			'<title>Email &lt;b&gt;This&lt;/b&gt;</title>',
-			WP_Email_Link::icon( 'Email <b>This</b>' )
+			WP_Email_Link::icon( 'Email <b>This</b>' ),
+			'The accessible name is escaped, so markup in it reads as text.'
 		);
 	}
 }

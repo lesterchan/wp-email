@@ -113,9 +113,9 @@ class WP_Email_Migration_Link_Test extends WP_Email_TestCase {
 		// One template cannot say "Post" on a post and "Page" on a page, so the
 		// token is what expresses both -- and it only appears where the site had
 		// not replaced the wording.
-		$this->assertStringContainsString( '%POST_TYPE%', $html );
-		$this->assertStringContainsString( 'Email This %POST_TYPE%', $html );
-		$this->assertStringNotContainsString( '%EMAIL_TEXT%', $html );
+		$this->assertStringContainsString( '%POST_TYPE%', $html, 'The stock pair of texts collapses onto the post type token.' );
+		$this->assertStringContainsString( 'Email This %POST_TYPE%', $html, 'Reading as the wording they shared.' );
+		$this->assertStringNotContainsString( '%EMAIL_TEXT%', $html, 'And the old text token is gone.' );
 	}
 
 	public function test_an_icon_only_site_stays_icon_only() {
@@ -125,11 +125,11 @@ class WP_Email_Migration_Link_Test extends WP_Email_TestCase {
 
 		$html = $this->migrated_html();
 
-		$this->assertStringContainsString( '%EMAIL_ICON%', $html );
-		$this->assertStringNotContainsString( '>Email This %POST_TYPE%<', $html );
+		$this->assertStringContainsString( '%EMAIL_ICON%', $html, 'An icon only site keeps its icon.' );
+		$this->assertStringNotContainsString( '>Email This %POST_TYPE%<', $html, 'With no text beside it.' );
 		// The wording survives as the link's accessible name, which is where the
 		// icon-only style put it.
-		$this->assertStringContainsString( 'title="Email This %POST_TYPE%"', $html );
+		$this->assertStringContainsString( 'title="Email This %POST_TYPE%"', $html, 'The text becomes the title instead.' );
 	}
 
 	public function test_a_text_only_site_gets_no_icon() {
@@ -139,8 +139,8 @@ class WP_Email_Migration_Link_Test extends WP_Email_TestCase {
 
 		$html = $this->migrated_html();
 
-		$this->assertStringNotContainsString( '%EMAIL_ICON%', $html );
-		$this->assertStringContainsString( '>Email This %POST_TYPE%</a>', $html );
+		$this->assertStringNotContainsString( '%EMAIL_ICON%', $html, 'A text only site gets no icon.' );
+		$this->assertStringContainsString( '>Email This %POST_TYPE%</a>', $html, 'Only the text it had.' );
 	}
 
 	public function test_an_icon_with_text_site_keeps_both() {
@@ -150,8 +150,8 @@ class WP_Email_Migration_Link_Test extends WP_Email_TestCase {
 
 		$html = $this->migrated_html();
 
-		$this->assertStringContainsString( '%EMAIL_ICON%', $html );
-		$this->assertStringContainsString( 'Email This %POST_TYPE%</a>', $html );
+		$this->assertStringContainsString( '%EMAIL_ICON%', $html, 'An icon with text site keeps the icon.' );
+		$this->assertStringContainsString( 'Email This %POST_TYPE%</a>', $html, 'And the text.' );
 	}
 
 	public function test_a_site_already_writing_its_own_markup_is_left_alone() {
@@ -166,7 +166,7 @@ class WP_Email_Migration_Link_Test extends WP_Email_TestCase {
 
 		WP_Email_Options::maybe_upgrade();
 
-		$this->assertSame( $mine, $this->migrated_html() );
+		$this->assertSame( $mine, $this->migrated_html(), 'A site already writing its own markup is left exactly as it was.' );
 	}
 
 	/**
@@ -186,9 +186,9 @@ class WP_Email_Migration_Link_Test extends WP_Email_TestCase {
 
 		$html = $this->migrated_html();
 
-		$this->assertStringContainsString( 'Send this article on', $html );
-		$this->assertStringNotContainsString( '%POST_TYPE%', $html );
-		$this->assertStringNotContainsString( 'Send this page on', $html );
+		$this->assertStringContainsString( 'Send this article on', $html, 'Texts that differ keep the post wording verbatim.' );
+		$this->assertStringNotContainsString( '%POST_TYPE%', $html, 'Rather than being collapsed onto a token that would change one of them.' );
+		$this->assertStringNotContainsString( 'Send this page on', $html, 'And the page wording is not what survives.' );
 	}
 
 	public function test_customised_texts_that_agree_are_carried_across_once() {
@@ -203,8 +203,8 @@ class WP_Email_Migration_Link_Test extends WP_Email_TestCase {
 
 		$html = $this->migrated_html();
 
-		$this->assertSame( 1, substr_count( $html, 'Mail this on</a>' ) );
-		$this->assertStringNotContainsString( '%POST_TYPE%', $html );
+		$this->assertSame( 1, substr_count( $html, 'Mail this on</a>' ), 'Texts that agree are carried across once, not twice.' );
+		$this->assertStringNotContainsString( '%POST_TYPE%', $html, 'And with no token, because there is only one wording.' );
 	}
 
 	public function test_a_customised_post_text_survives_a_page_text_left_at_stock() {
@@ -212,7 +212,7 @@ class WP_Email_Migration_Link_Test extends WP_Email_TestCase {
 
 		WP_Email_Options::maybe_upgrade();
 
-		$this->assertStringContainsString( 'Mail this on', $this->migrated_html() );
+		$this->assertStringContainsString( 'Mail this on', $this->migrated_html(), 'A customised post text survives a page text left at stock.' );
 	}
 
 	public function test_markup_in_a_link_text_is_escaped_into_the_template() {
@@ -229,9 +229,9 @@ class WP_Email_Migration_Link_Test extends WP_Email_TestCase {
 
 		// The old renderer ran the text through esc_html() at the sink. The
 		// template is echoed as written, so the escaping moves into it.
-		$this->assertStringNotContainsString( '<b>now</b>', $html );
-		$this->assertStringContainsString( '&lt;b&gt;now&lt;/b&gt;', $html );
-		$this->assertStringNotContainsString( 'title="Say "hi"', $html );
+		$this->assertStringNotContainsString( '<b>now</b>', $html, 'Markup in a link text does not become markup in the template.' );
+		$this->assertStringContainsString( '&lt;b&gt;now&lt;/b&gt;', $html, 'It is escaped into it.' );
+		$this->assertStringNotContainsString( 'title="Say "hi"', $html, 'And a quote cannot close the title attribute early.' );
 	}
 
 
@@ -246,7 +246,7 @@ class WP_Email_Migration_Link_Test extends WP_Email_TestCase {
 			$this->assertArrayNotHasKey( $key, $stored['link'], "{$key} should have been removed" );
 		}
 
-		$this->assertSame( array( 'type', 'html' ), array_keys( $stored['link'] ) );
+		$this->assertSame( array( 'type', 'html' ), array_keys( $stored['link'] ), 'The three retired keys are gone, leaving these two.' );
 	}
 
 	public function test_the_settings_the_migration_is_not_about_are_untouched() {
@@ -258,7 +258,7 @@ class WP_Email_Migration_Link_Test extends WP_Email_TestCase {
 
 		$after = get_option( WP_Email_Options::OPTION );
 
-		$this->assertSame( 2, $after['link']['type'] );
+		$this->assertSame( 2, $after['link']['type'], 'A setting the migration is not about is left alone.' );
 
 		foreach ( array( 'fields', 'sending', 'templates', 'stats_display', 'stats_most_limit' ) as $group ) {
 			$this->assertSame( $before[ $group ], $after[ $group ], "{$group} is not what this migration touches." );
@@ -279,9 +279,9 @@ class WP_Email_Migration_Link_Test extends WP_Email_TestCase {
 
 		$html = $this->migrated_html();
 
-		$this->assertStringContainsString( '%EMAIL_ICON%', $html );
-		$this->assertStringContainsString( 'title="Mail this on"', $html );
-		$this->assertStringNotContainsString( '%EMAIL_TEXT%', $html );
+		$this->assertStringContainsString( '%EMAIL_ICON%', $html, 'A 2.x install has its template built from the flat row.' );
+		$this->assertStringContainsString( 'title="Mail this on"', $html, 'Carrying the text it had.' );
+		$this->assertStringNotContainsString( '%EMAIL_TEXT%', $html, 'And no leftover text token.' );
 		$this->assertArrayNotHasKey( 'style', get_option( WP_Email_Options::OPTION )['link'], 'The retired link style key is not carried into the new row.' );
 	}
 
@@ -300,7 +300,8 @@ class WP_Email_Migration_Link_Test extends WP_Email_TestCase {
 		// instead of finding an empty link.
 		$this->assertSame(
 			'<a class="from-2x" href="%EMAIL_URL%">%EMAIL_TEXT%</a>',
-			$this->migrated_html()
+			$this->migrated_html(),
+			'A 2.x install on the custom style keeps its own markup.'
 		);
 	}
 
@@ -310,8 +311,8 @@ class WP_Email_Migration_Link_Test extends WP_Email_TestCase {
 
 		WP_Email::get_instance()->activate();
 
-		$this->assertStringNotContainsString( '%EMAIL_ICON%', $this->migrated_html() );
-		$this->assertSame( WP_EMAIL_DB_VERSION, WP_Email_Options::markers()['db'] );
+		$this->assertStringNotContainsString( '%EMAIL_ICON%', $this->migrated_html(), 'The activation hook runs the migration.' );
+		$this->assertSame( WP_EMAIL_DB_VERSION, WP_Email_Options::markers()['db'], 'And stamps the schema version, so it does not run again.' );
 	}
 
 	/**
@@ -324,8 +325,8 @@ class WP_Email_Migration_Link_Test extends WP_Email_TestCase {
 
 		WP_Email::get_instance()->maybe_upgrade();
 
-		$this->assertStringNotContainsString( '%EMAIL_ICON%', $this->migrated_html() );
-		$this->assertSame( WP_EMAIL_DB_VERSION, WP_Email_Options::markers()['db'] );
+		$this->assertStringNotContainsString( '%EMAIL_ICON%', $this->migrated_html(), 'The admin upgrade path runs it too.' );
+		$this->assertSame( WP_EMAIL_DB_VERSION, WP_Email_Options::markers()['db'], 'And stamps the schema version.' );
 	}
 
 	public function test_the_migration_is_idempotent() {
@@ -356,7 +357,7 @@ class WP_Email_Migration_Link_Test extends WP_Email_TestCase {
 
 		WP_Email_Options::maybe_upgrade();
 
-		$this->assertSame( $once, $this->migrated_html() );
+		$this->assertSame( $once, $this->migrated_html(), 'Running the migration twice leaves the same template.' );
 	}
 
 	public function test_a_fresh_install_is_left_on_the_shipped_template() {
@@ -366,7 +367,7 @@ class WP_Email_Migration_Link_Test extends WP_Email_TestCase {
 
 		WP_Email::get_instance()->activate();
 
-		$this->assertSame( WP_Email_Options::default_link_html(), $this->migrated_html() );
+		$this->assertSame( WP_Email_Options::default_link_html(), $this->migrated_html(), 'A fresh install is left on the shipped template rather than migrated onto a copy of it.' );
 	}
 
 
@@ -389,8 +390,8 @@ class WP_Email_Migration_Link_Test extends WP_Email_TestCase {
 
 		$link = WP_Email_Link::render();
 
-		$this->assertStringContainsString( '<svg class="wp-email-icon"', $link );
-		$this->assertStringContainsString( 'title="Mail this on"', $link );
-		$this->assertStringNotContainsString( '%', $link );
+		$this->assertStringContainsString( '<svg class="wp-email-icon"', $link, 'A migrated template still renders the icon.' );
+		$this->assertStringContainsString( 'title="Mail this on"', $link, 'And the title it carried across.' );
+		$this->assertStringNotContainsString( '%', $link, 'With no token left unexpanded.' );
 	}
 }

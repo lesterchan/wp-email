@@ -28,7 +28,7 @@ class WP_Email_Uninstall_Test extends WP_Email_TestCase {
 	}
 
 	public function test_it_refuses_to_run_outside_an_uninstall() {
-		$this->assertStringContainsString( 'WP_UNINSTALL_PLUGIN', $this->source() );
+		$this->assertStringContainsString( 'WP_UNINSTALL_PLUGIN', $this->source(), 'The uninstaller refuses to run outside an uninstall.' );
 	}
 
 	public function test_it_lifts_the_site_query_row_cap() {
@@ -41,7 +41,7 @@ class WP_Email_Uninstall_Test extends WP_Email_TestCase {
 	public function test_it_does_not_call_the_deprecated_wp_get_sites() {
 		// Deprecated in WordPress 4.6 and capped at 100 sites, so a larger network
 		// uninstalls in part and still reports success.
-		$this->assertStringNotContainsString( 'wp_get_sites', $this->source() );
+		$this->assertStringNotContainsString( 'wp_get_sites', $this->source(), 'It does not call the function core removed.' );
 	}
 
 	public function test_it_restores_the_blog_inside_the_loop() {
@@ -55,7 +55,7 @@ class WP_Email_Uninstall_Test extends WP_Email_TestCase {
 
 		// switch_to_blog() pushes onto a stack, so restoring once after the
 		// loop leaves it unwound by exactly one.
-		$this->assertStringContainsString( 'restore_current_blog', $loop_body );
+		$this->assertStringContainsString( 'restore_current_blog', $loop_body, 'It restores the site it switched away from, inside the loop.' );
 	}
 
 	public function test_it_only_fetches_the_ids_it_needs() {
@@ -68,16 +68,16 @@ class WP_Email_Uninstall_Test extends WP_Email_TestCase {
 		// The old version called the drop inside the option loop, so it ran
 		// eighteen times per site. The statement itself lives on
 		// WP_Email_Logs::drop_table() now, so uninstall.php names it once.
-		$this->assertSame( 2, substr_count( $source, 'WP_Email_Logs::drop_table()' ) );
+		$this->assertSame( 2, substr_count( $source, 'WP_Email_Logs::drop_table()' ), 'The table is dropped once per site, not once per option row.' );
 	}
 
 	public function test_it_clears_the_consolidated_option_and_the_legacy_rows() {
 		$source = $this->source();
 
-		$this->assertStringContainsString( "'wp_email_options'", $source );
-		$this->assertStringContainsString( "'wp_email_version'", $source );
-		$this->assertStringContainsString( "'email_options'", $source );
-		$this->assertStringContainsString( "'email_db_version'", $source );
+		$this->assertStringContainsString( "'wp_email_options'", $source, 'The consolidated row is cleared.' );
+		$this->assertStringContainsString( "'wp_email_version'", $source, 'The version row.' );
+		$this->assertStringContainsString( "'email_options'", $source, 'The legacy options row.' );
+		$this->assertStringContainsString( "'email_db_version'", $source, 'And the legacy schema row.' );
 
 		// An install that never reached the migration still has the originals.
 		foreach ( WP_Email_Options::LEGACY_ROWS as $name ) {
@@ -86,7 +86,7 @@ class WP_Email_Uninstall_Test extends WP_Email_TestCase {
 	}
 
 	public function test_it_takes_the_capability_back() {
-		$this->assertStringContainsString( 'remove_cap', $this->source() );
+		$this->assertStringContainsString( 'remove_cap', $this->source(), 'The capability is taken back.' );
 	}
 
 	/**
@@ -108,6 +108,6 @@ class WP_Email_Uninstall_Test extends WP_Email_TestCase {
 			}
 		}
 
-		$this->assertSame( array( 'helper-testcase.php' ), $requiring );
+		$this->assertSame( array( 'helper-testcase.php' ), $requiring, 'Exactly this one file requires the uninstaller, so it cannot run by being loaded.' );
 	}
 }

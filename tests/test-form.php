@@ -128,12 +128,12 @@ class WP_Email_Form_Test extends WP_Email_Ajax_TestCase {
 
 		$form = WP_Email_Form::render( '', false );
 
-		$this->assertStringContainsString( 'id="wp-email-content"', $form );
-		$this->assertStringContainsString( 'name="friendemail"', $form );
-		$this->assertStringContainsString( 'name="yourname"', $form );
-		$this->assertStringContainsString( 'id="wp-email-submit"', $form );
-		$this->assertStringContainsString( 'id="wp-email-loading"', $form );
-		$this->assertStringContainsString( WP_Email_Form::NONCE_NAME, $form );
+		$this->assertStringContainsString( 'id="wp-email-content"', $form, 'The form renders the content block.' );
+		$this->assertStringContainsString( 'name="friendemail"', $form, 'The recipient field.' );
+		$this->assertStringContainsString( 'name="yourname"', $form, 'The sender name field.' );
+		$this->assertStringContainsString( 'id="wp-email-submit"', $form, 'The submit button.' );
+		$this->assertStringContainsString( 'id="wp-email-loading"', $form, 'The loading indicator.' );
+		$this->assertStringContainsString( WP_Email_Form::NONCE_NAME, $form, 'And a nonce.' );
 	}
 
 	public function test_form_submit_button_has_no_inline_handler() {
@@ -142,8 +142,8 @@ class WP_Email_Form_Test extends WP_Email_Ajax_TestCase {
 
 		$form = WP_Email_Form::render( '', false );
 
-		$this->assertStringNotContainsString( 'onclick', $form );
-		$this->assertStringNotContainsString( 'onkeypress', $form );
+		$this->assertStringNotContainsString( 'onclick', $form, 'The submit button carries no click handler.' );
+		$this->assertStringNotContainsString( 'onkeypress', $form, 'And no key handler.' );
 	}
 
 	public function test_disabling_a_field_removes_it_from_the_form() {
@@ -154,7 +154,7 @@ class WP_Email_Form_Test extends WP_Email_Ajax_TestCase {
 		$options['fields']['yourremarks'] = 0;
 		WP_Email_Options::update( $options );
 
-		$this->assertStringNotContainsString( 'name="yourremarks"', WP_Email_Form::render( '', false ) );
+		$this->assertStringNotContainsString( 'name="yourremarks"', WP_Email_Form::render( '', false ), 'A disabled field is not rendered at all.' );
 	}
 
 	public function test_form_action_points_at_a_registered_endpoint() {
@@ -169,18 +169,18 @@ class WP_Email_Form_Test extends WP_Email_Ajax_TestCase {
 		$header = WP_Email_Form::header( $page_id, false );
 
 		// 'emailpage/' was never registered as an endpoint.
-		$this->assertStringNotContainsString( 'emailpage/', $header );
-		$this->assertStringContainsString( 'email/', $header );
+		$this->assertStringNotContainsString( 'emailpage/', $header, 'The action is not an endpoint that was never registered.' );
+		$this->assertStringContainsString( 'email/', $header, 'It is the standalone endpoint.' );
 
 		$popup = WP_Email_Form::header( $page_id, true );
 
-		$this->assertStringNotContainsString( 'emailpopuppage/', $popup );
-		$this->assertStringContainsString( 'emailpopup/', $popup );
+		$this->assertStringNotContainsString( 'emailpopuppage/', $popup, 'The popup action is not one either.' );
+		$this->assertStringContainsString( 'emailpopup/', $popup, 'It is the popup endpoint.' );
 	}
 
 
 	public function test_remote_addr_is_used_by_default() {
-		$this->assertSame( '198.51.100.200', WP_Email_Form::ip_address() );
+		$this->assertSame( '198.51.100.200', WP_Email_Form::ip_address(), 'The remote address is used as it stands.' );
 	}
 
 	public function test_forwarded_for_is_ignored_unless_opted_in() {
@@ -188,7 +188,7 @@ class WP_Email_Form_Test extends WP_Email_Ajax_TestCase {
 
 		// Trusting this by default let anyone bypass the flood interval by
 		// sending a different value on each request.
-		$this->assertSame( '198.51.100.200', WP_Email_Form::ip_address() );
+		$this->assertSame( '198.51.100.200', WP_Email_Form::ip_address(), 'A forwarded header is ignored until the site opts in.' );
 	}
 
 	public function test_a_configured_header_is_honoured() {
@@ -198,7 +198,7 @@ class WP_Email_Form_Test extends WP_Email_Ajax_TestCase {
 		$options['sending']['ip_header'] = 'HTTP_X_REAL_IP';
 		WP_Email_Options::update( $options );
 
-		$this->assertSame( '10.9.9.9', WP_Email_Form::ip_address() );
+		$this->assertSame( '10.9.9.9', WP_Email_Form::ip_address(), 'A configured header is read.' );
 
 		unset( $_SERVER['HTTP_X_REAL_IP'] );
 	}
@@ -210,7 +210,7 @@ class WP_Email_Form_Test extends WP_Email_Ajax_TestCase {
 		$options['sending']['ip_header'] = 'HTTP_X_REAL_IP';
 		WP_Email_Options::update( $options );
 
-		$this->assertSame( '198.51.100.200', WP_Email_Form::ip_address() );
+		$this->assertSame( '198.51.100.200', WP_Email_Form::ip_address(), 'And a junk value in it falls back to the remote address.' );
 
 		unset( $_SERVER['HTTP_X_REAL_IP'] );
 	}
@@ -218,7 +218,7 @@ class WP_Email_Form_Test extends WP_Email_Ajax_TestCase {
 	public function test_the_ip_filter_wins() {
 		add_filter( 'wp_email_ipaddress', static fn() => '1.2.3.4' );
 
-		$this->assertSame( '1.2.3.4', WP_Email_Form::ip_address() );
+		$this->assertSame( '1.2.3.4', WP_Email_Form::ip_address(), 'The filter wins over everything else.' );
 	}
 
 
@@ -292,22 +292,22 @@ class WP_Email_Form_Test extends WP_Email_Ajax_TestCase {
 			)
 		);
 
-		$this->assertStringContainsString( 'OK: Harness Post', $response );
-		$this->assertStringNotContainsString( '%EMAIL_', $response );
+		$this->assertStringContainsString( 'OK: Harness Post', $response, 'A successful send is confirmed.' );
+		$this->assertStringNotContainsString( '%EMAIL_', $response, 'With every token expanded.' );
 
 		$this->assertIsArray( $this->mail, 'A valid submission sends mail.' );
-		$this->assertSame( 'S: Sender Name -> Harness Post', $this->mail['subject'] );
-		$this->assertStringContainsString( 'Worth a read', $this->mail['message'] );
-		$this->assertStringContainsString( 'One two three', $this->mail['message'] );
-		$this->assertStringNotContainsString( '%EMAIL_', $this->mail['message'] );
+		$this->assertSame( 'S: Sender Name -> Harness Post', $this->mail['subject'], 'The subject is built from its template.' );
+		$this->assertStringContainsString( 'Worth a read', $this->mail['message'], 'The body carries the remark.' );
+		$this->assertStringContainsString( 'One two three', $this->mail['message'], 'And the post content.' );
+		$this->assertStringNotContainsString( '%EMAIL_', $this->mail['message'], 'With every token expanded.' );
 
 		$to = is_array( $this->mail['to'] ) ? implode( ', ', $this->mail['to'] ) : $this->mail['to'];
-		$this->assertStringContainsString( 'one@example.com', $to );
-		$this->assertStringContainsString( 'two@example.com', $to );
+		$this->assertStringContainsString( 'one@example.com', $to, 'The first recipient is addressed.' );
+		$this->assertStringContainsString( 'two@example.com', $to, 'And the second.' );
 
 		$headers = implode( "\n", (array) $this->mail['headers'] );
-		$this->assertStringContainsString( 'sender@example.com', $headers );
-		$this->assertStringContainsString( 'text/html', $headers );
+		$this->assertStringContainsString( 'sender@example.com', $headers, 'The sender is on the headers.' );
+		$this->assertStringContainsString( 'text/html', $headers, 'And the content type says HTML.' );
 	}
 
 	public function test_a_successful_send_logs_one_row_per_recipient() {
@@ -321,7 +321,7 @@ class WP_Email_Form_Test extends WP_Email_Ajax_TestCase {
 			)
 		);
 
-		$this->assertSame( 2, WP_Email_Logs::count_all() );
+		$this->assertSame( 2, WP_Email_Logs::count_all(), 'Two recipients are two log rows.' );
 
 		$rows = WP_Email_Logs::query(
 			array(
@@ -330,11 +330,11 @@ class WP_Email_Form_Test extends WP_Email_Ajax_TestCase {
 			)
 		);
 
-		$this->assertSame( 'Sender Name', $rows[0]->email_yourname );
-		$this->assertSame( 'Friend One', $rows[0]->email_friendname );
-		$this->assertSame( 'Friend Two', $rows[1]->email_friendname );
-		$this->assertSame( WP_Email_Logs::STATUS_SUCCESS, $rows[0]->email_status );
-		$this->assertSame( (string) $this->post_id, (string) $rows[0]->email_postid );
+		$this->assertSame( 'Sender Name', $rows[0]->email_yourname, 'Each carrying the sender.' );
+		$this->assertSame( 'Friend One', $rows[0]->email_friendname, 'The first recipient.' );
+		$this->assertSame( 'Friend Two', $rows[1]->email_friendname, 'And the second, so the two rows are not copies of one.' );
+		$this->assertSame( WP_Email_Logs::STATUS_SUCCESS, $rows[0]->email_status, 'Recorded as a success.' );
+		$this->assertSame( (string) $this->post_id, (string) $rows[0]->email_postid, 'Against the post it was sent for.' );
 	}
 
 	public function test_logged_values_are_not_double_escaped() {
@@ -356,8 +356,8 @@ class WP_Email_Form_Test extends WP_Email_Ajax_TestCase {
 
 		// addslashes() before $wpdb->insert() used to store a second layer of
 		// backslashes that the logs screen then had to strip back out.
-		$this->assertStringContainsString( "It's good", $rows[0]->email_yourremarks );
-		$this->assertStringNotContainsString( '\\', $rows[0]->email_yourremarks );
+		$this->assertStringContainsString( "It's good", $rows[0]->email_yourremarks, 'The logged remark reads as it was typed.' );
+		$this->assertStringNotContainsString( '\\', $rows[0]->email_yourremarks, 'Without the slashes WordPress added on the way in.' );
 	}
 
 	public function test_validation_failure_sends_nothing_and_logs_nothing() {
@@ -371,14 +371,14 @@ class WP_Email_Form_Test extends WP_Email_Ajax_TestCase {
 			)
 		);
 
-		$this->assertStringContainsString( 'ERR:', $response );
-		$this->assertStringContainsString( 'Your Name is invalid', $response );
-		$this->assertStringContainsString( 'Your Email is invalid', $response );
-		$this->assertStringContainsString( 'Your Remarks is invalid', $response );
-		$this->assertStringContainsString( 'Friend Email is invalid', $response );
+		$this->assertStringContainsString( 'ERR:', $response, 'A validation failure is reported as an error.' );
+		$this->assertStringContainsString( 'Your Name is invalid', $response, 'Naming the sender name.' );
+		$this->assertStringContainsString( 'Your Email is invalid', $response, 'The sender address.' );
+		$this->assertStringContainsString( 'Your Remarks is invalid', $response, 'The remark.' );
+		$this->assertStringContainsString( 'Friend Email is invalid', $response, 'And the recipient, so every bad field is listed rather than only the first.' );
 
 		$this->assertNull( $this->mail, 'A validation failure sends nothing.' );
-		$this->assertSame( 0, WP_Email_Logs::count_all() );
+		$this->assertSame( 0, WP_Email_Logs::count_all(), 'And nothing is logged.' );
 	}
 
 	public function test_the_first_error_is_not_truncated() {
@@ -394,8 +394,8 @@ class WP_Email_Form_Test extends WP_Email_Ajax_TestCase {
 		// substr( $error, 21 ) assumed a 21-character separator prefix, but
 		// '<br /><strong>&raquo;</strong> ' is 31, so it ate nine characters of
 		// the first message and left a stray closing tag in front of it.
-		$this->assertStringNotContainsString( 'ERR: </strong>', $response );
-		$this->assertStringContainsString( 'Your Name is invalid', $response );
+		$this->assertStringNotContainsString( 'ERR: </strong>', $response, 'The first error is not swallowed by the prefix in front of it.' );
+		$this->assertStringContainsString( 'Your Name is invalid', $response, 'It is there in full.' );
 	}
 
 	public function test_a_failed_submission_comes_back_with_the_typed_values() {
@@ -410,8 +410,8 @@ class WP_Email_Form_Test extends WP_Email_Ajax_TestCase {
 
 		// email_form() used to assign the field-values filter result
 		// straight over its $error_field parameter, discarding the lot.
-		$this->assertStringContainsString( 'Bad #Name$', $response );
-		$this->assertStringContainsString( 'value="nope"', $response );
+		$this->assertStringContainsString( 'Bad #Name$', $response, 'A failed submission comes back with the name that was typed.' );
+		$this->assertStringContainsString( 'value="nope"', $response, 'And the other fields, so nothing has to be typed twice.' );
 	}
 
 	public function test_a_bad_nonce_stops_the_handler() {
@@ -435,9 +435,9 @@ class WP_Email_Form_Test extends WP_Email_Ajax_TestCase {
 			$unused = $e;
 		}
 
-		$this->assertStringContainsString( 'Failed To Verify Referrer', $this->_last_response );
+		$this->assertStringContainsString( 'Failed To Verify Referrer', $this->_last_response, 'A bad nonce stops the handler with a reason.' );
 		$this->assertNull( $this->mail, 'A bad nonce stops the handler before anything is sent.' );
-		$this->assertSame( 0, WP_Email_Logs::count_all() );
+		$this->assertSame( 0, WP_Email_Logs::count_all(), 'And nothing is logged.' );
 	}
 
 	public function test_recipients_beyond_the_maximum_are_rejected() {
@@ -454,7 +454,7 @@ class WP_Email_Form_Test extends WP_Email_Ajax_TestCase {
 			)
 		);
 
-		$this->assertStringContainsString( 'Maximum', $response );
+		$this->assertStringContainsString( 'Maximum', $response, 'Recipients past the cap are refused with the reason.' );
 		$this->assertNull( $this->mail, 'Recipients beyond the maximum are refused rather than truncated.' );
 	}
 
@@ -471,9 +471,9 @@ class WP_Email_Form_Test extends WP_Email_Ajax_TestCase {
 			)
 		);
 
-		$this->assertStringContainsString( 'Invalid post', $response );
+		$this->assertStringContainsString( 'Invalid post', $response, 'A send for an unpublished post is refused.' );
 		$this->assertNull( $this->mail, 'A send for an unpublished post is refused.' );
-		$this->assertSame( 0, WP_Email_Logs::count_all() );
+		$this->assertSame( 0, WP_Email_Logs::count_all(), 'And nothing is logged.' );
 	}
 
 	public function test_a_plain_text_send_uses_the_alternate_body() {
@@ -492,11 +492,11 @@ class WP_Email_Form_Test extends WP_Email_Ajax_TestCase {
 		);
 
 		$this->assertIsArray( $this->mail, 'A plain text send goes out.' );
-		$this->assertStringContainsString( 'ALT:', $this->mail['message'] );
-		$this->assertStringNotContainsString( '<p>', $this->mail['message'] );
+		$this->assertStringContainsString( 'ALT:', $this->mail['message'], 'A plain text send uses the alternate body.' );
+		$this->assertStringNotContainsString( '<p>', $this->mail['message'], 'Which carries no markup.' );
 
 		$headers = implode( "\n", (array) $this->mail['headers'] );
-		$this->assertStringContainsString( 'text/plain', $headers );
+		$this->assertStringContainsString( 'text/plain', $headers, 'And the content type says so.' );
 	}
 
 	public function test_an_html_send_on_an_rtl_site_is_wrapped() {
@@ -516,7 +516,7 @@ class WP_Email_Form_Test extends WP_Email_Ajax_TestCase {
 		$GLOBALS['wp_locale']->text_direction = 'ltr';
 
 		$this->assertIsArray( $this->mail, 'An HTML send on an RTL site goes out.' );
-		$this->assertStringContainsString( 'direction: rtl', $this->mail['message'] );
+		$this->assertStringContainsString( 'direction: rtl', $this->mail['message'], 'An HTML send on an RTL site is wrapped, so the mail reads right to left.' );
 	}
 
 	public function test_a_plain_text_send_is_never_wrapped() {
@@ -539,7 +539,7 @@ class WP_Email_Form_Test extends WP_Email_Ajax_TestCase {
 
 		$GLOBALS['wp_locale']->text_direction = 'ltr';
 
-		$this->assertStringNotContainsString( 'direction: rtl', $this->mail['message'] );
+		$this->assertStringNotContainsString( 'direction: rtl', $this->mail['message'], 'While a plain text send is never wrapped, because there is nothing to wrap it in.' );
 	}
 
 	public function test_a_refused_delivery_is_logged_as_failed() {
@@ -559,10 +559,10 @@ class WP_Email_Form_Test extends WP_Email_Ajax_TestCase {
 			)
 		);
 
-		$this->assertStringContainsString( 'FAILED: Friend One', $response );
+		$this->assertStringContainsString( 'FAILED: Friend One', $response, 'A refused delivery is reported as a failure.' );
 
 		$rows = WP_Email_Logs::query();
-		$this->assertSame( WP_Email_Logs::STATUS_FAILED, $rows[0]->email_status );
+		$this->assertSame( WP_Email_Logs::STATUS_FAILED, $rows[0]->email_status, 'And logged as one.' );
 	}
 
 	public function test_a_send_without_friend_names_still_addresses_everyone() {
@@ -582,9 +582,9 @@ class WP_Email_Form_Test extends WP_Email_Ajax_TestCase {
 
 		$to = is_array( $this->mail['to'] ) ? implode( ', ', $this->mail['to'] ) : $this->mail['to'];
 
-		$this->assertStringContainsString( 'one@example.com', $to );
-		$this->assertStringContainsString( 'two@example.com', $to );
-		$this->assertSame( 2, WP_Email_Logs::count_all() );
+		$this->assertStringContainsString( 'one@example.com', $to, 'The first recipient is addressed even with no name for them.' );
+		$this->assertStringContainsString( 'two@example.com', $to, 'And the second.' );
+		$this->assertSame( 2, WP_Email_Logs::count_all(), 'And both are logged.' );
 	}
 
 	public function test_an_empty_remark_becomes_not_applicable() {
@@ -601,7 +601,7 @@ class WP_Email_Form_Test extends WP_Email_Ajax_TestCase {
 			)
 		);
 
-		$this->assertStringContainsString( 'R: N/A', $this->mail['message'] );
+		$this->assertStringContainsString( 'R: N/A', $this->mail['message'], 'An empty remark reads as not applicable rather than as a blank line.' );
 	}
 
 	public function test_the_subject_is_decoded_for_the_header() {
@@ -619,8 +619,8 @@ class WP_Email_Form_Test extends WP_Email_Ajax_TestCase {
 		);
 
 		// Entities belong in a body, not in a Subject: header.
-		$this->assertStringContainsString( 'Read & enjoy', $this->mail['subject'] );
-		$this->assertStringNotContainsString( '&amp;', $this->mail['subject'] );
+		$this->assertStringContainsString( 'Read & enjoy', $this->mail['subject'], 'The subject is decoded for the header.' );
+		$this->assertStringNotContainsString( '&amp;', $this->mail['subject'], 'So an ampersand does not arrive as an entity.' );
 	}
 
 	public function test_a_blocked_visitor_is_told_to_wait() {
@@ -645,8 +645,8 @@ class WP_Email_Form_Test extends WP_Email_Ajax_TestCase {
 
 		$form = WP_Email_Form::render( '', false );
 
-		$this->assertStringContainsString( 'Please wait', $form );
-		$this->assertStringNotContainsString( 'name="friendemail"', $form );
+		$this->assertStringContainsString( 'Please wait', $form, 'A visitor inside the interval is told to wait.' );
+		$this->assertStringNotContainsString( 'name="friendemail"', $form, 'And is not given the form.' );
 	}
 
 	public function test_a_protected_post_shows_the_password_form() {
@@ -659,8 +659,8 @@ class WP_Email_Form_Test extends WP_Email_Ajax_TestCase {
 
 		$form = WP_Email_Form::render( '', false );
 
-		$this->assertStringNotContainsString( 'name="friendemail"', $form );
-		$this->assertStringContainsString( 'post_password', $form );
+		$this->assertStringNotContainsString( 'name="friendemail"', $form, 'A protected post does not give up its form.' );
+		$this->assertStringContainsString( 'post_password', $form, 'It asks for the password instead.' );
 	}
 
 	public function test_the_form_action_falls_back_to_a_query_var() {
@@ -669,21 +669,21 @@ class WP_Email_Form_Test extends WP_Email_Ajax_TestCase {
 		$this->go_to( get_permalink( $this->post_id ) );
 		the_post();
 
-		$this->assertStringContainsString( 'wp_email=1', WP_Email_Form::header( $this->post_id, false ) );
-		$this->assertStringContainsString( 'wp_email_popup=1', WP_Email_Form::header( $this->post_id, true ) );
+		$this->assertStringContainsString( 'wp_email=1', WP_Email_Form::header( $this->post_id, false ), 'Without permalinks the action falls back to the query var.' );
+		$this->assertStringContainsString( 'wp_email_popup=1', WP_Email_Form::header( $this->post_id, true ), 'And so does the popup action.' );
 	}
 
 	public function test_the_header_names_the_right_id_field() {
 		$this->go_to( get_permalink( $this->post_id ) );
 		the_post();
 
-		$this->assertStringContainsString( 'name="p"', WP_Email_Form::header( $this->post_id, false ) );
+		$this->assertStringContainsString( 'name="p"', WP_Email_Form::header( $this->post_id, false ), 'A post is identified by p.' );
 
 		$page_id = self::factory()->post->create( array( 'post_type' => 'page' ) );
 		$this->go_to( get_permalink( $page_id ) );
 		the_post();
 
-		$this->assertStringContainsString( 'name="page_id"', WP_Email_Form::header( $page_id, false ) );
+		$this->assertStringContainsString( 'name="page_id"', WP_Email_Form::header( $page_id, false ), 'And a page by page_id, which is what core reads.' );
 	}
 
 	public function test_the_recipient_cap_has_a_floor() {
@@ -691,7 +691,7 @@ class WP_Email_Form_Test extends WP_Email_Ajax_TestCase {
 		$options['sending']['multiple'] = 0;
 		WP_Email_Options::update( $options );
 
-		$this->assertSame( 1, WP_Email_Form::max_recipients() );
+		$this->assertSame( 1, WP_Email_Form::max_recipients(), 'The cap is floored at one, so the form is never useless.' );
 	}
 
 	public function test_the_multiple_hint_appears_only_when_useful() {
@@ -699,12 +699,12 @@ class WP_Email_Form_Test extends WP_Email_Ajax_TestCase {
 		$options['sending']['multiple'] = 1;
 		WP_Email_Options::update( $options );
 
-		$this->assertSame( '', WP_Email_Form::multiple_hint() );
+		$this->assertSame( '', WP_Email_Form::multiple_hint(), 'With one recipient allowed there is no hint worth showing.' );
 
 		$options['sending']['multiple'] = 4;
 		WP_Email_Options::update( $options );
 
-		$this->assertStringContainsString( 'Maximum 4 entries', WP_Email_Form::multiple_hint() );
+		$this->assertStringContainsString( 'Maximum 4 entries', WP_Email_Form::multiple_hint(), 'With several there is.' );
 	}
 
 	public function test_recipients_may_be_separated_by_semicolons() {
@@ -717,7 +717,7 @@ class WP_Email_Form_Test extends WP_Email_Ajax_TestCase {
 			)
 		);
 
-		$this->assertSame( 2, WP_Email_Logs::count_all() );
+		$this->assertSame( 2, WP_Email_Logs::count_all(), 'Semicolons separate recipients as well as commas do.' );
 	}
 
 	public function test_stray_separators_are_ignored() {
@@ -730,17 +730,17 @@ class WP_Email_Form_Test extends WP_Email_Ajax_TestCase {
 			)
 		);
 
-		$this->assertSame( 1, WP_Email_Logs::count_all() );
+		$this->assertSame( 1, WP_Email_Logs::count_all(), 'And a stray separator is ignored rather than counted as a recipient.' );
 	}
 
 	public function test_the_trust_proxy_filter_opts_in() {
 		$_SERVER['HTTP_X_FORWARDED_FOR'] = '203.0.113.7';
 
-		$this->assertSame( '198.51.100.200', WP_Email_Form::ip_address() );
+		$this->assertSame( '198.51.100.200', WP_Email_Form::ip_address(), 'Before the filter opts in, the remote address is used.' );
 
 		add_filter( 'wp_email_trust_proxy', '__return_true' );
 
-		$this->assertSame( '203.0.113.7', WP_Email_Form::ip_address() );
+		$this->assertSame( '203.0.113.7', WP_Email_Form::ip_address(), 'And after it, the header is.' );
 
 		remove_filter( 'wp_email_trust_proxy', '__return_true' );
 	}
@@ -756,11 +756,11 @@ class WP_Email_Form_Test extends WP_Email_Ajax_TestCase {
 
 		add_filter( 'wp_email_trust_proxy', $only_from_balancer );
 
-		$this->assertSame( '198.51.100.200', WP_Email_Form::ip_address() );
+		$this->assertSame( '198.51.100.200', WP_Email_Form::ip_address(), 'The filter can refuse for this request.' );
 
 		$_SERVER['REMOTE_ADDR'] = '10.0.0.1';
 
-		$this->assertSame( '203.0.113.7', WP_Email_Form::ip_address() );
+		$this->assertSame( '203.0.113.7', WP_Email_Form::ip_address(), 'And allow for the next.' );
 
 		remove_filter( 'wp_email_trust_proxy', $only_from_balancer );
 	}
@@ -775,7 +775,7 @@ class WP_Email_Form_Test extends WP_Email_Ajax_TestCase {
 
 		add_filter( 'wp_email_trust_proxy', '__return_true' );
 
-		$this->assertSame( '203.0.113.20', WP_Email_Form::ip_address() );
+		$this->assertSame( '203.0.113.20', WP_Email_Form::ip_address(), 'A named header wins over the filter, so the more specific setting is what applies.' );
 
 		remove_filter( 'wp_email_trust_proxy', '__return_true' );
 		unset( $_SERVER['HTTP_X_REAL_IP'] );

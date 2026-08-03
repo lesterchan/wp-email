@@ -107,21 +107,21 @@ class WP_Email_Widget_Test extends WP_Email_TestCase {
 			)
 		);
 
-		$this->assertStringContainsString( '<aside>', $html );
-		$this->assertStringContainsString( '<h2>Most Emailed</h2>', $html );
-		$this->assertStringContainsString( 'Harness Post', $html );
+		$this->assertStringContainsString( '<aside>', $html, 'The widget renders inside the wrapper the theme gave it.' );
+		$this->assertStringContainsString( '<h2>Most Emailed</h2>', $html, 'With its title.' );
+		$this->assertStringContainsString( 'Harness Post', $html, 'And the post it is there to list.' );
 	}
 
 	public function test_an_empty_title_renders_no_heading_markup() {
 		$html = $this->render( array( 'title' => '' ) );
 
-		$this->assertStringNotContainsString( '<h2>', $html );
+		$this->assertStringNotContainsString( '<h2>', $html, 'An empty title renders no heading at all.' );
 	}
 
 	public function test_the_widget_title_is_escaped() {
 		$html = $this->render( array( 'title' => '<script>alert(1)</script>' ) );
 
-		$this->assertStringNotContainsString( '<script>alert(1)</script>', $html );
+		$this->assertStringNotContainsString( '<script>alert(1)</script>', $html, 'A title carrying markup is not rendered as markup.' );
 	}
 
 	public function test_update_sanitizes_its_input() {
@@ -137,10 +137,10 @@ class WP_Email_Widget_Test extends WP_Email_TestCase {
 			array()
 		);
 
-		$this->assertSame( 'Titled', $instance['title'] );
-		$this->assertSame( 'both', $instance['mode'] );
-		$this->assertSame( 4, $instance['limit'] );
-		$this->assertSame( 0, $instance['chars'] );
+		$this->assertSame( 'Titled', $instance['title'], 'The title is saved.' );
+		$this->assertSame( 'both', $instance['mode'], 'The mode.' );
+		$this->assertSame( 4, $instance['limit'], 'The row limit.' );
+		$this->assertSame( 0, $instance['chars'], 'And the character budget.' );
 	}
 
 	public function test_update_saves_without_the_legacy_submit_marker() {
@@ -151,7 +151,7 @@ class WP_Email_Widget_Test extends WP_Email_TestCase {
 		$instance = $widget->update( array( 'title' => 'Saved' ), array() );
 
 		$this->assertIsArray( $instance, 'A save returns an instance rather than false.' );
-		$this->assertSame( 'Saved', $instance['title'] );
+		$this->assertSame( 'Saved', $instance['title'], 'The form saves without the marker the old screen used to send.' );
 	}
 
 	public function test_the_form_renders_its_controls() {
@@ -162,8 +162,8 @@ class WP_Email_Widget_Test extends WP_Email_TestCase {
 		$widget->form( array() );
 		$html = ob_get_clean();
 
-		$this->assertStringContainsString( 'Title:', $html );
-		$this->assertStringContainsString( 'Include Views From:', $html );
-		$this->assertStringContainsString( 'No. Of Records To Show:', $html );
+		$this->assertStringContainsString( 'Title:', $html, 'The form offers a title.' );
+		$this->assertStringContainsString( 'Include Views From:', $html, 'A mode.' );
+		$this->assertStringContainsString( 'No. Of Records To Show:', $html, 'And a row limit.' );
 	}
 }

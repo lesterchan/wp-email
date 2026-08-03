@@ -128,7 +128,7 @@ class WP_Email_WPStats_Test extends WP_Email_TestCase {
 		$section = $this->stats->register_section( array() )['wp_email'];
 
 		$this->assertIsString( $section['title'], 'The section entry carries a title string.' );
-		$this->assertNotSame( '', $section['title'] );
+		$this->assertNotSame( '', $section['title'], 'The entry is titled.' );
 		$this->assertIsInt( $section['priority'], 'The section entry carries an integer priority.' );
 		$this->assertTrue( is_callable( $section['render'] ), 'The section entry carries something callable to render with.' );
 	}
@@ -143,7 +143,7 @@ class WP_Email_WPStats_Test extends WP_Email_TestCase {
 	public function test_an_opted_out_site_contributes_nothing() {
 		$this->set_stats_options( false, 5 );
 
-		$this->assertSame( array(), $this->stats->register_section( array() ) );
+		$this->assertSame( array(), $this->stats->register_section( array() ), 'An opted out site contributes nothing to register.' );
 	}
 
 	public function test_a_non_array_filter_value_is_tolerated() {
@@ -162,8 +162,8 @@ class WP_Email_WPStats_Test extends WP_Email_TestCase {
 
 	public function test_the_filter_is_hooked_without_probing_for_wp_stats() {
 		$this->assertNotFalse( has_filter( 'wp_stats_sections' ), 'The sections filter is attached once the plugin is constructed.' );
-		$this->assertStringNotContainsString( 'class_exists', file_get_contents( dirname( __DIR__ ) . '/includes/class-wp-email-wpstats.php' ) );
-		$this->assertStringNotContainsString( 'function_exists', file_get_contents( dirname( __DIR__ ) . '/includes/class-wp-email-wpstats.php' ) );
+		$this->assertStringNotContainsString( 'class_exists', file_get_contents( dirname( __DIR__ ) . '/includes/class-wp-email-wpstats.php' ), 'The filter is hooked without probing for the class.' );
+		$this->assertStringNotContainsString( 'function_exists', file_get_contents( dirname( __DIR__ ) . '/includes/class-wp-email-wpstats.php' ), 'Or for a function, because a filter nobody calls costs nothing.' );
 	}
 
 
@@ -173,7 +173,7 @@ class WP_Email_WPStats_Test extends WP_Email_TestCase {
 		$echoed   = (string) ob_get_clean();
 
 		$this->assertNull( $returned, 'Rendering the section prints rather than returning, as WP-Stats expects.' );
-		$this->assertNotSame( '', $echoed );
+		$this->assertNotSame( '', $echoed, 'The renderer echoes rather than returning.' );
 	}
 
 	public function test_render_reports_the_totals() {
@@ -183,9 +183,9 @@ class WP_Email_WPStats_Test extends WP_Email_TestCase {
 
 		$out = $this->rendered();
 
-		$this->assertStringContainsString( '<strong>3</strong> emails were sent.', $out );
-		$this->assertStringContainsString( '<strong>2</strong> emails were sent successfully.', $out );
-		$this->assertStringContainsString( '<strong>1</strong> email failed to send.', $out );
+		$this->assertStringContainsString( '<strong>3</strong> emails were sent.', $out, 'The total is reported.' );
+		$this->assertStringContainsString( '<strong>2</strong> emails were sent successfully.', $out, 'The successes.' );
+		$this->assertStringContainsString( '<strong>1</strong> email failed to send.', $out, 'And the failures.' );
 	}
 
 	public function test_render_counts_untranslated_statuses() {
@@ -193,7 +193,7 @@ class WP_Email_WPStats_Test extends WP_Email_TestCase {
 		// them, and the counts read the canonical value.
 		$this->log( $this->post_id );
 
-		$this->assertStringContainsString( '<strong>1</strong> email was sent successfully.', $this->rendered() );
+		$this->assertStringContainsString( '<strong>1</strong> email was sent successfully.', $this->rendered(), 'A row stored untranslated is still counted.' );
 	}
 
 	public function test_render_lists_the_most_emailed_posts_and_pages() {
@@ -202,15 +202,15 @@ class WP_Email_WPStats_Test extends WP_Email_TestCase {
 
 		$out = $this->rendered();
 
-		$this->assertStringContainsString( 'Most Emailed Post', $out );
-		$this->assertStringContainsString( 'Most Emailed Page', $out );
-		$this->assertStringContainsString( 'Harness Post', $out );
-		$this->assertStringContainsString( 'Harness Page', $out );
+		$this->assertStringContainsString( 'Most Emailed Post', $out, 'The posts listing is headed for posts.' );
+		$this->assertStringContainsString( 'Most Emailed Page', $out, 'And the pages listing for pages.' );
+		$this->assertStringContainsString( 'Harness Post', $out, 'The post is listed.' );
+		$this->assertStringContainsString( 'Harness Page', $out, 'And the page, so neither has taken the other rows.' );
 	}
 
 	public function test_render_uses_the_plugins_own_copy_of_the_most_limit() {
 		$this->set_stats_options( true, 3 );
 
-		$this->assertStringContainsString( '3 Most Emailed Posts', $this->rendered() );
+		$this->assertStringContainsString( '3 Most Emailed Posts', $this->rendered(), 'The heading counts from the settings of this plugin, not a shared row.' );
 	}
 }

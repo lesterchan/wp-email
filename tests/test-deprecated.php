@@ -101,14 +101,14 @@ class WP_Email_Deprecated_Test extends WP_Email_TestCase {
 
 		// htmlspecialchars_decode() landed in PHP 5.1 and get_the_id() only
 		// ever shadowed core's get_the_ID(); the 8.2 floor makes both dead.
-		$this->assertStringNotContainsString( 'function htmlspecialchars_decode', $source );
-		$this->assertStringNotContainsString( 'function get_the_id', $source );
+		$this->assertStringNotContainsString( 'function htmlspecialchars_decode', $source, 'The polyfill for htmlspecialchars_decode is gone.' );
+		$this->assertStringNotContainsString( 'function get_the_id', $source, 'And so is the one for get_the_id.' );
 	}
 
 
 	public function test_get_ipaddress_delegates() {
-		$this->assertSame( WP_Email_Form::ip_address(), get_ipaddress() );
-		$this->assertSame( '198.51.100.5', get_ipaddress() );
+		$this->assertSame( WP_Email_Form::ip_address(), get_ipaddress(), 'The shim answers with what the class answers.' );
+		$this->assertSame( '198.51.100.5', get_ipaddress(), 'Which is the remote address.' );
 	}
 
 	public function test_the_validators_delegate() {
@@ -123,8 +123,8 @@ class WP_Email_Deprecated_Test extends WP_Email_TestCase {
 	}
 
 	public function test_the_snippet_helpers_delegate() {
-		$this->assertSame( 'one two ...', snippet_words( 'one two three', 2 ) );
-		$this->assertSame( 'abcde...', snippet_text( 'abcdefghij', 5 ) );
+		$this->assertSame( 'one two ...', snippet_words( 'one two three', 2 ), 'The word snippet shim delegates.' );
+		$this->assertSame( 'abcde...', snippet_text( 'abcdefghij', 5 ), 'And the character snippet shim.' );
 	}
 
 	public function test_the_filter_helpers_delegate() {
@@ -142,7 +142,7 @@ class WP_Email_Deprecated_Test extends WP_Email_TestCase {
 		email_meta_nofollow();
 		$out = ob_get_clean();
 
-		$this->assertStringContainsString( 'noindex', $out );
+		$this->assertStringContainsString( 'noindex', $out, 'The robots shim delegates.' );
 	}
 
 	public function test_the_wpstats_wrappers_are_gone() {
@@ -155,9 +155,9 @@ class WP_Email_Deprecated_Test extends WP_Email_TestCase {
 
 
 	public function test_the_counter_tags_delegate() {
-		$this->assertSame( '0', get_emails( false ) );
-		$this->assertSame( '0', get_emails_success( false ) );
-		$this->assertSame( '0', get_emails_failed( false ) );
+		$this->assertSame( '0', get_emails( false ), 'The total counter shim delegates.' );
+		$this->assertSame( '0', get_emails_success( false ), 'The success counter.' );
+		$this->assertSame( '0', get_emails_failed( false ), 'And the failure counter.' );
 	}
 
 	public function test_get_email_count_defaults_to_the_current_post() {
@@ -179,7 +179,7 @@ class WP_Email_Deprecated_Test extends WP_Email_TestCase {
 
 		$this->loop();
 
-		$this->assertSame( '1', get_email_count( 0, false ) );
+		$this->assertSame( '1', get_email_count( 0, false ), 'A post id of zero means the post in scope.' );
 	}
 
 	public function test_the_title_and_remark_tags_delegate() {
@@ -187,8 +187,8 @@ class WP_Email_Deprecated_Test extends WP_Email_TestCase {
 
 		$this->loop();
 
-		$this->assertSame( 'Harness Post', email_get_title() );
-		$this->assertSame( 'Suggested', email_get_remark() );
+		$this->assertSame( 'Harness Post', email_get_title(), 'The title shim delegates.' );
+		$this->assertSame( 'Suggested', email_get_remark(), 'And the remark shim.' );
 	}
 
 	public function test_the_category_tag_delegates() {
@@ -197,19 +197,19 @@ class WP_Email_Deprecated_Test extends WP_Email_TestCase {
 
 		$this->loop();
 
-		$this->assertStringContainsString( 'Reviews', email_category() );
+		$this->assertStringContainsString( 'Reviews', email_category(), 'The category shim delegates.' );
 	}
 
 	public function test_the_content_tags_delegate() {
 		$this->loop();
 
-		$this->assertStringContainsString( 'One two three', email_content() );
-		$this->assertStringNotContainsString( '<p>', email_content_alt() );
-		$this->assertStringContainsString( 'One two three', get_email_content() );
+		$this->assertStringContainsString( 'One two three', email_content(), 'The content shim delegates.' );
+		$this->assertStringNotContainsString( '<p>', email_content_alt(), 'The plain text shim gives plain text.' );
+		$this->assertStringContainsString( 'One two three', get_email_content(), 'And the returning form delegates too.' );
 	}
 
 	public function test_the_page_title_tag_delegates() {
-		$this->assertStringContainsString( 'E-Mail', email_pagetitle( 'Harness Post' ) );
+		$this->assertStringContainsString( 'E-Mail', email_pagetitle( 'Harness Post' ), 'The page title shim delegates.' );
 	}
 
 	public function test_the_interval_tag_delegates() {
@@ -217,7 +217,7 @@ class WP_Email_Deprecated_Test extends WP_Email_TestCase {
 		$options['sending']['interval'] = 7;
 		WP_Email_Options::update( $options );
 
-		$this->assertSame( 7, email_flood_interval( false ) );
+		$this->assertSame( 7, email_flood_interval( false ), 'The interval shim delegates.' );
 	}
 
 	public function test_not_spamming_delegates() {
@@ -229,13 +229,13 @@ class WP_Email_Deprecated_Test extends WP_Email_TestCase {
 		$options['sending']['multiple'] = 5;
 		WP_Email_Options::update( $options );
 
-		$this->assertStringContainsString( 'Maximum 5 entries', email_multiple( false ) );
+		$this->assertStringContainsString( 'Maximum 5 entries', email_multiple( false ), 'The multiple hint shim delegates.' );
 
 		// A cap of one means there is nothing to explain.
 		$options['sending']['multiple'] = 1;
 		WP_Email_Options::update( $options );
 
-		$this->assertSame( '', email_multiple( false ) );
+		$this->assertSame( '', email_multiple( false ), 'And says nothing when there is nothing worth saying.' );
 	}
 
 	public function test_the_form_header_tags_delegate() {
@@ -245,9 +245,9 @@ class WP_Email_Deprecated_Test extends WP_Email_TestCase {
 		$standalone = email_form_header( $this->post_id, false );
 		$popup      = email_popup_form_header( false, $this->post_id );
 
-		$this->assertStringContainsString( 'email/', $standalone );
-		$this->assertStringNotContainsString( 'emailpopup/', $standalone );
-		$this->assertStringContainsString( 'emailpopup/', $popup );
+		$this->assertStringContainsString( 'email/', $standalone, 'The header shim points at the standalone endpoint.' );
+		$this->assertStringNotContainsString( 'emailpopup/', $standalone, 'And not at the popup one.' );
+		$this->assertStringContainsString( 'emailpopup/', $popup, 'While the popup form points at the popup endpoint.' );
 
 		foreach ( array( $standalone, $popup ) as $header ) {
 			$this->assertStringContainsString( 'wp-email_nonce', $header, 'The deprecated header helper still prints the nonce the form needs.' );
@@ -261,11 +261,11 @@ class WP_Email_Deprecated_Test extends WP_Email_TestCase {
 		email_link();
 		$printed = ob_get_clean();
 
-		$this->assertStringContainsString( '<a href=', $printed );
+		$this->assertStringContainsString( '<a href=', $printed, 'The echoing shim prints the link.' );
 
 		ob_start();
 		get_emails();
-		$this->assertSame( '0', trim( ob_get_clean() ) );
+		$this->assertSame( '0', trim( ob_get_clean() ), 'And the echoing counter prints the count.' );
 	}
 
 	public function test_the_form_tag_keeps_its_old_signature() {
@@ -275,7 +275,7 @@ class WP_Email_Deprecated_Test extends WP_Email_TestCase {
 		// the argument order cannot move.
 		$form = email_form( '', false, true, true, array() );
 
-		$this->assertStringContainsString( 'id="wp-email-content"', $form );
-		$this->assertStringContainsString( 'name="friendemail"', $form );
+		$this->assertStringContainsString( 'id="wp-email-content"', $form, 'The form shim keeps its old signature, content block and all.' );
+		$this->assertStringContainsString( 'name="friendemail"', $form, 'And renders the form.' );
 	}
 }

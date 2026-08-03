@@ -134,12 +134,12 @@ class WP_Email_Admin_Test extends WP_Email_TestCase {
 
 		$html = $this->render_logs();
 
-		$this->assertStringContainsString( 'Manage E-Mail', $html );
-		$this->assertStringContainsString( 'Alice', $html );
-		$this->assertStringContainsString( 'friend@example.com', $html );
-		$this->assertStringContainsString( '198.51.100.1', $html );
-		$this->assertStringContainsString( 'Total E-Mails', $html );
-		$this->assertStringContainsString( 'Delete E-Mail Logs', $html );
+		$this->assertStringContainsString( 'Manage E-Mail', $html, 'The logs screen is titled.' );
+		$this->assertStringContainsString( 'Alice', $html, 'Naming the sender.' );
+		$this->assertStringContainsString( 'friend@example.com', $html, 'The recipient.' );
+		$this->assertStringContainsString( '198.51.100.1', $html, 'The address it came from.' );
+		$this->assertStringContainsString( 'Total E-Mails', $html, 'A total.' );
+		$this->assertStringContainsString( 'Delete E-Mail Logs', $html, 'And the way to empty it.' );
 	}
 
 	public function test_the_logs_screen_escapes_hostile_stored_values() {
@@ -155,14 +155,14 @@ class WP_Email_Admin_Test extends WP_Email_TestCase {
 
 		// esc_html() leaves '=' alone, so the giveaway is whether the tag
 		// itself survived, not whether the attribute text appears anywhere.
-		$this->assertStringNotContainsString( '<script>alert(1)</script>', $html );
-		$this->assertStringNotContainsString( '<img src=x', $html );
-		$this->assertStringContainsString( '&lt;img src=x', $html );
-		$this->assertStringContainsString( '&amp;', $html );
+		$this->assertStringNotContainsString( '<script>alert(1)</script>', $html, 'A stored script is not rendered as markup.' );
+		$this->assertStringNotContainsString( '<img src=x', $html, 'Nor a stored image element.' );
+		$this->assertStringContainsString( '&lt;img src=x', $html, 'It is escaped and shown as text instead.' );
+		$this->assertStringContainsString( '&amp;', $html, 'And an ampersand is escaped too.' );
 	}
 
 	public function test_the_logs_screen_says_so_when_empty() {
-		$this->assertStringContainsString( 'No E-Mail Logs Found', $this->render_logs() );
+		$this->assertStringContainsString( 'No E-Mail Logs Found', $this->render_logs(), 'An empty log says so rather than rendering an empty table.' );
 	}
 
 	public function test_the_logs_table_sorts_only_on_known_columns() {
@@ -177,16 +177,16 @@ class WP_Email_Admin_Test extends WP_Email_TestCase {
 	public function test_the_delete_form_carries_a_nonce() {
 		$html = $this->render_logs();
 
-		$this->assertStringContainsString( 'name="_wpnonce"', $html );
-		$this->assertStringContainsString( 'name="delete_logs_yes"', $html );
-		$this->assertStringContainsString( 'name="delete_logs"', $html );
+		$this->assertStringContainsString( 'name="_wpnonce"', $html, 'The delete form carries a nonce.' );
+		$this->assertStringContainsString( 'name="delete_logs_yes"', $html, 'A confirmation box.' );
+		$this->assertStringContainsString( 'name="delete_logs"', $html, 'And the field that asks for the delete.' );
 	}
 
 	public function test_the_delete_button_has_no_inline_handler() {
 		$html = $this->render_logs();
 
-		$this->assertStringNotContainsString( 'onclick', $html );
-		$this->assertStringContainsString( 'data-wp-email-confirm', $html );
+		$this->assertStringNotContainsString( 'onclick', $html, 'The delete button carries no inline handler.' );
+		$this->assertStringContainsString( 'data-wp-email-confirm', $html, 'The confirmation is data for the script to read instead.' );
 	}
 
 
@@ -266,8 +266,8 @@ class WP_Email_Admin_Test extends WP_Email_TestCase {
 
 		$html = $this->render_logs();
 
-		$this->assertStringContainsString( 'newest@example.com', $html );
-		$this->assertStringContainsString( 'middle@example.com', $html );
+		$this->assertStringContainsString( 'newest@example.com', $html, 'The newest row is on the first page.' );
+		$this->assertStringContainsString( 'middle@example.com', $html, 'And so is the next, so the page size is what decides.' );
 		$this->assertStringNotContainsString(
 			'oldest@example.com',
 			$html,
@@ -294,21 +294,21 @@ class WP_Email_Admin_Test extends WP_Email_TestCase {
 	public function test_the_settings_tab_renders_the_three_sections_it_owns() {
 		$html = $this->render_options( 'settings' );
 
-		$this->assertStringContainsString( 'E-Mail Link', $html );
-		$this->assertStringContainsString( 'E-Mail Link Type', $html );
-		$this->assertStringContainsString( 'E-Mail Link Template', $html );
-		$this->assertStringContainsString( 'E-Mail Fields', $html );
-		$this->assertStringContainsString( 'Interval Between E-Mails', $html );
-		$this->assertStringContainsString( 'Header That Contains The IP', $html );
-		$this->assertStringContainsString( 'WP-Stats', $html );
+		$this->assertStringContainsString( 'E-Mail Link', $html, 'The link section is rendered.' );
+		$this->assertStringContainsString( 'E-Mail Link Type', $html, 'With the link type.' );
+		$this->assertStringContainsString( 'E-Mail Link Template', $html, 'And the link template.' );
+		$this->assertStringContainsString( 'E-Mail Fields', $html, 'The fields section is rendered.' );
+		$this->assertStringContainsString( 'Interval Between E-Mails', $html, 'The sending section, with the interval.' );
+		$this->assertStringContainsString( 'Header That Contains The IP', $html, 'And the header setting.' );
+		$this->assertStringContainsString( 'WP-Stats', $html, 'And the WP-Stats section.' );
 	}
 
 	public function test_the_templates_tab_renders_the_eight_templates() {
 		$html = $this->render_options( 'templates' );
 
-		$this->assertStringContainsString( 'E-Mail Subject', $html );
-		$this->assertStringContainsString( 'E-Mail Body', $html );
-		$this->assertStringContainsString( 'Restore Default Template', $html );
+		$this->assertStringContainsString( 'E-Mail Subject', $html, 'The templates tab renders the subject.' );
+		$this->assertStringContainsString( 'E-Mail Body', $html, 'The body.' );
+		$this->assertStringContainsString( 'Restore Default Template', $html, 'And a way back to the defaults.' );
 	}
 
 	/**
@@ -320,24 +320,24 @@ class WP_Email_Admin_Test extends WP_Email_TestCase {
 		$settings  = $this->render_options( 'settings' );
 		$templates = $this->render_options( 'templates' );
 
-		$this->assertStringNotContainsString( 'name="wp_email_options[templates][subject]"', $settings );
-		$this->assertStringNotContainsString( 'name="wp_email_options[sending][interval]"', $templates );
+		$this->assertStringNotContainsString( 'name="wp_email_options[templates][subject]"', $settings, 'The settings tab draws no template field.' );
+		$this->assertStringNotContainsString( 'name="wp_email_options[sending][interval]"', $templates, 'And the templates tab draws no settings field, so a save of one cannot blank the other.' );
 	}
 
 	public function test_both_tabs_are_offered_and_the_current_one_is_marked() {
 		$html = $this->render_options( 'templates' );
 
-		$this->assertStringContainsString( 'nav-tab-wrapper', $html );
-		$this->assertStringContainsString( 'tab=settings', $html );
-		$this->assertStringContainsString( 'tab=templates', $html );
+		$this->assertStringContainsString( 'nav-tab-wrapper', $html, 'The screen renders the core tab strip.' );
+		$this->assertStringContainsString( 'tab=settings', $html, 'Offering the settings tab.' );
+		$this->assertStringContainsString( 'tab=templates', $html, 'And the templates tab.' );
 		$this->assertMatchesRegularExpression( '/nav-tab nav-tab-active[^>]*>\s*Templates/', $html, 'The tab being viewed is the one marked active.' );
 	}
 
 	public function test_an_unknown_tab_falls_back_to_the_first_one() {
 		$html = $this->render_options( 'nonsense' );
 
-		$this->assertStringContainsString( 'E-Mail Link Type', $html );
-		$this->assertStringNotContainsString( 'name="wp_email_options[templates][subject]"', $html );
+		$this->assertStringContainsString( 'E-Mail Link Type', $html, 'An unknown tab falls back to the first one.' );
+		$this->assertStringNotContainsString( 'name="wp_email_options[templates][subject]"', $html, 'Rather than to the second.' );
 	}
 
 	/**
@@ -347,27 +347,28 @@ class WP_Email_Admin_Test extends WP_Email_TestCase {
 	public function test_the_save_returns_to_the_tab_it_was_submitted_from() {
 		$html = $this->render_options( 'templates' );
 
-		$this->assertStringContainsString( 'name="_wp_http_referer"', $html );
+		$this->assertStringContainsString( 'name="_wp_http_referer"', $html, 'The referer field is what returns the save to the tab it came from.' );
 		$this->assertMatchesRegularExpression( '/_wp_http_referer" value="[^"]*tab=templates/', $html, 'The referer field carries the tab, so a save returns to the tab it was made on.' );
 	}
 
 	public function test_the_options_screen_posts_to_the_settings_api() {
 		$html = $this->render_options();
 
-		$this->assertStringContainsString( 'action="' . admin_url( 'options.php' ) . '"', $html );
+		$this->assertStringContainsString( 'action="' . admin_url( 'options.php' ) . '"', $html, 'The form posts to options.php, so core handles the save.' );
 		// settings_fields() emits single-quoted attributes.
-		$this->assertStringContainsString( "name='option_page' value='wp_email_options'", $html );
-		$this->assertStringContainsString( '_wpnonce', $html );
+		$this->assertStringContainsString( "name='option_page' value='wp_email_options'", $html, 'Naming the settings group.' );
+		$this->assertStringContainsString( '_wpnonce', $html, 'And carrying a nonce.' );
 	}
 
 	public function test_the_options_screen_uses_nested_field_names() {
 		$html = $this->render_options();
 
-		$this->assertStringContainsString( 'name="wp_email_options[link][html]"', $html );
-		$this->assertStringContainsString( 'name="wp_email_options[sending][interval]"', $html );
+		$this->assertStringContainsString( 'name="wp_email_options[link][html]"', $html, 'The link template field is named for its place in the option row.' );
+		$this->assertStringContainsString( 'name="wp_email_options[sending][interval]"', $html, 'The interval field too.' );
 		$this->assertStringContainsString(
 			'name="wp_email_options[templates][subject]"',
-			$this->render_options( 'templates' )
+			$this->render_options( 'templates' ),
+			'And so is the subject, on its own tab.'
 		);
 	}
 
@@ -377,9 +378,9 @@ class WP_Email_Admin_Test extends WP_Email_TestCase {
 		// phpcbf reads a literal %TOKEN% inside a translatable string as a
 		// printf placeholder and renumbers it, which would rewrite the very
 		// text users are told to type.
-		$this->assertStringContainsString( '%EMAIL_POST_TITLE%', $html );
-		$this->assertStringContainsString( '%EMAIL_FRIEND_NAME%', $html );
-		$this->assertStringNotContainsString( '%1$EMAIL', $html );
+		$this->assertStringContainsString( '%EMAIL_POST_TITLE%', $html, 'The post title token is shown as it is written.' );
+		$this->assertStringContainsString( '%EMAIL_FRIEND_NAME%', $html, 'And the friend name token.' );
+		$this->assertStringNotContainsString( '%1$EMAIL', $html, 'Not run through a formatter that would renumber them.' );
 	}
 
 	public function test_the_restore_buttons_carry_defaults_in_data_attributes() {
@@ -387,9 +388,9 @@ class WP_Email_Admin_Test extends WP_Email_TestCase {
 
 		// Not esc_js() into an inline onclick, which is where these plugins
 		// hide their XSS.
-		$this->assertStringContainsString( 'data-wp-email-restore=', $html );
-		$this->assertStringContainsString( 'data-wp-email-default=', $html );
-		$this->assertStringNotContainsString( 'onclick', $html );
+		$this->assertStringContainsString( 'data-wp-email-restore=', $html, 'The restore button names the template it restores.' );
+		$this->assertStringContainsString( 'data-wp-email-default=', $html, 'And carries the default as data.' );
+		$this->assertStringNotContainsString( 'onclick', $html, 'Rather than as an inline handler.' );
 	}
 
 	/**
@@ -418,7 +419,8 @@ class WP_Email_Admin_Test extends WP_Email_TestCase {
 		$this->assertArrayHasKey( WP_Email_Options::OPTION, $registered, 'The settings row is registered, so its sanitise callback is attached.' );
 		$this->assertSame(
 			array( 'WP_Email_Options', 'sanitize' ),
-			$registered[ WP_Email_Options::OPTION ]['sanitize_callback']
+			$registered[ WP_Email_Options::OPTION ]['sanitize_callback'],
+			'The setting is registered with its sanitizer, so a save cannot go round it.'
 		);
 	}
 

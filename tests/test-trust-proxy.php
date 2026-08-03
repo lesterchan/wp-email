@@ -50,7 +50,7 @@ class WP_Email_Trust_Proxy_Test extends WP_Email_TestCase {
 
 		$_SERVER['HTTP_X_FORWARDED_FOR'] = '203.0.113.7';
 
-		$this->assertSame( '203.0.113.7', WP_Email_Form::ip_address() );
+		$this->assertSame( '203.0.113.7', WP_Email_Form::ip_address(), 'The constant opts into the proxy headers.' );
 	}
 
 	public function test_the_cloudflare_header_wins() {
@@ -59,7 +59,7 @@ class WP_Email_Trust_Proxy_Test extends WP_Email_TestCase {
 		$_SERVER['HTTP_CF_CONNECTING_IP'] = '203.0.113.8';
 		$_SERVER['HTTP_X_FORWARDED_FOR']  = '203.0.113.9';
 
-		$this->assertSame( '203.0.113.8', WP_Email_Form::ip_address() );
+		$this->assertSame( '203.0.113.8', WP_Email_Form::ip_address(), 'The Cloudflare header wins over the forwarded one.' );
 	}
 
 	public function test_the_first_address_in_a_chain_is_used() {
@@ -67,7 +67,7 @@ class WP_Email_Trust_Proxy_Test extends WP_Email_TestCase {
 
 		$_SERVER['HTTP_X_FORWARDED_FOR'] = '203.0.113.10, 70.41.3.18, 150.172.238.178';
 
-		$this->assertSame( '203.0.113.10', WP_Email_Form::ip_address() );
+		$this->assertSame( '203.0.113.10', WP_Email_Form::ip_address(), 'Only the first address in a chain is used.' );
 	}
 
 	public function test_a_junk_header_falls_back() {
@@ -75,7 +75,7 @@ class WP_Email_Trust_Proxy_Test extends WP_Email_TestCase {
 
 		$_SERVER['HTTP_X_FORWARDED_FOR'] = 'not-an-ip, still-not-an-ip';
 
-		$this->assertSame( '198.51.100.200', WP_Email_Form::ip_address() );
+		$this->assertSame( '198.51.100.200', WP_Email_Form::ip_address(), 'A junk header falls back to the remote address.' );
 	}
 
 	public function test_a_named_header_still_wins() {
@@ -88,7 +88,7 @@ class WP_Email_Trust_Proxy_Test extends WP_Email_TestCase {
 		$_SERVER['HTTP_X_REAL_IP']       = '203.0.113.20';
 		$_SERVER['HTTP_X_FORWARDED_FOR'] = '203.0.113.21';
 
-		$this->assertSame( '203.0.113.20', WP_Email_Form::ip_address() );
+		$this->assertSame( '203.0.113.20', WP_Email_Form::ip_address(), 'A named header still wins, so the more specific setting is what applies.' );
 
 		unset( $_SERVER['HTTP_X_REAL_IP'] );
 	}
@@ -102,7 +102,7 @@ class WP_Email_Trust_Proxy_Test extends WP_Email_TestCase {
 
 		// The filter is the last word, so a site can keep the constant in
 		// wp-config.php and still refuse the header for particular requests.
-		$this->assertSame( '198.51.100.200', WP_Email_Form::ip_address() );
+		$this->assertSame( '198.51.100.200', WP_Email_Form::ip_address(), 'And the filter can override the constant, so a site can opt back out.' );
 
 		remove_filter( 'wp_email_trust_proxy', '__return_false' );
 	}

@@ -32,7 +32,7 @@ class WP_Email_Boot_Test extends WP_Email_TestCase {
 
 
 	public function test_get_instance_returns_one_object() {
-		$this->assertSame( WP_Email::get_instance(), WP_Email::get_instance() );
+		$this->assertSame( WP_Email::get_instance(), WP_Email::get_instance(), 'get_instance() answers with the same object every time.' );
 	}
 
 	public function test_the_ajax_endpoints_are_registered_for_both_audiences() {
@@ -48,9 +48,9 @@ class WP_Email_Boot_Test extends WP_Email_TestCase {
 	public function test_query_vars_are_declared() {
 		$vars = WP_Email::get_instance()->register_query_vars( array( 'existing' ) );
 
-		$this->assertContains( 'existing', $vars );
-		$this->assertContains( 'wp_email', $vars );
-		$this->assertContains( 'wp_email_popup', $vars );
+		$this->assertContains( 'existing', $vars, 'The query vars already registered survive.' );
+		$this->assertContains( 'wp_email', $vars, 'The form var is appended.' );
+		$this->assertContains( 'wp_email_popup', $vars, 'And the popup var.' );
 	}
 
 	public function test_both_endpoints_are_registered() {
@@ -70,8 +70,8 @@ class WP_Email_Boot_Test extends WP_Email_TestCase {
 
 		// EP_PERMALINK | EP_PAGES: one endpoint covers both, which is why the
 		// separate 'emailpage/' path was never needed.
-		$this->assertSame( EP_PERMALINK | EP_PAGES, $found['email'] );
-		$this->assertSame( EP_PERMALINK | EP_PAGES, $found['emailpopup'] );
+		$this->assertSame( EP_PERMALINK | EP_PAGES, $found['email'], 'The standalone endpoint is registered on posts and pages.' );
+		$this->assertSame( EP_PERMALINK | EP_PAGES, $found['emailpopup'], 'And so is the popup endpoint.' );
 	}
 
 	public function test_the_takeover_can_be_filtered_off() {
@@ -98,7 +98,7 @@ class WP_Email_Boot_Test extends WP_Email_TestCase {
 		$this->go_to( get_permalink( $this->post_id ) );
 		the_post();
 
-		$this->assertStringContainsString( '<a href=', do_shortcode( '[email_link]' ) );
+		$this->assertStringContainsString( '<a href=', do_shortcode( '[email_link]' ), 'The shortcode renders a link.' );
 	}
 
 	public function test_the_link_shortcode_explains_itself_in_a_feed() {
@@ -107,18 +107,18 @@ class WP_Email_Boot_Test extends WP_Email_TestCase {
 		$out = WP_Email::get_instance()->link_shortcode();
 
 		// A feed reader cannot run the form, so a bare link would be a dead end.
-		$this->assertStringNotContainsString( '<a href=', $out );
-		$this->assertStringContainsString( 'visit this post', $out );
+		$this->assertStringNotContainsString( '<a href=', $out, 'In a feed there is no link to render.' );
+		$this->assertStringContainsString( 'visit this post', $out, 'It says where to go instead.' );
 	}
 
 	public function test_the_donotemail_shortcode_passes_content_through() {
-		$this->assertSame( 'keep me', do_shortcode( '[donotemail]keep me[/donotemail]' ) );
+		$this->assertSame( 'keep me', do_shortcode( '[donotemail]keep me[/donotemail]' ), 'The shortcode passes its content through unchanged.' );
 	}
 
 	public function test_the_donotemail_shortcode_resolves_nested_shortcodes() {
 		add_shortcode( 'harness_inner', static fn() => 'INNER' );
 
-		$this->assertSame( 'INNER', do_shortcode( '[donotemail][harness_inner][/donotemail]' ) );
+		$this->assertSame( 'INNER', do_shortcode( '[donotemail][harness_inner][/donotemail]' ), 'Resolving whatever is nested inside it.' );
 
 		remove_shortcode( 'harness_inner' );
 	}
@@ -181,8 +181,8 @@ class WP_Email_Boot_Test extends WP_Email_TestCase {
 	}
 
 	public function test_the_page_title_is_marked() {
-		$this->assertStringContainsString( 'E-Mail', WP_Email::filter_page_title( 'Harness Post' ) );
-		$this->assertStringStartsWith( 'Harness Post', WP_Email::filter_page_title( 'Harness Post' ) );
+		$this->assertStringContainsString( 'E-Mail', WP_Email::filter_page_title( 'Harness Post' ), 'The page title says what the page is for.' );
+		$this->assertStringStartsWith( 'Harness Post', WP_Email::filter_page_title( 'Harness Post' ), 'After the post title rather than instead of it.' );
 	}
 
 	public function test_the_page_is_noindexed() {
@@ -190,8 +190,8 @@ class WP_Email_Boot_Test extends WP_Email_TestCase {
 		WP_Email::noindex();
 		$out = ob_get_clean();
 
-		$this->assertStringContainsString( 'noindex', $out );
-		$this->assertStringContainsString( 'nofollow', $out );
+		$this->assertStringContainsString( 'noindex', $out, 'The page asks not to be indexed.' );
+		$this->assertStringContainsString( 'nofollow', $out, 'Nor its links followed.' );
 	}
 
 
@@ -207,14 +207,14 @@ class WP_Email_Boot_Test extends WP_Email_TestCase {
 
 		$values = WP_Email::get_instance()->prefill_for_logged_in_user( array() );
 
-		$this->assertSame( 'Lester Chan', $values['yourname'] );
-		$this->assertSame( 'lester@example.com', $values['youremail'] );
+		$this->assertSame( 'Lester Chan', $values['yourname'], 'A logged in visitor has their name filled in.' );
+		$this->assertSame( 'lester@example.com', $values['youremail'], 'And their address.' );
 	}
 
 	public function test_a_logged_out_visitor_is_not_prefilled() {
 		wp_set_current_user( 0 );
 
-		$this->assertSame( array(), WP_Email::get_instance()->prefill_for_logged_in_user( array() ) );
+		$this->assertSame( array(), WP_Email::get_instance()->prefill_for_logged_in_user( array() ), 'While a logged out visitor is given nothing to fill in.' );
 	}
 
 	public function test_the_prefill_is_wired_to_the_public_filter() {
@@ -226,7 +226,7 @@ class WP_Email_Boot_Test extends WP_Email_TestCase {
 		// Hyphenated on purpose: it is the plugin's documented filter name.
 		$values = apply_filters( 'wp_email_form_field_values', array() );
 
-		$this->assertSame( 'Lester Chan', $values['yourname'] );
+		$this->assertSame( 'Lester Chan', $values['yourname'], 'The prefill runs off the public filter, so a theme could replace it.' );
 	}
 
 
@@ -242,10 +242,10 @@ class WP_Email_Boot_Test extends WP_Email_TestCase {
 
 		$data = wp_scripts()->get_data( 'wp-email', 'data' );
 
-		$this->assertStringContainsString( 'wpEmailL10n', $data );
-		$this->assertStringContainsString( 'ajax_url', $data );
-		$this->assertStringContainsString( 'max_allowed', $data );
-		$this->assertStringContainsString( 'text_friend_email_invalid', $data );
+		$this->assertStringContainsString( 'wpEmailL10n', $data, 'The localised object is attached under the name the script reads.' );
+		$this->assertStringContainsString( 'ajax_url', $data, 'Carrying the endpoint.' );
+		$this->assertStringContainsString( 'max_allowed', $data, 'The recipient cap.' );
+		$this->assertStringContainsString( 'text_friend_email_invalid', $data, 'And the messages, so a bad field can be caught before a round trip.' );
 	}
 
 	public function test_the_localised_cap_tracks_the_setting() {
@@ -257,7 +257,7 @@ class WP_Email_Boot_Test extends WP_Email_TestCase {
 
 		// wp_localize_script() stringifies every scalar, which is why the
 		// script parseInt()s it back.
-		$this->assertStringContainsString( '"max_allowed":"3"', wp_scripts()->get_data( 'wp-email', 'data' ) );
+		$this->assertStringContainsString( '"max_allowed":"3"', wp_scripts()->get_data( 'wp-email', 'data' ), 'The localised cap follows the setting rather than a number written into the script.' );
 	}
 
 	public function test_the_script_loads_in_the_footer() {
@@ -265,7 +265,7 @@ class WP_Email_Boot_Test extends WP_Email_TestCase {
 
 		// WP records a footer script as group 1; ->in_footer is only populated
 		// once the scripts are actually printed.
-		$this->assertSame( 1, wp_scripts()->get_data( 'wp-email', 'group' ) );
+		$this->assertSame( 1, wp_scripts()->get_data( 'wp-email', 'group' ), 'The script is printed in the footer.' );
 	}
 
 
@@ -308,7 +308,7 @@ class WP_Email_Boot_Test extends WP_Email_TestCase {
 
 		WP_Email::get_instance()->maybe_upgrade();
 
-		$this->assertSame( '<a href="%EMAIL_URL%">Untouched</a>', WP_Email_Options::get( 'link', 'html' ) );
+		$this->assertSame( '<a href="%EMAIL_URL%">Untouched</a>', WP_Email_Options::get( 'link', 'html' ), 'With the version current the upgrade leaves the settings alone.' );
 	}
 
 	public function test_the_upgrade_is_hooked_where_an_update_will_reach_it() {
@@ -340,7 +340,7 @@ class WP_Email_Boot_Test extends WP_Email_TestCase {
 	public function test_the_version_constant_matches_the_header() {
 		$header = get_file_data( WP_EMAIL_MAIN_FILE, array( 'Version' => 'Version' ) );
 
-		$this->assertSame( $header['Version'], WP_EMAIL_VERSION );
+		$this->assertSame( $header['Version'], WP_EMAIL_VERSION, 'The version constant matches the plugin header.' );
 	}
 
 	public function test_the_plugin_stylesheet_is_enqueued_from_the_plugin_directory() {
@@ -348,7 +348,7 @@ class WP_Email_Boot_Test extends WP_Email_TestCase {
 
 		do_action( 'wp_enqueue_scripts' );
 
-		$this->assertStringContainsString( 'plugins/wp-email/css/wp-email.css', wp_styles()->registered['wp-email']->src );
+		$this->assertStringContainsString( 'plugins/wp-email/css/wp-email.css', wp_styles()->registered['wp-email']->src, 'The stylesheet is served from the plugin.' );
 	}
 
 	public function test_no_second_stylesheet_is_enqueued_on_an_rtl_site() {
@@ -362,7 +362,7 @@ class WP_Email_Boot_Test extends WP_Email_TestCase {
 
 		$this->assertFalse( wp_style_is( 'wp-email-rtl', 'enqueued' ), 'No separate RTL stylesheet is enqueued; the one file uses logical properties.' );
 		$this->assertFalse( wp_style_is( 'wp-email-rtl', 'registered' ), 'No separate RTL stylesheet is even registered.' );
-		$this->assertSame( array(), (array) glob( dirname( __DIR__ ) . '/css/*-rtl.css' ) );
+		$this->assertSame( array(), (array) glob( dirname( __DIR__ ) . '/css/*-rtl.css' ), 'There is no second stylesheet for RTL, because the one is written both ways.' );
 	}
 
 	public function test_activation_installs_on_a_single_site() {
@@ -397,8 +397,8 @@ class WP_Email_Boot_Test extends WP_Email_TestCase {
 
 		$bare = WP_Email_Form::render( '', false, false, false );
 
-		$this->assertStringNotContainsString( 'id="wp-email-content"', $bare );
-		$this->assertStringContainsString( 'name="friendemail"', $bare );
+		$this->assertStringNotContainsString( 'id="wp-email-content"', $bare, 'The bare form omits the content block.' );
+		$this->assertStringContainsString( 'name="friendemail"', $bare, 'And still renders the form.' );
 	}
 
 	public function test_the_form_can_echo_itself() {
@@ -409,8 +409,8 @@ class WP_Email_Boot_Test extends WP_Email_TestCase {
 		$returned = WP_Email_Form::render( '', true );
 		$printed  = ob_get_clean();
 
-		$this->assertSame( '', $returned );
-		$this->assertStringContainsString( 'name="friendemail"', $printed );
+		$this->assertSame( '', $returned, 'Asked to echo, the form returns nothing.' );
+		$this->assertStringContainsString( 'name="friendemail"', $printed, 'It prints instead.' );
 	}
 
 	/**
@@ -434,7 +434,7 @@ class WP_Email_Boot_Test extends WP_Email_TestCase {
 
 		// switch_to_blog() pushes onto a stack; restoring once after the loop
 		// leaves it unwound by exactly one.
-		$this->assertStringContainsString( 'restore_current_blog', $body );
+		$this->assertStringContainsString( 'restore_current_blog', $body, 'The network loop restores the site it switched away from, inside the loop.' );
 	}
 
 	public function test_every_php_file_refuses_to_run_directly() {

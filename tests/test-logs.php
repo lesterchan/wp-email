@@ -46,13 +46,13 @@ class WP_Email_Logs_Test extends WP_Email_TestCase {
 		$indexes = $wpdb->get_results( "SHOW INDEX FROM {$wpdb->email}" );
 		$names   = wp_list_pluck( $indexes, 'Key_name' );
 
-		$this->assertContains( 'PRIMARY', $names );
+		$this->assertContains( 'PRIMARY', $names, 'The table has its primary key.' );
 
 		// Every query the plugin runs filters on one of these, and none of them
 		// was indexed before 3.0.0.
-		$this->assertContains( 'email_postid', $names );
-		$this->assertContains( 'email_status', $names );
-		$this->assertContains( 'email_ip', $names );
+		$this->assertContains( 'email_postid', $names, 'An index on the post.' );
+		$this->assertContains( 'email_status', $names, 'On the status.' );
+		$this->assertContains( 'email_ip', $names, 'And on the address, which is what the interval check reads.' );
 	}
 
 	public function test_the_table_is_registered_for_multisite_prefixing() {
@@ -60,8 +60,8 @@ class WP_Email_Logs_Test extends WP_Email_TestCase {
 
 		// $wpdb->tables[] is what keeps the name correct across
 		// switch_to_blog(); a bare $wpdb->email assignment is not enough.
-		$this->assertContains( 'email', $wpdb->tables );
-		$this->assertSame( $wpdb->prefix . 'email', $wpdb->email );
+		$this->assertContains( 'email', $wpdb->tables, 'The table is registered as blog scoped.' );
+		$this->assertSame( $wpdb->prefix . 'email', $wpdb->email, 'Under the table prefix.' );
 	}
 
 	public function test_counts() {
@@ -70,11 +70,11 @@ class WP_Email_Logs_Test extends WP_Email_TestCase {
 		$this->log( array( 'status' => WP_Email_Logs::STATUS_FAILED ) );
 		$this->log( array( 'postid' => 99 ) );
 
-		$this->assertSame( 4, WP_Email_Logs::count_all() );
-		$this->assertSame( 3, WP_Email_Logs::count_by_status( WP_Email_Logs::STATUS_SUCCESS ) );
-		$this->assertSame( 1, WP_Email_Logs::count_by_status( WP_Email_Logs::STATUS_FAILED ) );
-		$this->assertSame( 3, WP_Email_Logs::count_for_post( 1 ) );
-		$this->assertSame( 1, WP_Email_Logs::count_for_post( 99 ) );
+		$this->assertSame( 4, WP_Email_Logs::count_all(), 'Every row is counted.' );
+		$this->assertSame( 3, WP_Email_Logs::count_by_status( WP_Email_Logs::STATUS_SUCCESS ), 'The successes are counted on their own.' );
+		$this->assertSame( 1, WP_Email_Logs::count_by_status( WP_Email_Logs::STATUS_FAILED ), 'And the failures.' );
+		$this->assertSame( 3, WP_Email_Logs::count_for_post( 1 ), 'A post is counted on its own.' );
+		$this->assertSame( 1, WP_Email_Logs::count_for_post( 99 ), 'And so is another, so the two are not sharing a count.' );
 	}
 
 	public function test_last_sent_at_only_counts_successes() {
@@ -86,7 +86,7 @@ class WP_Email_Logs_Test extends WP_Email_TestCase {
 			)
 		);
 
-		$this->assertSame( 0, WP_Email_Logs::last_sent_at( '203.0.113.1' ) );
+		$this->assertSame( 0, WP_Email_Logs::last_sent_at( '203.0.113.1' ), 'A failure is not a send, so there is nothing to wait for.' );
 
 		$this->log(
 			array(
@@ -96,7 +96,7 @@ class WP_Email_Logs_Test extends WP_Email_TestCase {
 			)
 		);
 
-		$this->assertSame( 2000, WP_Email_Logs::last_sent_at( '203.0.113.1' ) );
+		$this->assertSame( 2000, WP_Email_Logs::last_sent_at( '203.0.113.1' ), 'While a success is, and is what the interval counts from.' );
 	}
 
 	public function test_query_sorts_on_a_whitelisted_column_only() {
@@ -109,7 +109,7 @@ class WP_Email_Logs_Test extends WP_Email_TestCase {
 				'order'   => 'ASC',
 			)
 		);
-		$this->assertSame( 'Adam', $asc[0]->email_yourname );
+		$this->assertSame( 'Adam', $asc[0]->email_yourname, 'Ascending puts the first name first.' );
 
 		$desc = WP_Email_Logs::query(
 			array(
@@ -117,7 +117,7 @@ class WP_Email_Logs_Test extends WP_Email_TestCase {
 				'order'   => 'DESC',
 			)
 		);
-		$this->assertSame( 'Zoe', $desc[0]->email_yourname );
+		$this->assertSame( 'Zoe', $desc[0]->email_yourname, 'And descending puts the last one first.' );
 	}
 
 	public function test_an_unknown_orderby_falls_back_instead_of_reaching_sql() {
@@ -154,8 +154,8 @@ class WP_Email_Logs_Test extends WP_Email_TestCase {
 
 		$this->assertCount( 2, $page_one, 'The first page holds its two rows.' );
 		$this->assertCount( 2, $page_two, 'The second page holds the other two.' );
-		$this->assertSame( 'Name 0', $page_one[0]->email_yourname );
-		$this->assertSame( 'Name 2', $page_two[0]->email_yourname );
+		$this->assertSame( 'Name 0', $page_one[0]->email_yourname, 'The first page starts at the first row.' );
+		$this->assertSame( 'Name 2', $page_two[0]->email_yourname, 'And the second page starts where it left off.' );
 	}
 
 	public function test_delete_all_empties_the_table() {
@@ -164,7 +164,7 @@ class WP_Email_Logs_Test extends WP_Email_TestCase {
 
 		WP_Email_Logs::delete_all();
 
-		$this->assertSame( 0, WP_Email_Logs::count_all() );
+		$this->assertSame( 0, WP_Email_Logs::count_all(), 'Deleting all empties the table.' );
 	}
 
 	public function test_status_is_stored_untranslated() {
@@ -174,12 +174,12 @@ class WP_Email_Logs_Test extends WP_Email_TestCase {
 
 		// Storing __( 'Success' ) meant changing site language orphaned every
 		// historical row from its own counters.
-		$this->assertSame( 'Success', $rows[0]->email_status );
+		$this->assertSame( 'Success', $rows[0]->email_status, 'The status is stored in English, whatever the site language is.' );
 	}
 
 	public function test_status_labels_are_translated_on_the_way_out() {
-		$this->assertSame( __( 'Success', 'wp-email' ), WP_Email_Logs::status_label( WP_Email_Logs::STATUS_SUCCESS ) );
-		$this->assertSame( 'Something else', WP_Email_Logs::status_label( 'Something else' ) );
+		$this->assertSame( __( 'Success', 'wp-email' ), WP_Email_Logs::status_label( WP_Email_Logs::STATUS_SUCCESS ), 'And is translated on the way out.' );
+		$this->assertSame( 'Something else', WP_Email_Logs::status_label( 'Something else' ), 'While a status with no translation is passed through as it stands.' );
 	}
 
 	public function test_install_is_safe_to_run_twice() {
@@ -187,7 +187,7 @@ class WP_Email_Logs_Test extends WP_Email_TestCase {
 
 		WP_Email_Logs::install();
 
-		$this->assertSame( 1, WP_Email_Logs::count_all() );
+		$this->assertSame( 1, WP_Email_Logs::count_all(), 'Installing twice does not lose the rows already there.' );
 	}
 
 	public function test_most_emailed_orders_by_volume() {
@@ -214,8 +214,8 @@ class WP_Email_Logs_Test extends WP_Email_TestCase {
 
 		$rows = WP_Email_Logs::most_emailed( 'post', 10 );
 
-		$this->assertSame( $loud, (int) $rows[0]->ID );
-		$this->assertSame( 3, (int) $rows[0]->email_total );
+		$this->assertSame( $loud, (int) $rows[0]->ID, 'The most emailed post is first.' );
+		$this->assertSame( 3, (int) $rows[0]->email_total, 'With its count, so the order can be checked against something.' );
 	}
 
 	public function test_most_emailed_respects_its_limit() {
@@ -248,7 +248,7 @@ class WP_Email_Logs_Test extends WP_Email_TestCase {
 		$this->log( array( 'postid' => $draft ) );
 		$this->log( array( 'postid' => $protected ) );
 
-		$this->assertSame( array(), WP_Email_Logs::most_emailed( 'post', 10 ) );
+		$this->assertSame( array(), WP_Email_Logs::most_emailed( 'post', 10 ), 'A draft or a password protected post is never listed.' );
 	}
 
 	public function test_normalize_statuses_rewrites_translated_rows() {
@@ -265,13 +265,13 @@ class WP_Email_Logs_Test extends WP_Email_TestCase {
 			array( '%s' )
 		);
 
-		$this->assertSame( 0, WP_Email_Logs::count_by_status( WP_Email_Logs::STATUS_SUCCESS ) );
+		$this->assertSame( 0, WP_Email_Logs::count_by_status( WP_Email_Logs::STATUS_SUCCESS ), 'A translated status is not counted as a success.' );
 
 		add_filter( 'gettext_wp-email', array( $this, 'translate_success' ), 10, 2 );
 		WP_Email_Logs::normalize_statuses();
 		remove_filter( 'gettext_wp-email', array( $this, 'translate_success' ), 10 );
 
-		$this->assertSame( 1, WP_Email_Logs::count_by_status( WP_Email_Logs::STATUS_SUCCESS ) );
+		$this->assertSame( 1, WP_Email_Logs::count_by_status( WP_Email_Logs::STATUS_SUCCESS ), 'Until it is rewritten, which is what the normaliser is for.' );
 	}
 
 	/**
@@ -291,7 +291,7 @@ class WP_Email_Logs_Test extends WP_Email_TestCase {
 
 		WP_Email_Logs::normalize_statuses();
 
-		$this->assertSame( 1, WP_Email_Logs::count_by_status( WP_Email_Logs::STATUS_SUCCESS ) );
+		$this->assertSame( 1, WP_Email_Logs::count_by_status( WP_Email_Logs::STATUS_SUCCESS ), 'On an English site there is nothing to rewrite, and the count is unchanged.' );
 	}
 
 	public function test_every_sortable_column_exists_on_the_table() {
@@ -305,16 +305,16 @@ class WP_Email_Logs_Test extends WP_Email_TestCase {
 	}
 
 	public function test_counts_are_zero_on_an_empty_table() {
-		$this->assertSame( 0, WP_Email_Logs::count_all() );
-		$this->assertSame( 0, WP_Email_Logs::count_by_status( WP_Email_Logs::STATUS_SUCCESS ) );
-		$this->assertSame( 0, WP_Email_Logs::count_for_post( 1 ) );
-		$this->assertSame( array(), WP_Email_Logs::query() );
+		$this->assertSame( 0, WP_Email_Logs::count_all(), 'An empty table counts no rows.' );
+		$this->assertSame( 0, WP_Email_Logs::count_by_status( WP_Email_Logs::STATUS_SUCCESS ), 'No successes.' );
+		$this->assertSame( 0, WP_Email_Logs::count_for_post( 1 ), 'Nothing for a post.' );
+		$this->assertSame( array(), WP_Email_Logs::query(), 'And returns an empty list rather than nothing at all.' );
 	}
 
 	public function test_the_table_name_is_prefixed_for_the_current_site() {
 		global $wpdb;
 
-		$this->assertSame( $wpdb->email, WP_Email_Logs::table() );
-		$this->assertStringEndsWith( 'email', WP_Email_Logs::table() );
+		$this->assertSame( $wpdb->email, WP_Email_Logs::table(), 'The table name is the one wpdb prefixed for this site.' );
+		$this->assertStringEndsWith( 'email', WP_Email_Logs::table(), 'Ending in the table name itself.' );
 	}
 }
