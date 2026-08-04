@@ -275,6 +275,31 @@ class WP_Email {
 	}
 
 	/**
+	 * Append " » E-Mail" to the document title parts.
+	 *
+	 * The same job as filter_page_title() for the other half of the title API:
+	 * a theme declaring add_theme_support( 'title-tag' ) goes through
+	 * document_title_parts and never calls wp_title(), which core deprecated in
+	 * 4.4. Both are hooked, because a site may be running either kind of theme.
+	 *
+	 * A method rather than the global function this used to be. It is hooked
+	 * from screen-standalone.php, which is required at request time when the
+	 * /email/ endpoint is hit -- so a global there is both a §2.5 violation and
+	 * a redeclare fatal waiting for the day something includes that file twice.
+	 *
+	 * @param array $parts Title parts.
+	 *
+	 * @return array
+	 */
+	public static function filter_document_title_parts( $parts ) {
+		if ( isset( $parts['title'] ) ) {
+			$parts['title'] .= ' &raquo; ' . __( 'E-Mail', 'wp-email' );
+		}
+
+		return $parts;
+	}
+
+	/**
 	 * Tell robots not to index the e-mail page.
 	 *
 	 * @return void
