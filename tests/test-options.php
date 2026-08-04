@@ -248,7 +248,7 @@ class WP_Email_Options_Test extends WP_Email_TestCase {
 		WP_Email_Options::maybe_upgrade();
 
 		$this->assertSame( 'wp_email_options', WP_Email_Options::OPTION, 'The consolidated row is the prefixed one.' );
-		$this->assertIsArray( get_option( WP_Email_Options::OPTION ), 'The migration writes the new row.' );
+		$this->assertIsArray( get_option( WP_Email_Options::OPTION, false ), 'The migration writes the new row.' );
 		$this->assertFalse( get_option( 'email_options' ), 'The migration deletes the legacy row once it has been folded in.' );
 	}
 
