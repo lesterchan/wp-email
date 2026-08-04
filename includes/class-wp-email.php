@@ -426,10 +426,16 @@ class WP_Email {
 		WP_Email_Logs::install();
 		WP_Email_Logs::normalize_statuses();
 
+		// WP_Email_Admin::capability(), not the CAPABILITY constant behind it.
+		// Every e-mail screen gates on the filtered value, so granting the raw
+		// constant while checking the filtered one means a site that filters
+		// wp_email_capability hands its administrator a capability nothing looks
+		// at and gates every screen on one nobody holds -- locked out of its own
+		// plugin, with nothing in any log to say why.
 		$role = get_role( 'administrator' );
 
-		if ( $role && ! $role->has_cap( WP_Email_Admin::CAPABILITY ) ) {
-			$role->add_cap( WP_Email_Admin::CAPABILITY );
+		if ( $role instanceof WP_Role ) {
+			$role->add_cap( WP_Email_Admin::capability() );
 		}
 
 		WP_Email_Options::maybe_upgrade();

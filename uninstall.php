@@ -68,9 +68,15 @@ function wp_email_delete_options() {
  * @return void
  */
 function wp_email_remove_capability() {
+	// One expression, asked and answered: the capability the screens check is
+	// the one granted and the one taken back. Testing the constant while
+	// removing the filtered value would walk straight past a site that filters
+	// wp_email_capability, leaving a capability nothing removes.
+	$capability = WP_Email_Admin::capability();
+
 	foreach ( wp_roles()->role_objects as $role ) {
-		if ( $role->has_cap( WP_Email_Admin::CAPABILITY ) ) {
-			$role->remove_cap( WP_Email_Admin::CAPABILITY );
+		if ( $role->has_cap( $capability ) ) {
+			$role->remove_cap( $capability );
 		}
 	}
 }
