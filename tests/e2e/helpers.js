@@ -187,6 +187,140 @@ function resetPlugin() {
 }
 
 /**
+ * The settings row as the database holds it, with no defaults merged in.
+ *
+ * Not the same question as setting() above, and the difference is the whole of
+ * §7.6.1: WP_Email_Options::all() merges over the defaults, so it answers
+ * identically for a row holding the defaults and for no row at all -- which is
+ * what a migration that read, deleted and never wrote leaves behind. Ask the
+ * database when the question is "was it written".
+ *
+ * @return {Object|false} The stored array, or false when there is no row.
+ */
+function rawOptions() {
+	return JSON.parse(
+		wpEval( "echo '<<<' . wp_json_encode( get_option( WP_Email_Options::OPTION ) ) . '>>>';" ),
+	);
+}
+
+/**
+ * The defaults the running code would fall back to.
+ *
+ * @return {Object} The default settings.
+ */
+function defaultOptions() {
+	return JSON.parse(
+		wpEval( "echo '<<<' . wp_json_encode( WP_Email_Options::defaults() ) . '>>>';" ),
+	);
+}
+
+/**
+ * Put the install back into the shape a pre-3.0.0 site is in.
+ *
+ * The prefixed rows go away and whichever unprefixed ones the caller names take
+ * their place: the flat email_options row of 2.x and its fifteen companions,
+ * plus the two WP-Stats rows this plugin shared with five siblings.
+ *
+ * @param {Object}      rows      Legacy option name => value, stored exactly as given.
+ * @param {Object|null} [current] A row already under the current name, for the
+ *                                install that has one and still holds the retired
+ *                                link keys.
+ * @param {Object|null} [markers] Version markers to stamp, for the same case.
+ * @return {void}
+ */
+function installLegacyRows( rows, current = null, markers = null ) {
+	const encoded = Buffer.from(
+		JSON.stringify( { rows, current, markers } ),
+		'utf8',
+	).toString( 'base64' );
+
+	wpEval(
+		`$data = json_decode( base64_decode( '${ encoded }' ), true );
+		delete_option( WP_Email_Options::OPTION );
+		delete_option( WP_Email_Options::VERSION );
+		foreach ( WP_Email_Options::LEGACY_ROWS as $row ) {
+			delete_option( $row );
+		}
+		foreach ( $data['rows'] as $name => $value ) {
+			update_option( $name, $value );
+		}
+		if ( null !== $data['current'] ) {
+			update_option( WP_Email_Options::OPTION, $data['current'] );
+		}
+		if ( null !== $data['markers'] ) {
+			update_option( WP_Email_Options::VERSION, $data['markers'] );
+		}
+		WP_Email_Options::flush();
+		echo '<<<done>>>';`,
+	);
+}
+
+/**
+ * Which pre-3.0.0 rows are still in the database.
+ *
+ * Read through the plugin's own list rather than a set typed out here, so a row
+ * that is added to the migration and forgotten by the cleanup -- or the other
+ * way round -- shows up as a failure instead of going unnoticed.
+ *
+ * @return {string[]} The legacy rows that survive.
+ */
+function survivingLegacyRows() {
+	return JSON.parse(
+		wpEval(
+			`$alive = array();
+			foreach ( WP_Email_Options::LEGACY_ROWS as $row ) {
+				if ( false !== get_option( $row, false ) ) {
+					$alive[] = $row;
+				}
+			}
+			echo '<<<' . wp_json_encode( array_values( $alive ) ) . '>>>';`,
+		),
+	);
+}
+
+/**
+ * The upgrade markers, as the database holds them.
+ *
+ * @return {Object|false} The stored array, or false when there is no row.
+ */
+function versionRow() {
+	return JSON.parse(
+		wpEval( "echo '<<<' . wp_json_encode( get_option( WP_Email_Options::VERSION ) ) . '>>>';" ),
+	);
+}
+
+/**
+ * Stamp the upgrade markers.
+ *
+ * @param {Object} versions The two markers.
+ * @return {void}
+ */
+function setVersionRow( versions ) {
+	const encoded = Buffer.from( JSON.stringify( versions ), 'utf8' ).toString( 'base64' );
+
+	wpEval(
+		`update_option( WP_Email_Options::VERSION, json_decode( base64_decode( '${ encoded }' ), true ) );
+		echo '<<<done>>>';`,
+	);
+}
+
+/**
+ * The version numbers the running code expects to find stamped.
+ *
+ * @return {{plugin: string, db: string}} The two markers.
+ */
+function runningVersions() {
+	return JSON.parse(
+		wpEval(
+			`echo '<<<' . wp_json_encode( array(
+				'plugin' => WP_EMAIL_VERSION,
+				'db'     => WP_EMAIL_DB_VERSION,
+			) ) . '>>>';`,
+		),
+	);
+}
+
+/**
  * Write one setting straight into the option row.
  *
  * For the preconditions a test needs but is not itself testing -- switching the
@@ -501,19 +635,26 @@ module.exports = {
 	countLogs,
 	createEmailablePost,
 	createLog,
+	defaultOptions,
 	emailPageUrl,
 	failNextMail,
 	fillForm,
+	installLegacyRows,
 	installMailInterceptor,
 	lastMail,
 	logInAs,
 	newestLog,
+	rawOptions,
 	resetMail,
 	resetPlugin,
+	runningVersions,
 	setSetting,
+	setVersionRow,
 	setting,
+	survivingLegacyRows,
 	template,
 	uniqueTitle,
 	usePrettyPermalinks,
+	versionRow,
 	wpEval,
 };
