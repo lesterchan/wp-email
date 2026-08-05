@@ -2,10 +2,6 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-WP-EMail follows `_standards/STANDARDS.md` in the parent folder, which is the
-contract for all nineteen plugins in the collection. Where this file and that
-one disagree, that one wins.
-
 ## What it is
 
 "Email this post to a friend": a link on a post, a form on a standalone or popup
@@ -14,8 +10,8 @@ templates, and a log of everything sent. Two front-end endpoints — `/email/`
 (themed) and `/emailpopup/` (standalone). One top-level menu: **Settings**
 first, then **Logs**.
 
-Settings first is deliberate (§4.1): the log is a *record* rather than a
-workspace — you open it to look something up occasionally, so Settings leads.
+Settings first is deliberate: the log is a *record* rather than a workspace —
+you open it to look something up occasionally, so Settings leads.
 
 ## Data
 
@@ -23,14 +19,18 @@ workspace — you open it to look something up occasionally, so Settings leads.
   `email_fields`, the eight `email_template_*` rows and the rest.
   `LEGACY_ROWS` is the single list, read by both the migration and the
   uninstaller so the two cannot disagree.
-* `wp_email_version` — from `email_db_version`.
+* `wp_email_version` — the `plugin` and `db` upgrade markers, from
+  `email_db_version`. Keep them out of the settings array: a marker in there has
+  to be rescued from the stored value on every save, because the settings form
+  never posts one.
 * **A custom table**, `$wpdb->email`, holding the send log.
-* One of the seven WP-Stats plugins (§13).
+* It contributes a section to **WP-Stats**, a separate plugin, by answering the
+  `wp_stats_sections` filter.
 
 ## Capabilities
 
 `manage_email` is the plugin's own capability and it is kept for the **Logs**
-screen only; Settings is `manage_options` (§2.7). Administrators hold both, so
+screen only; Settings is `manage_options`. Administrators hold both, so
 this only bites where `manage_email` was granted to a non-administrator role —
 that role now sees the log but not the settings. `wp_email_capability` is the
 one filter.
@@ -83,7 +83,7 @@ one filter.
   under `.wp-email`, so the rules keep working from a theme's own stylesheet —
   but they now *add* to the plugin's rather than replacing the whole file.
 * **`includes/screen-popup.php` and `screen-standalone.php` are `screen-*.php`
-  partials, not classes**, per §1. The popup deliberately does not run the theme
+  partials, not classes.** The popup deliberately does not run the theme
   but does enqueue `get_stylesheet_uri()`, so the form does not look foreign; the
   standalone one goes through the theme and uses `document_title_parts` because
   `wp_title()` has been deprecated since WP 4.4.
@@ -95,33 +95,59 @@ one filter.
 
 ## WP-Stats coupling
 
-Three separate checkboxes collapse into one block. Read `stats_display` through
-`WP_Email_Options`, never `get_option()` directly, and **keep the shared
-`stats_display` / `stats_mostlimit` rows off the uninstall list** — wp-polls and
-wp-downloadmanager currently get that wrong (`_standards/RESUME.md`).
+WP-Stats is a separate plugin; this one contributes a section to its page by
+answering the `wp_stats_sections` filter. Three separate checkboxes collapse
+into one block.
+
+Read `stats_display` through `WP_Email_Options`, never `get_option()` directly:
+a raw read cannot tell "a sibling plugin already migrated the shared row away"
+from "the site opted out", and would turn a fresh install's section off.
+
+**Keep the shared `stats_display` / `stats_mostlimit` rows off the uninstall
+list.** They were never this plugin's to own — several plugins wrote into them —
+so the migration deletes them once it has folded them in, and uninstall leaves
+them alone, because a sibling that has not upgraded is still reading them.
+
+## Migrations, and why they are tested through a browser
+
+There are two, gated separately, and `tests/e2e/upgrade.spec.js` holds both
+still: with no schema counter, sixteen unprefixed rows fold into one; below
+counter 2, the four link settings collapse into the single HTML template the
+plugin now keeps.
+
+The second is the half only a browser can answer. A stored install has to come
+out of the upgrade rendering what it was rendering before, and "the same link"
+is a question about a page — so three tests take the three shapes an install can
+be in (stock wording, customised wording, a site already writing its own HTML)
+and read the answer off a rendered post rather than off the row.
+
+Read rows **raw**: `WP_Email_Options::all()` merges over the defaults, so it
+answers identically for a row holding them and for no row at all — the state a
+migration that read, deleted and never wrote leaves behind. And assert the
+retired link keys are *absent* rather than merely unread; a setting the screen
+no longer draws is one the next release has to keep thinking about.
 
 ## Tests
 
-The largest suite in the collection at 331 tests, and the best documented: 94.9%
-of assertions carry a failure message, the highest measured (`_standards/RESUME.md`).
+`bin/test.sh` runs PHPUnit, `bin/test-multisite.sh` the network pass, and
+`bin/test-e2e.sh` the Playwright suite. **Run them rather than trusting a note
+about their last result** — CI is the authority, and this file cannot be.
+
+This is a large suite (330-odd PHPUnit tests), and every assertion in it carries
+a failure message. Keep it that way.
 
 **`helper-ajax-testcase.php` exists because AJAX tests must go through
 `_handleAjax()`**, not the handler directly. Catch `WPDieException`, the parent —
 `wp_die()` only throws the `WPAjaxDie*` subclasses while `wp_doing_ajax()` is
 true.
 
-§7.2's PHP 8.2 lesson came from this plugin: **one undeclared `private $mail`
-dynamic property failed all 41 tests in its class**, because the floor moved to
-8.2 *and* the shared config sets `convertDeprecationsToExceptions` (commit
-`2426531`).
-
-`tests/e2e/` is 5 specs and 54 tests. `upgrade.spec.js` (9) is green as of
-2026-08-05; **the other four were not re-run that day**, so verify before
-trusting them.
+**One undeclared `private $mail` dynamic property failed all 41 tests in its
+class**, because the PHP floor is 8.2 *and* `phpunit.xml.dist` sets
+`convertDeprecationsToExceptions` (commit `2426531`). A dynamic property is a
+fatal-shaped failure here, not a notice.
 
 ## Pending, not started
 
-Task #18 (the link-settings collapse) has largely landed here already — see
-commit `bb95952`. Check before redoing it. Task #20 brings the proxy-header
-label into line with wp-polls and wp-postratings; commit `190f659` may already
-have done it.
+Nothing outstanding. The link-settings collapse landed in commit `bb95952` and
+the proxy-header label and description were brought into line in `190f659` —
+check those before redoing either.
