@@ -115,8 +115,9 @@ dynamic property failed all 41 tests in its class**, because the floor moved to
 8.2 *and* the shared config sets `convertDeprecationsToExceptions` (commit
 `2426531`).
 
-`tests/e2e/` (4 specs, 41 tests) is among the twelve suites listed as never run
-to green.
+`tests/e2e/` is 5 specs and 54 tests. `upgrade.spec.js` (9) is green as of
+2026-08-05; **the other four were not re-run that day**, so verify before
+trusting them.
 
 ## Pending, not started
 
