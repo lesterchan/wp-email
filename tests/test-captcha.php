@@ -71,6 +71,57 @@ class WP_Email_Captcha_Test extends WP_Email_TestCase {
 		$this->assertNotFalse( $this->answer_for( $second ), 'The second challenge has its own answer, so the two are independent.' );
 	}
 
+	/**
+	 * Rendering the form is free and unauthenticated, and every render wrote a
+	 * ten-minute transient -- two non-autoloaded wp_options rows apiece without
+	 * a persistent object cache, reaped only by the daily cron.
+	 */
+	public function test_one_visitor_cannot_hold_an_unbounded_number_of_challenges() {
+		if ( ! WP_Email_Captcha::is_available() ) {
+			$this->markTestSkipped( 'No GD library on this PHP build.' );
+		}
+
+		$tokens = array();
+
+		for ( $i = 0; $i < WP_Email_Captcha::MAX_LIVE + 15; $i++ ) {
+			$tokens[] = WP_Email_Captcha::issue();
+		}
+
+		$live = 0;
+
+		foreach ( $tokens as $token ) {
+			if ( false !== $this->answer_for( $token ) ) {
+				++$live;
+			}
+		}
+
+		$this->assertSame( WP_Email_Captcha::MAX_LIVE, $live, 'Past the cap the oldest challenge is discarded rather than accumulating.' );
+		$this->assertNotFalse( $this->answer_for( end( $tokens ) ), 'And the newest is always one of the survivors.' );
+	}
+
+	/**
+	 * The cap must not become "one challenge per visitor". That is the bug the
+	 * 3.0.0 rewrite exists to fix -- the session-backed version kept one
+	 * site-wide answer, so opening a second form invalidated the first.
+	 */
+	public function test_a_handful_of_open_forms_all_keep_working() {
+		if ( ! WP_Email_Captcha::is_available() ) {
+			$this->markTestSkipped( 'No GD library on this PHP build.' );
+		}
+
+		$first  = WP_Email_Captcha::issue();
+		$second = WP_Email_Captcha::issue();
+		$third  = WP_Email_Captcha::issue();
+
+		foreach ( array( $first, $second, $third ) as $token ) {
+			$this->assertNotFalse( $this->answer_for( $token ), 'Three tabs open at once are three live challenges.' );
+		}
+
+		$this->assertTrue( WP_Email_Captcha::verify( $second, $this->answer_for( $second ) ), 'Answering the second works.' );
+		$this->assertNotFalse( $this->answer_for( $first ), 'And does not consume the first.' );
+		$this->assertNotFalse( $this->answer_for( $third ), 'Nor the third.' );
+	}
+
 	public function test_the_right_answer_verifies() {
 		if ( ! WP_Email_Captcha::is_available() ) {
 			$this->markTestSkipped( 'No GD library on this PHP build.' );

@@ -941,6 +941,19 @@ class WP_Email_Form {
 		$status = $sent ? WP_Email_Logs::STATUS_SUCCESS : WP_Email_Logs::STATUS_FAILED;
 		$ip     = self::ip_address();
 
+		/*
+		 * Resolved once, outside the loop below.
+		 *
+		 * gethostbyaddr() is a blocking DNS lookup and whoever owns the
+		 * address's reverse zone decides how long it takes -- a zone pointed at
+		 * a black hole costs the resolver timeout, with a PHP worker held for
+		 * the whole of it. Inside the loop that was one lookup per recipient, so
+		 * the default maximum of five multiplied it by five, on an endpoint any
+		 * visitor can reach. The answer is the same every time round: the
+		 * address does not change between recipients.
+		 */
+		$host = '' === $ip ? '' : gethostbyaddr( $ip );
+
 		foreach ( $emails as $index => $email ) {
 			WP_Email_Logs::insert(
 				array(
@@ -957,7 +970,7 @@ class WP_Email_Form {
 					// historical row by the site's offset.
 					'timestamp'   => current_time( 'timestamp' ), // phpcs:ignore WordPress.DateTime.CurrentTimeTimestamp.Requested -- The column has held site-local time since 2.x; switching to UTC would shift every historical row by the site's offset.
 					'ip'          => $ip,
-					'host'        => '' === $ip ? '' : gethostbyaddr( $ip ),
+					'host'        => $host,
 					'status'      => $status,
 				)
 			);

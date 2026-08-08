@@ -215,6 +215,13 @@ class WP_Email_Template {
 	/**
 	 * Trim text to a number of characters, entity-encoding the result.
 	 *
+	 * ENT_QUOTES rather than ENT_COMPAT, so a single quote is encoded too. The
+	 * sibling branch that does not truncate uses esc_html(), which encodes both
+	 * -- so the two escaped to different standards, and the truncating one is
+	 * the branch the widget takes by default. Nothing shipped puts this in a
+	 * single-quoted attribute, but "safe because of how the stock template
+	 * happens to quote things" is not a property worth keeping.
+	 *
 	 * @param string $text   Text to trim.
 	 * @param int    $length Character count.
 	 *
@@ -225,9 +232,9 @@ class WP_Email_Template {
 		$text    = html_entity_decode( (string) $text, ENT_QUOTES, $charset );
 
 		if ( mb_strlen( $text ) > $length ) {
-			return htmlentities( mb_substr( $text, 0, (int) $length ), ENT_COMPAT, $charset ) . '...';
+			return htmlentities( mb_substr( $text, 0, (int) $length ), ENT_QUOTES, $charset ) . '...';
 		}
 
-		return htmlentities( $text, ENT_COMPAT, $charset );
+		return htmlentities( $text, ENT_QUOTES, $charset );
 	}
 }

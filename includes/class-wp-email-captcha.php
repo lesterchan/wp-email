@@ -34,6 +34,23 @@ class WP_Email_Captcha {
 	const TRANSIENT_PREFIX = 'wp_email_captcha_';
 
 	/**
+	 * Prefix for the per-visitor pointer at their live challenge.
+	 *
+	 * @since 3.0.0
+	 */
+	const POINTER_PREFIX = 'wp_email_captcha_for_';
+
+	/**
+	 * How many challenges one visitor may hold at once.
+	 *
+	 * Generous on purpose: a person with several tabs open is the case this
+	 * protects, and nobody legitimately holds ten.
+	 *
+	 * @since 3.0.0
+	 */
+	const MAX_LIVE = 10;
+
+	/**
 	 * How long an issued challenge stays valid.
 	 */
 	const TTL = 600;
@@ -108,6 +125,27 @@ class WP_Email_Captcha {
 	/**
 	 * Issue a challenge and return its token.
 	 *
+	 * A fresh challenge every time, but no more than MAX_LIVE of them alive per
+	 * visitor at once.
+	 *
+	 * Rendering the form is free and unauthenticated, and every GET of
+	 * `/post/email/` or `/post/emailpopup/` -- and every failed submission --
+	 * wrote a transient that lived ten minutes. With no persistent object cache
+	 * that is two non-autoloaded wp_options rows apiece, reaped only by the
+	 * daily cron, so a request loop grew the table by millions of rows inside
+	 * the hour.
+	 *
+	 * Handing back the *same* challenge instead would bound it in one line, and
+	 * would reintroduce the bug the 3.0.0 rewrite exists to fix: the
+	 * session-backed version kept one site-wide answer, so opening a second form
+	 * invalidated the first. Two tabs have to keep working. So the count is
+	 * capped rather than collapsed -- the oldest challenge is discarded when a
+	 * visitor is holding too many, which no real person ever is.
+	 *
+	 * The design note that the image endpoint must not be able to mint a
+	 * challenge is untouched; this is about the form endpoint not minting an
+	 * unbounded number.
+	 *
 	 * @return string Empty string when verification is not in use.
 	 */
 	public static function issue() {
@@ -126,7 +164,42 @@ class WP_Email_Captcha {
 
 		set_transient( self::TRANSIENT_PREFIX . $token, $code, self::TTL );
 
+		self::remember( $token );
+
 		return $token;
+	}
+
+	/**
+	 * Track this visitor's live challenges, discarding the oldest past the cap.
+	 *
+	 * @since 3.0.0
+	 *
+	 * @param string $token The challenge just issued.
+	 * @return void
+	 */
+	protected static function remember( $token ) {
+		$pointer = self::POINTER_PREFIX . md5( WP_Email_Form::ip_address() );
+		$live    = get_transient( $pointer );
+		$live    = is_array( $live ) ? $live : array();
+
+		// Anything verify() has already consumed, or that has simply expired, is
+		// not this visitor's to be charged for.
+		$live = array_values(
+			array_filter(
+				$live,
+				static function ( $held ) {
+					return false !== get_transient( self::TRANSIENT_PREFIX . $held );
+				}
+			)
+		);
+
+		$live[] = $token;
+
+		for ( $over = count( $live ) - self::MAX_LIVE; $over > 0; $over-- ) {
+			delete_transient( self::TRANSIENT_PREFIX . array_shift( $live ) );
+		}
+
+		set_transient( $pointer, $live, self::TTL );
 	}
 
 	/**
