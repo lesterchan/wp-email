@@ -30,6 +30,16 @@ class WP_Email_Form {
 	const ERROR_SEPARATOR = '<br /><strong>&raquo;</strong> ';
 
 	/**
+	 * Prefix for the transient and cache key holding a visitor's flood claim.
+	 */
+	const FLOOD_PREFIX = 'wp_email_flood_';
+
+	/**
+	 * Object cache group for the flood claim.
+	 */
+	const CACHE_GROUP = 'wp-email';
+
+	/**
 	 * The visitor's IP address.
 	 *
 	 * Only REMOTE_ADDR is trusted by default. Proxy headers are attacker
@@ -146,7 +156,25 @@ class WP_Email_Form {
 	}
 
 	/**
+	 * The key this visitor's flood claim is held under.
+	 *
+	 * Hashed, because the address is the input and an option name has a length
+	 * limit that an IPv6 address plus a prefix can approach.
+	 *
+	 * @param string $ip Visitor address.
+	 *
+	 * @return string
+	 */
+	private static function flood_key( $ip ) {
+		return self::FLOOD_PREFIX . md5( (string) $ip );
+	}
+
+	/**
 	 * Whether the visitor is clear to send again.
+	 *
+	 * A read, and only a read -- it answers the question the form asks before it
+	 * draws itself. Deciding whether a *send* may proceed is claim_send_slot()'s
+	 * job, because that one has to be a claim rather than a question.
 	 *
 	 * @return bool
 	 */
@@ -157,17 +185,59 @@ class WP_Email_Form {
 			return true;
 		}
 
-		$last = WP_Email_Logs::last_sent_at( self::ip_address() );
+		return false === get_transient( self::flood_key( self::ip_address() ) );
+	}
 
-		if ( ! $last ) {
+	/**
+	 * Take this visitor's slot in the flood interval, if it is free.
+	 *
+	 * Two things were wrong with reading the interval out of the log, and both
+	 * mattered.
+	 *
+	 * It was a read followed, much later, by a write: `not_spamming()` consulted
+	 * the last logged send and `send()` wrote the row afterwards, with template
+	 * expansion, a DNS lookup and wp_mail() in between. Requests arriving
+	 * together all read the same value, all concluded they were clear, and all
+	 * sent -- so the interval bounded a polite sender and did nothing at all to
+	 * a parallel one. The claim is taken here, before anything is sent.
+	 *
+	 * And it keyed on `email_status = 'Success'`, so a delivery the mailer
+	 * refused cost the sender no cooldown whatever. An attempt is what is
+	 * counted now.
+	 *
+	 * wp_cache_add() is the atomic half: add-if-absent, and genuinely atomic on
+	 * a persistent object cache, which is what a site big enough to be flooded
+	 * in parallel is running. Without one it is a per-request array and proves
+	 * nothing between requests, so the transient is what holds there -- and the
+	 * window it leaves is the few microseconds between the two calls below
+	 * rather than the seconds wp_mail() used to sit in.
+	 *
+	 * @return bool True when the caller may send.
+	 */
+	public static function claim_send_slot() {
+		$interval = self::flood_interval() * MINUTE_IN_SECONDS;
+
+		if ( $interval <= 0 ) {
 			return true;
 		}
 
-		// Local, not UTC: compared against email_timestamp, which the plugin
-		// has stored in site-local time since 2.x. See WP_Email_Logs::insert().
-		$now = current_time( 'timestamp' ); // phpcs:ignore WordPress.DateTime.CurrentTimeTimestamp.Requested -- Compared against email_timestamp, which has held site-local time since 2.x; a UTC value here would misjudge the interval by the site's offset.
+		$key = self::flood_key( self::ip_address() );
 
-		return ( $now - $last ) >= $interval;
+		if ( ! wp_cache_add( $key, time(), self::CACHE_GROUP, $interval ) ) {
+			return false;
+		}
+
+		if ( false !== get_transient( $key ) ) {
+			return false;
+		}
+
+		// A transient rather than an option, so the record expires and is
+		// reaped on its own. An option would need pruning, and one row per
+		// address that never comes back is how a wp_options table grows without
+		// anybody noticing.
+		set_transient( $key, time(), $interval );
+
+		return true;
 	}
 
 	/**
@@ -492,7 +562,17 @@ class WP_Email_Form {
 
 		$post = $post_id > 0 ? get_post( $post_id ) : null;
 
-		if ( ! $post || 'publish' !== $post->post_status ) {
+		/*
+		 * is_post_publicly_viewable() as well as the status, because the status
+		 * alone is not the question. Plenty of post types are published and not
+		 * public -- core's own wp_block, wp_template and wp_navigation among
+		 * them, and any plugin that stores records as a published private type --
+		 * and this endpoint never runs the front-end query, so nothing else on
+		 * the path consults the type at all. Without this an anonymous caller
+		 * naming any such id got its full rendered content delivered to an
+		 * address of their choosing, and its title back in the response.
+		 */
+		if ( ! $post || 'publish' !== $post->post_status || ! is_post_publicly_viewable( $post ) ) {
 			esc_html_e( 'Invalid post.', 'wp-email' );
 			wp_die( '', '', array( 'response' => 200 ) );
 		}
@@ -544,9 +624,16 @@ class WP_Email_Form {
 
 		$errors = self::validate( $input );
 
-		// The throttle is deliberately not an error message. It answers like a
-		// validation failure so a flooder learns nothing from the difference.
-		if ( ! empty( $errors ) || ! self::not_spamming() ) {
+		/*
+		 * Validation first, so a submission that was going to be refused anyway
+		 * does not burn the sender's slot -- and the claim only after it passes,
+		 * because claiming is a write and the interval should measure attempts
+		 * to send rather than attempts to fill the form in.
+		 *
+		 * The throttle is deliberately not an error message. It answers like a
+		 * validation failure so a flooder learns nothing from the difference.
+		 */
+		if ( ! empty( $errors ) || ! self::claim_send_slot() ) {
 			return array(
 				'status' => 'invalid',
 				'sent'   => false,
@@ -606,23 +693,37 @@ class WP_Email_Form {
 		$max    = self::max_recipients();
 		$errors = array();
 
-		if ( 1 === (int) $fields['yourname'] ) {
-			if ( '' === $input['yourname'] ) {
-				$errors[] = __( 'Your Name is empty', 'wp-email' );
-			} elseif ( ! self::is_valid_name( $input['yourname'] ) ) {
-				$errors[] = __( 'Your Name is invalid', 'wp-email' );
-			}
+		/*
+		 * "Required" is a question about the form; "valid" is a question about
+		 * the value. Only the first of the two belongs behind the `fields`
+		 * toggles, and running both behind them was the bug: turning a field off
+		 * turned its validation off with it, while read_input() went on reading
+		 * the value and send() went on putting it in the From header. An admin
+		 * tidying a field away was quietly widening what a crafted POST could
+		 * do, because a submission does not have to come from the form.
+		 *
+		 * sanitize_text_field() has already flattened CR and LF by the time any
+		 * of this runs, so header injection is not reachable either way. These
+		 * are the checks that stop a value being a plausible-looking wrong
+		 * thing.
+		 */
+		if ( 1 === (int) $fields['yourname'] && '' === $input['yourname'] ) {
+			$errors[] = __( 'Your Name is empty', 'wp-email' );
+		} elseif ( '' !== $input['yourname'] && ! self::is_valid_name( $input['yourname'] ) ) {
+			$errors[] = __( 'Your Name is invalid', 'wp-email' );
 		}
 
-		if ( 1 === (int) $fields['youremail'] ) {
-			if ( '' === $input['youremail'] ) {
-				$errors[] = __( 'Your Email is empty', 'wp-email' );
-			} elseif ( ! self::is_valid_email( $input['youremail'] ) ) {
-				$errors[] = __( 'Your Email is invalid', 'wp-email' );
-			}
+		if ( 1 === (int) $fields['youremail'] && '' === $input['youremail'] ) {
+			$errors[] = __( 'Your Email is empty', 'wp-email' );
+		} elseif ( '' !== $input['youremail'] && ! self::is_valid_email( $input['youremail'] ) ) {
+			$errors[] = __( 'Your Email is invalid', 'wp-email' );
 		}
 
-		if ( 1 === (int) $fields['yourremarks'] && ! self::is_valid_remarks( $input['yourremarks'] ) ) {
+		// Unconditional for the same reason, and this is the header blocklist:
+		// %EMAIL_YOUR_REMARKS% is a documented variable for the *subject*
+		// template, so on a site that uses it there the value reaches a
+		// header-bound token.
+		if ( ! self::is_valid_remarks( $input['yourremarks'] ) ) {
 			$errors[] = __( 'Your Remarks is invalid', 'wp-email' );
 		}
 
@@ -665,8 +766,18 @@ class WP_Email_Form {
 			$errors[] = __( 'Friend Name(s) count does not tally with Friend Email(s) count', 'wp-email' );
 		}
 
-		if ( WP_Email_Captcha::is_enabled() ) {
-			if ( '' === $input['imageverify'] ) {
+		/*
+		 * is_required() rather than is_enabled(), so this fails closed. The two
+		 * differ only when the site has asked for verification and the server
+		 * cannot draw it -- GD lost across a PHP upgrade, most likely -- and the
+		 * old check treated that as "no verification needed", which silently
+		 * removed the form's only anti-automation control on exactly the install
+		 * whose owner believed it was on.
+		 */
+		if ( WP_Email_Captcha::is_required() ) {
+			if ( ! WP_Email_Captcha::is_available() ) {
+				$errors[] = __( 'Image Verification is unavailable on this server, so the form cannot be submitted. An administrator needs to turn it off or install the GD extension.', 'wp-email' );
+			} elseif ( '' === $input['imageverify'] ) {
 				$errors[] = __( 'Image Verification is empty', 'wp-email' );
 			} elseif ( ! WP_Email_Captcha::verify( $input['imageverify_token'], $input['imageverify'] ) ) {
 				$errors[] = __( 'Image Verification failed', 'wp-email' );
@@ -710,7 +821,20 @@ class WP_Email_Form {
 			return;
 		}
 
-		$message = implode( self::ERROR_SEPARATOR, $errors );
+		/*
+		 * Escaped here rather than trusted upstream. Two of these messages carry
+		 * the value that failed -- "Friend Email is invalid: %s" -- so they hold
+		 * visitor input, and they are substituted into a stored template that is
+		 * echoed raw. sanitize_text_field() has already stripped tags, so this is
+		 * not currently the difference between safe and not; it is the
+		 * difference between safe and safe-by-coincidence, and quotes do survive
+		 * sanitisation, so a template that moves %EMAIL_ERROR_MSG% inside an
+		 * attribute would have had no backstop at all.
+		 *
+		 * Each message individually, then joined: the separator is the plugin's
+		 * own markup and must stay markup.
+		 */
+		$message = implode( self::ERROR_SEPARATOR, array_map( 'esc_html', $errors ) );
 
 		$output  = WP_Email_Template::expand(
 			WP_Email_Options::template( 'error' ),

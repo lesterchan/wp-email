@@ -206,6 +206,11 @@ Two option rows — `wp_email_options` for the settings and `wp_email_version` f
 
 ## Changelog
 ### 3.0.0
+* FIXED: The endpoint checked only that a post was published, so any *published* post of a non-public post type — a reusable block, a template, a plugin's private records — could be mailed to an address of the sender's choosing by an anonymous visitor, with its title coming back in the response. The post type has to be publicly viewable now
+* FIXED: The flood interval was a read of the log followed, much later, by a write, so requests arriving together all decided they were clear and all sent — it bounded a polite sender and did nothing to a parallel one. The slot is claimed before anything is sent, and an attempt counts whether or not the mailer accepted it; a refused delivery used to cost no cooldown at all
+* FIXED: Image verification failed *open*. With the setting on and GD missing — the state a host lands in after a PHP upgrade — the check was skipped entirely and the form's only anti-automation control disappeared with nothing to say so. The form now refuses to submit until an administrator turns it off or installs GD. `wp_email_captcha_available` overrides the detection
+* FIXED: The verification image was 55x15, one call to the built-in GD font at a fixed pitch from a fixed origin, no noise and no distortion, which made it readable by thirty-odd reference bitmaps and a per-cell crop. Each character is now drawn, rotated and placed on its own, over speckle and through two lines that share its ink
+* FIXED: The name, address and header-token checks ran only when the matching field was switched *on* — so turning a field off turned its validation off with it, while the value was still read and still used. A submission does not have to come from the form; the checks are unconditional now, and only "this field is required" still follows the setting
 * BREAKING: WordPress 6.8 and PHP 8.2 are now the minimum. A site on anything older will not be offered this update at all.
 * BREAKING: The `email_form-fieldvalues` filter is renamed `wp_email_form_field_values`. There is no compatibility shim.
 * BREAKING: The eighteen `wp_options` rows the plugin used are consolidated into `wp_email_options` and `wp_email_version`. Your settings are migrated automatically on upgrade and the old rows are deleted.

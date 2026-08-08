@@ -55,16 +55,54 @@ class WP_Email_Captcha {
 	 * @return bool
 	 */
 	public static function is_available() {
-		return function_exists( 'imagecreate' ) && function_exists( 'imagejpeg' );
+		$available = function_exists( 'imagecreatetruecolor' )
+			&& function_exists( 'imagejpeg' )
+			&& function_exists( 'imagerotate' );
+
+		/**
+		 * Filters whether the server can draw a verification image.
+		 *
+		 * Answering false makes the form refuse every submission while the
+		 * setting is on, which is the point: it is the state a host that has
+		 * lost GD is already in, and the only way to exercise it on a host that
+		 * has not.
+		 *
+		 * @since 3.0.0
+		 *
+		 * @param bool $available Whether the required GD functions are present.
+		 */
+		return (bool) apply_filters( 'wp_email_captcha_available', $available );
+	}
+
+	/**
+	 * Whether the site has asked for image verification.
+	 *
+	 * Deliberately separate from is_enabled(): this one is the *setting*, and
+	 * the difference between the two is what the form has to fail closed on.
+	 *
+	 * @since 3.0.0
+	 *
+	 * @return bool
+	 */
+	public static function is_required() {
+		return 1 === (int) WP_Email_Options::get( 'sending', 'imageverify' );
 	}
 
 	/**
 	 * Whether image verification is switched on and usable.
 	 *
+	 * What the *renderer* asks, because a challenge that cannot be drawn must
+	 * not be drawn. What the validator asks is is_required(), and the gap
+	 * between the two is deliberate: a host that loses GD across a PHP upgrade
+	 * leaves this false while the stored setting still says the site wants
+	 * verification, and answering that by quietly accepting every submission is
+	 * how the only anti-automation control on the form disappears with nothing
+	 * in any log to say so.
+	 *
 	 * @return bool
 	 */
 	public static function is_enabled() {
-		return (int) WP_Email_Options::get( 'sending', 'imageverify' ) === 1 && self::is_available();
+		return self::is_required() && self::is_available();
 	}
 
 	/**
@@ -164,18 +202,92 @@ class WP_Email_Captcha {
 		header( 'Content-Type: image/jpeg' );
 		header( 'X-Content-Type-Options: nosniff' );
 
-		$image      = imagecreate( 55, 15 );
-		$background = imagecolorallocate( $image, 255, 255, 255 );
-		$foreground = imagecolorallocate( $image, 0, 0, 0 );
+		imagejpeg( self::draw( $code ) );
 
-		imagestring( $image, 5, 5, 1, $code, $foreground );
-		imagejpeg( $image );
+		exit;
+	}
+
+	/**
+	 * Draw the challenge.
+	 *
+	 * The 3.0.0 image was 55x15, pure black on pure white, one imagestring()
+	 * call: the built-in GD font at a fixed pitch from a fixed origin, no noise,
+	 * no distortion, no rotation, and an alphabet of thirty-two glyphs. Thirty-two
+	 * reference bitmaps and a per-cell crop read it perfectly, which made the
+	 * only anti-automation control on a form that sends mail worth nothing
+	 * against anything but a person.
+	 *
+	 * GD's bitmap fonts cannot be rotated in place, so each character is drawn
+	 * into its own small canvas, turned, and copied down at an offset of its
+	 * own. That is what breaks the fixed grid a template matcher needs: there is
+	 * no longer a cell to crop. The speckle and the two lines are secondary --
+	 * they cost an attacker a denoising pass, where the jitter and rotation cost
+	 * them the segmentation step entirely.
+	 *
+	 * Still not a hard captcha, and it is not trying to be. It is trying not to
+	 * be free.
+	 *
+	 * @since 3.0.0
+	 *
+	 * @param string $code The answer to draw.
+	 *
+	 * @return resource|GdImage
+	 */
+	protected static function draw( $code ) {
+		$width  = 150;
+		$height = 44;
+
+		$image = imagecreatetruecolor( $width, $height );
+
+		$background = imagecolorallocate( $image, 255, 255, 255 );
+		imagefilledrectangle( $image, 0, 0, $width, $height, $background );
+
+		// Speckle first, so the glyphs sit on top of it and a "delete every
+		// isolated pixel" pass cannot also lift parts of the answer.
+		for ( $i = 0; $i < 320; $i++ ) {
+			$speckle = imagecolorallocate( $image, wp_rand( 140, 215 ), wp_rand( 140, 215 ), wp_rand( 140, 215 ) );
+			imagesetpixel( $image, wp_rand( 0, $width - 1 ), wp_rand( 0, $height - 1 ), $speckle );
+		}
+
+		$length = strlen( $code );
+		$step   = (int) floor( ( $width - 20 ) / max( 1, $length ) );
+
+		for ( $i = 0; $i < $length; $i++ ) {
+			// One character on its own transparent canvas, so imagerotate() has
+			// something to turn. 5 is the largest built-in font.
+			$glyph = imagecreatetruecolor( 14, 22 );
+			$clear = imagecolorallocate( $glyph, 255, 255, 255 );
+			imagefilledrectangle( $glyph, 0, 0, 14, 22, $clear );
+			imagecolortransparent( $glyph, $clear );
+
+			$ink = imagecolorallocate( $glyph, wp_rand( 0, 90 ), wp_rand( 0, 90 ), wp_rand( 0, 90 ) );
+			imagestring( $glyph, 5, 2, 1, $code[ $i ], $ink );
+
+			$rotated = imagerotate( $glyph, wp_rand( -28, 28 ), $clear );
+			imagecolortransparent( $rotated, $clear );
+
+			imagecopy(
+				$image,
+				$rotated,
+				10 + ( $i * $step ) + wp_rand( -3, 3 ),
+				wp_rand( 2, $height - 30 ),
+				0,
+				0,
+				imagesx( $rotated ),
+				imagesy( $rotated )
+			);
+		}
+
+		// Drawn last and in the same ink range as the glyphs, so they cannot be
+		// separated out by colour.
+		for ( $i = 0; $i < 2; $i++ ) {
+			$line = imagecolorallocate( $image, wp_rand( 0, 90 ), wp_rand( 0, 90 ), wp_rand( 0, 90 ) );
+			imageline( $image, 0, wp_rand( 0, $height ), $width, wp_rand( 0, $height ), $line );
+		}
 
 		// No imagedestroy(): deprecated in PHP 8.0, where GdImage instances are
 		// freed by the garbage collector like any other object.
-		unset( $image, $background );
-
-		exit;
+		return $image;
 	}
 
 	/**

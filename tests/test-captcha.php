@@ -168,6 +168,40 @@ class WP_Email_Captcha_Test extends WP_Email_TestCase {
 		$this->assertStringNotContainsString( '&foo=bar', WP_Email_Captcha::image_url( 'x&foo=bar' ), 'The token is encoded, so it cannot add arguments of its own.' );
 	}
 
+	/**
+	 * The setting on its own, versus the setting AND what the server can draw.
+	 * They differ exactly when a host has lost GD with verification switched on,
+	 * and the old code answered that by skipping the check -- so the only
+	 * anti-automation control on a form that sends mail vanished on the install
+	 * whose owner believed it was on, with nothing anywhere to say so.
+	 */
+	public function test_a_required_captcha_the_server_cannot_draw_fails_closed() {
+		$options                           = WP_Email_Options::all();
+		$options['sending']['imageverify'] = 1;
+		WP_Email_Options::update( $options );
+
+		add_filter( 'wp_email_captcha_available', '__return_false' );
+
+		$this->assertTrue( WP_Email_Captcha::is_required(), 'The site still wants verification.' );
+		$this->assertFalse( WP_Email_Captcha::is_enabled(), 'The server cannot draw it, so nothing is rendered.' );
+		$this->assertSame( '', WP_Email_Captcha::issue(), 'And no challenge is issued.' );
+	}
+
+	public function test_is_required_ignores_whether_the_server_can_draw() {
+		$options                           = WP_Email_Options::all();
+		$options['sending']['imageverify'] = 1;
+		WP_Email_Options::update( $options );
+
+		add_filter( 'wp_email_captcha_available', '__return_false' );
+
+		$this->assertTrue( WP_Email_Captcha::is_required(), 'is_required() is the setting and nothing else.' );
+
+		$options['sending']['imageverify'] = 0;
+		WP_Email_Options::update( $options );
+
+		$this->assertFalse( WP_Email_Captcha::is_required(), 'And it follows the setting down again.' );
+	}
+
 	public function test_is_enabled_follows_the_setting() {
 		$options                           = WP_Email_Options::all();
 		$options['sending']['imageverify'] = 0;

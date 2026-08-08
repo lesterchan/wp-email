@@ -224,10 +224,23 @@ class WP_Email_Form_Test extends WP_Email_Ajax_TestCase {
 
 	public function test_flood_interval_blocks_a_repeat_from_the_same_ip() {
 		$this->assertTrue( WP_Email_Form::not_spamming(), 'A first send is not throttled.' );
+		$this->assertTrue( WP_Email_Form::claim_send_slot(), 'And the first claim on the slot succeeds.' );
+
+		$this->assertFalse( WP_Email_Form::not_spamming(), 'A second send inside the window is throttled.' );
+		$this->assertFalse( WP_Email_Form::claim_send_slot(), 'And a second claim is refused.' );
+	}
+
+	/**
+	 * The interval used to be derived from the log, filtered on
+	 * email_status = 'Success' -- so a delivery the mailer refused reset nothing
+	 * and cost the sender no cooldown at all. It counts attempts now.
+	 */
+	public function test_a_refused_delivery_still_consumes_the_interval() {
+		$this->assertTrue( WP_Email_Form::claim_send_slot(), 'The attempt takes the slot.' );
 
 		WP_Email_Logs::insert(
 			array(
-				'yourname'    => 'Recent',
+				'yourname'    => 'Refused',
 				'youremail'   => 'r@example.com',
 				'yourremarks' => '',
 				'friendname'  => 'F',
@@ -237,11 +250,29 @@ class WP_Email_Form_Test extends WP_Email_Ajax_TestCase {
 				'timestamp'   => $this->local_timestamp(),
 				'ip'          => '198.51.100.200',
 				'host'        => '',
-				'status'      => WP_Email_Logs::STATUS_SUCCESS,
+				'status'      => WP_Email_Logs::STATUS_FAILED,
 			)
 		);
 
-		$this->assertFalse( WP_Email_Form::not_spamming(), 'A second send inside the window is throttled.' );
+		$this->assertFalse( WP_Email_Form::claim_send_slot(), 'A failed send is still a send as far as the interval is concerned.' );
+	}
+
+	/**
+	 * The claim is what submit() consults, and it has to be taken before the
+	 * message goes out rather than inferred from the log afterwards -- otherwise
+	 * every request in a parallel burst reads the same "nothing sent yet" and
+	 * they all send.
+	 */
+	public function test_the_slot_is_claimed_before_anything_is_sent() {
+		$claimed = 0;
+
+		for ( $i = 0; $i < 5; $i++ ) {
+			if ( WP_Email_Form::claim_send_slot() ) {
+				++$claimed;
+			}
+		}
+
+		$this->assertSame( 1, $claimed, 'Five attempts inside one interval yield one slot, not five.' );
 	}
 
 	public function test_a_zero_interval_disables_the_check() {
@@ -249,25 +280,208 @@ class WP_Email_Form_Test extends WP_Email_Ajax_TestCase {
 		$options['sending']['interval'] = 0;
 		WP_Email_Options::update( $options );
 
-		WP_Email_Logs::insert(
+		WP_Email_Form::claim_send_slot();
+
+		$this->assertTrue( WP_Email_Form::not_spamming(), 'With the interval off, nothing is throttled.' );
+		$this->assertTrue( WP_Email_Form::claim_send_slot(), 'And every claim succeeds.' );
+	}
+
+
+	/**
+	 * The endpoint used to gate on post_status alone. Plenty of post types are
+	 * published and not public -- core's own wp_block and wp_template among
+	 * them -- and the AJAX path never runs the front-end query, so nothing else
+	 * consulted the type. An anonymous caller naming any such id had its full
+	 * rendered content delivered to an address of their choosing.
+	 */
+	public function test_a_published_post_of_a_non_public_type_is_not_emailable() {
+		// Post type names are capped at 20 characters by core.
+		register_post_type(
+			'emailsecret',
 			array(
-				'yourname'    => 'Recent',
-				'youremail'   => 'r@example.com',
-				'yourremarks' => '',
-				'friendname'  => 'F',
-				'friendemail' => 'f@example.com',
-				'postid'      => $this->post_id,
-				'posttitle'   => 'Harness Post',
-				'timestamp'   => $this->local_timestamp(),
-				'ip'          => '198.51.100.200',
-				'host'        => '',
-				'status'      => WP_Email_Logs::STATUS_SUCCESS,
+				'public'              => false,
+				'publicly_queryable'  => false,
+				'exclude_from_search' => true,
 			)
 		);
 
-		$this->assertTrue( WP_Email_Form::not_spamming(), 'Once the window has passed, sending is allowed again.' );
+		$hidden = self::factory()->post->create(
+			array(
+				'post_type'    => 'emailsecret',
+				'post_status'  => 'publish',
+				'post_title'   => 'Commercially Sensitive Record',
+				'post_content' => 'The contents of a record nobody should be able to mail out.',
+			)
+		);
+
+		$response = $this->submit(
+			array(
+				'p'           => $hidden,
+				'yourname'    => 'Sender',
+				'youremail'   => 'sender@example.com',
+				'friendname'  => 'Friend',
+				'friendemail' => 'friend@example.com',
+			)
+		);
+
+		unregister_post_type( 'emailsecret' );
+
+		$this->assertStringContainsString( 'Invalid post.', $response, 'A non-public post type is refused.' );
+		$this->assertStringNotContainsString( 'Commercially Sensitive Record', $response, 'And its title does not come back in the response either.' );
 	}
 
+	public function test_an_ordinary_published_post_is_still_emailable() {
+		$response = $this->submit(
+			array(
+				'yourname'    => 'Sender',
+				'youremail'   => 'sender@example.com',
+				'friendname'  => 'Friend',
+				'friendemail' => 'friend@example.com',
+			)
+		);
+
+		$this->assertStringNotContainsString( 'Invalid post.', $response, 'The feature still works for the posts it is for.' );
+	}
+
+	/**
+	 * The `fields` settings decide which inputs the form draws. They used to
+	 * decide which values were validated too, so turning a field off turned its
+	 * check off while send() went on putting the value in the From header.
+	 */
+	public function test_a_disabled_field_is_still_validated_when_it_is_submitted() {
+		$options                           = WP_Email_Options::all();
+		$options['fields']['youremail']    = 0;
+		$options['fields']['yourname']     = 0;
+		$options['sending']['imageverify'] = 0;
+		WP_Email_Options::update( $options );
+
+		$response = $this->submit(
+			array(
+				// Angle brackets would be no test at all -- sanitize_text_field()
+				// strips them long before validation sees the value. These two
+				// characters survive it and is_valid_name() refuses them.
+				'yourname'    => 'Sender #1 $x',
+				'youremail'   => 'not-an-address',
+				'friendname'  => 'Friend',
+				'friendemail' => 'friend@example.com',
+			)
+		);
+
+		$this->assertStringContainsString( 'Your Email is invalid', $response, 'A malformed sender address is refused even with the field switched off.' );
+		$this->assertStringContainsString( 'Your Name is invalid', $response, 'And so is a name carrying angle brackets.' );
+	}
+
+	/**
+	 * %EMAIL_YOUR_REMARKS% is a documented variable for the *subject* template,
+	 * so on a site that uses it there the value reaches a header-bound token --
+	 * and the header blocklist that guards it was gated on the field toggle,
+	 * i.e. on whether the form drew a textarea.
+	 */
+	public function test_remarks_are_checked_for_header_tokens_even_with_the_field_off() {
+		$options                           = WP_Email_Options::all();
+		$options['fields']['yourremarks']  = 0;
+		$options['sending']['imageverify'] = 0;
+		WP_Email_Options::update( $options );
+
+		$response = $this->submit(
+			array(
+				'yourname'    => 'Sender',
+				'youremail'   => 'sender@example.com',
+				'yourremarks' => "Nice article\nreply-to: victim@example.com",
+				'friendname'  => 'Friend',
+				'friendemail' => 'friend@example.com',
+			)
+		);
+
+		$this->assertStringContainsString( 'Your Remarks is invalid', $response, 'The blocklist runs whether or not the form drew the field.' );
+	}
+
+	public function test_a_disabled_field_left_empty_is_not_required() {
+		$options                           = WP_Email_Options::all();
+		$options['fields']['youremail']    = 0;
+		$options['fields']['yourname']     = 0;
+		$options['sending']['imageverify'] = 0;
+		WP_Email_Options::update( $options );
+
+		$response = $this->submit(
+			array(
+				'friendname'  => 'Friend',
+				'friendemail' => 'friend@example.com',
+			)
+		);
+
+		$this->assertStringNotContainsString( 'is empty', $response, 'Switching a field off still means it does not have to be filled in.' );
+	}
+
+	/**
+	 * Through the endpoint rather than against claim_send_slot() directly,
+	 * because the bug was never in the arithmetic -- it was that submit()
+	 * *asked* whether the visitor was clear instead of *claiming* the slot, and
+	 * only a test that goes through submit() can tell the two apart.
+	 */
+	public function test_the_endpoint_refuses_a_second_send_inside_the_interval() {
+		$options                           = WP_Email_Options::all();
+		$options['sending']['imageverify'] = 0;
+		WP_Email_Options::update( $options );
+
+		$fields = array(
+			'yourname'    => 'Sender',
+			'youremail'   => 'sender@example.com',
+			'friendname'  => 'Friend',
+			'friendemail' => 'friend@example.com',
+		);
+
+		$first = $this->submit( $fields );
+		$this->assertStringNotContainsString( 'Please wait', $first, 'The first send goes through.' );
+
+		$second = $this->submit( $fields );
+		$this->assertStringContainsString( 'Please wait', $second, 'The second inside the same interval is refused.' );
+	}
+
+	/**
+	 * Two of the validation messages carry the value that failed, so they hold
+	 * visitor input, and they are substituted into a stored template that is
+	 * echoed raw. sanitize_text_field() strips tags, which is why this was not
+	 * a live hole -- but a double quote survives it, and a site that moved
+	 * %EMAIL_ERROR_MSG% inside an attribute would have had nothing behind it.
+	 */
+	public function test_a_validation_message_escapes_the_value_it_quotes_back() {
+		$options                           = WP_Email_Options::all();
+		$options['sending']['imageverify'] = 0;
+		WP_Email_Options::update( $options );
+
+		$response = $this->submit(
+			array(
+				'yourname'    => 'Sender',
+				'youremail'   => 'sender@example.com',
+				'friendname'  => 'Friend',
+				'friendemail' => 'broken"quote@example.com',
+			)
+		);
+
+		$this->assertStringContainsString( 'Friend Email is invalid', $response, 'The address is refused.' );
+		$this->assertStringContainsString( 'broken&quot;quote@example.com', $response, 'And the value is escaped where it is quoted back.' );
+		$this->assertStringNotContainsString( 'broken"quote@example.com', $response, 'The raw quote does not reach the page.' );
+	}
+
+	public function test_a_submission_is_refused_when_verification_is_on_but_undrawable() {
+		$options                           = WP_Email_Options::all();
+		$options['sending']['imageverify'] = 1;
+		WP_Email_Options::update( $options );
+
+		add_filter( 'wp_email_captcha_available', '__return_false' );
+
+		$response = $this->submit(
+			array(
+				'yourname'    => 'Sender',
+				'youremail'   => 'sender@example.com',
+				'friendname'  => 'Friend',
+				'friendemail' => 'friend@example.com',
+			)
+		);
+
+		$this->assertStringContainsString( 'Image Verification is unavailable', $response, 'The form refuses rather than quietly dropping the only check on it.' );
+	}
 
 	public function test_valid_name_rejects_markup_characters() {
 		$this->assertTrue( WP_Email_Form::is_valid_name( 'Mary Jane' ), 'An ordinary name is accepted.' );
@@ -624,21 +838,9 @@ class WP_Email_Form_Test extends WP_Email_Ajax_TestCase {
 	}
 
 	public function test_a_blocked_visitor_is_told_to_wait() {
-		WP_Email_Logs::insert(
-			array(
-				'yourname'    => 'Recent',
-				'youremail'   => 'r@example.com',
-				'yourremarks' => '',
-				'friendname'  => 'F',
-				'friendemail' => 'f@example.com',
-				'postid'      => $this->post_id,
-				'posttitle'   => 'Harness Post',
-				'timestamp'   => $this->local_timestamp(),
-				'ip'          => '198.51.100.200',
-				'host'        => '',
-				'status'      => WP_Email_Logs::STATUS_SUCCESS,
-			)
-		);
+		// The interval is a claim now rather than a reading of the log, so this
+		// takes the slot the way a send would.
+		WP_Email_Form::claim_send_slot();
 
 		$this->go_to( get_permalink( $this->post_id ) );
 		the_post();
