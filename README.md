@@ -28,6 +28,13 @@ Every message is logged, so you can see what was sent, to whom, from which addre
 ### Donations
 I spent most of my free time creating, updating, maintaining and supporting these plugins, if you really love my plugins and could spare me a couple of bucks, I will really appreciate it. If not feel free to use it without any obligations.
 
+## Installation
+
+1. Install and activate the plugin.
+1. Re-save your permalinks at `WP-Admin -> Settings -> Permalinks -> Save Changes`, so the e-mail endpoint is registered.
+1. Decide where the link appears: type `[email_link]` into a post, or call `email_link()` in your theme. Usage below covers both.
+1. Templates and options are at `WP-Admin -> E-Mail -> E-Mail Settings`, and every message sent is listed under `E-Mail Logs`.
+
 ## Usage
 The plugin works as soon as it is activated. All you have to decide is where the e-mail link appears.
 
