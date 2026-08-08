@@ -192,7 +192,7 @@ Two option rows — `wp_email_options` for the settings and `wp_email_version` f
 ## Screenshots
 
 1. E-Mail -> Settings, covering the link, the form, the checks and delivery
-2. The Templates tab, holding all eight of the messages the plugin sends
+2. The Templates tab, holding all eight templates: the page, the message itself, and what a visitor is told when a send succeeds or fails
 3. E-Mail -> Manage E-Mail, the log of what was sent, to whom, and whether it arrived
 4. The e-mail link in a post, placed with the shortcode
 5. The form behind the link, with its image verification
