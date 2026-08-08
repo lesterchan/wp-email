@@ -206,6 +206,7 @@ Two option rows — `wp_email_options` for the settings and `wp_email_version` f
 
 ## Changelog
 ### 3.0.0
+* FIXED: Uninstalling left one flood record behind per address that had sent recently. They expire on their own, but until they did the site was still counting down a cooldown for a plugin that was no longer installed
 * FIXED: Every render of the form minted a ten-minute verification challenge, and rendering it is free and needs no account — so a request loop grew `wp_options` by two rows a time with nothing to stop it. A visitor may now hold ten live challenges at once, which is far more than anyone with several tabs open needs and far fewer than a loop wants. Collapsing to one challenge per visitor would have bounded it too, and would have brought back the bug 3.0.0 fixed, where opening a second form invalidated the first
 * FIXED: The reverse-DNS lookup for the log ran once per recipient rather than once per send, so the default maximum of five multiplied a blocking call — whose duration is chosen by whoever owns the address's reverse zone — by five
 * FIXED: The endpoint checked only that a post was published, so any *published* post of a non-public post type — a reusable block, a template, a plugin's private records — could be mailed to an address of the sender's choosing by an anonymous visitor, with its title coming back in the response. The post type has to be publicly viewable now

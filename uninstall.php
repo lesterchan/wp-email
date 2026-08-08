@@ -60,6 +60,42 @@ function wp_email_delete_options() {
 	foreach ( $option_names as $option_name ) {
 		delete_option( $option_name );
 	}
+
+	wp_email_delete_flood_records();
+}
+
+/**
+ * Clear the flood records.
+ *
+ * One transient per address that has sent recently, named
+ * `wp_email_flood_{md5}` -- so there is no list to read them off and they have
+ * to be matched. They expire on their own, which is why they are transients,
+ * but an uninstall should not leave a site waiting out somebody's cooldown, and
+ * on a busy site there can be a great many of them.
+ *
+ * Deleted through the options table rather than delete_transient(), because
+ * nothing knows the addresses. The object cache is not cleared to match: the
+ * rows are what survive a request, and a cached entry outlives its transient by
+ * at most the interval.
+ *
+ * @return void
+ */
+function wp_email_delete_flood_records() {
+	global $wpdb;
+
+	// phpcs:disable WordPress.DB.DirectDatabaseQuery -- Transients whose names are a hash, so there is no list to read and no API that matches by prefix. Runs once, on uninstall.
+	$names = $wpdb->get_col(
+		$wpdb->prepare(
+			"SELECT option_name FROM $wpdb->options WHERE option_name LIKE %s OR option_name LIKE %s",
+			$wpdb->esc_like( '_transient_wp_email_flood_' ) . '%',
+			$wpdb->esc_like( '_transient_timeout_wp_email_flood_' ) . '%'
+		)
+	);
+	// phpcs:enable WordPress.DB.DirectDatabaseQuery
+
+	foreach ( (array) $names as $name ) {
+		delete_option( $name );
+	}
 }
 
 /**

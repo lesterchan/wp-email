@@ -31,6 +31,31 @@ class WP_Email_Uninstall_Test extends WP_Email_TestCase {
 		$this->assertStringContainsString( 'WP_UNINSTALL_PLUGIN', $this->source(), 'The uninstaller refuses to run outside an uninstall.' );
 	}
 
+	/**
+	 * The flood records go with everything else.
+	 *
+	 * One transient per address that has sent recently, named for an md5 of the
+	 * address -- so nothing holds a list of them and delete_transient() has
+	 * nothing to be called with. They expire on their own, which is why they
+	 * are transients, but leaving a site to wait out somebody's cooldown after
+	 * the plugin has been removed is not an uninstall.
+	 */
+	public function test_it_clears_the_flood_records() {
+		set_transient( 'wp_email_flood_' . md5( '203.0.113.20' ), time(), HOUR_IN_SECONDS );
+		set_transient( 'wp_email_flood_' . md5( '203.0.113.21' ), time(), HOUR_IN_SECONDS );
+		set_transient( 'wp_email_unrelated', 'kept', HOUR_IN_SECONDS );
+
+		$this->assertNotFalse( get_transient( 'wp_email_flood_' . md5( '203.0.113.20' ) ), 'The fixture is there, or the assertion below proves nothing.' );
+
+		$this->run_uninstall();
+
+		$this->assertFalse( get_transient( 'wp_email_flood_' . md5( '203.0.113.20' ) ), 'A flood record survived the uninstall.' );
+		$this->assertFalse( get_transient( 'wp_email_flood_' . md5( '203.0.113.21' ) ), 'A second flood record survived the uninstall.' );
+		$this->assertSame( 'kept', get_transient( 'wp_email_unrelated' ), 'The match is anchored on the flood prefix and took an unrelated transient with it.' );
+
+		delete_transient( 'wp_email_unrelated' );
+	}
+
 	public function test_it_lifts_the_site_query_row_cap() {
 		// get_sites() defaults 'number' to 100, so without this the options and
 		// the table are left behind on every site past the hundredth and the

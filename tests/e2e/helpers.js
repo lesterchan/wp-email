@@ -182,6 +182,24 @@ function resetPlugin() {
 		WP_Email_Options::flush();
 		delete_option( '${ MAIL_OPTION }' );
 		delete_option( '${ FAIL_OPTION }' );
+
+		// The flood record. A send starts a ten-minute cooldown for the
+		// address that sent it, and the address here is the same for every
+		// test in the run -- so without this the first spec to send an e-mail
+		// makes every later spec's form render "please wait" instead of a
+		// form, and the failure surfaces in whichever file happens to come
+		// after it.
+		$flood = $wpdb->get_col(
+			$wpdb->prepare(
+				"SELECT option_name FROM {$wpdb->options} WHERE option_name LIKE %s",
+				$wpdb->esc_like( '_transient_' ) . '%' . $wpdb->esc_like( 'wp_email_flood_' ) . '%'
+			)
+		);
+		foreach ( $flood as $name ) {
+			delete_option( $name );
+		}
+		wp_cache_flush();
+
 		echo '<<<done>>>';`,
 	);
 }
