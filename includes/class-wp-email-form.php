@@ -497,6 +497,43 @@ class WP_Email_Form {
 			wp_die( '', '', array( 'response' => 200 ) );
 		}
 
+		$result = self::submit( $input, $post );
+
+		// Three outcomes, not two. A submission that failed validation goes
+		// back as the form carrying its errors; a delivery the mailer refused
+		// goes back as the sentfailed template, which is a different thing and
+		// says so to the person who filled the form in.
+		if ( 'invalid' === $result['status'] ) {
+			self::render_errors( $result['errors'], $input );
+			wp_die( '', '', array( 'response' => 200 ) );
+		}
+
+		echo $result['html']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Template is wp_kses_post()'d on save.
+
+		wp_die( '', '', array( 'response' => 200 ) );
+	}
+
+	/**
+	 * Validate a submission and send it, reporting what happened.
+	 *
+	 * Split out of process() so the outcome is a value rather than something a
+	 * caller has to infer from printed markup. process() used to validate,
+	 * send and render in one run and then wp_die(), so "did this send?" was
+	 * answerable only by buffering the output and reading it -- which is why
+	 * the errors this raises could not reach any client that is not a browser.
+	 *
+	 * Prints nothing. What to do with the result belongs to the caller.
+	 *
+	 * @param array   $input Sanitized submission, as read_input() returns it.
+	 * @param WP_Post $post  Post being sent.
+	 * @return array {
+	 *     @type string $status One of 'sent', 'failed' or 'invalid'.
+	 *     @type bool   $sent   Whether the message went.
+	 *     @type array  $errors Validation messages, empty unless 'invalid'.
+	 *     @type string $html   Result markup, empty when 'invalid'.
+	 * }
+	 */
+	public static function submit( array $input, $post ) {
 		// Set up the loop so the template variables resolve against the post
 		// being sent rather than whatever admin-ajax.php happens to have.
 		// admin-ajax.php has no loop of its own, so the post being sent has to
@@ -507,14 +544,28 @@ class WP_Email_Form {
 
 		$errors = self::validate( $input );
 
+		// The throttle is deliberately not an error message. It answers like a
+		// validation failure so a flooder learns nothing from the difference.
 		if ( ! empty( $errors ) || ! self::not_spamming() ) {
-			self::render_errors( $errors, $input );
-			wp_die( '', '', array( 'response' => 200 ) );
+			return array(
+				'status' => 'invalid',
+				'sent'   => false,
+				'errors' => $errors,
+				'html'   => '',
+			);
 		}
 
-		self::send( $input, $post );
+		$outcome = self::send( $input, $post );
 
-		wp_die( '', '', array( 'response' => 200 ) );
+		// 'failed' is not 'invalid': the submission was fine and the mailer
+		// refused it, so the caller shows the sentfailed template rather than
+		// handing the form back as though the person had mistyped something.
+		return array(
+			'status' => $outcome['sent'] ? 'sent' : 'failed',
+			'sent'   => $outcome['sent'],
+			'errors' => array(),
+			'html'   => $outcome['html'],
+		);
 	}
 
 	/**
@@ -694,10 +745,16 @@ class WP_Email_Form {
 	/**
 	 * Build and send the message, then log it.
 	 *
+	 * Returns rather than prints, so the caller can tell a send from a failure
+	 * -- the template chosen here already knows, and used to discard it.
+	 *
 	 * @param array   $input Sanitized submission.
 	 * @param WP_Post $post  Post being sent.
 	 *
-	 * @return void
+	 * @return array {
+	 *     @type bool   $sent Whether wp_mail() accepted the message.
+	 *     @type string $html Markup for the result template.
+	 * }
 	 */
 	private static function send( array $input, $post ) {
 		$names  = self::split_list( $input['friendname'] );
@@ -796,6 +853,9 @@ class WP_Email_Form {
 			$result_vars
 		);
 
-		echo $result; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Template is wp_kses_post()'d on save.
+		return array(
+			'sent' => $sent,
+			'html' => $result,
+		);
 	}
 }
