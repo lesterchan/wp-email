@@ -46,10 +46,10 @@ export function l10n() {
 		text_email_invalid: '- Your Email is empty/invalid',
 		text_remarks_invalid: '- Your Remarks is invalid',
 		text_friend_names_empty: '- Friend Name(s) is empty',
-		text_friend_name_invalid: '- Friend Name is empty/invalid: ',
+		text_friend_name_invalid: '- Friend Name is empty/invalid: %s',
 		text_max_friend_names_allowed: '- Maximum 5 Friend Names allowed',
 		text_friend_emails_empty: '- Friend Email(s) is empty',
-		text_friend_email_invalid: '- Friend Email is invalid: ',
+		text_friend_email_invalid: '- Friend Email is invalid: %s',
 		text_max_friend_emails_allowed: '- Maximum 5 Friend Emails allowed',
 		text_friends_tally:
 			'- Friend Name(s) count does not tally with Friend Email(s) count',

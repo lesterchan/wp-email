@@ -134,6 +134,27 @@ describe( 'validation before the request', () => {
 		expect( window.alert.mock.calls[ 0 ][ 0 ] ).toContain( l10n()[ message ] );
 	} );
 
+	it.each( [
+		[ 'name', { friendname: 'Bob <b>', friendemail: 'bob@example.com' }, 'text_friend_name_invalid', 'Bob <b>' ],
+		[ 'address', { friendname: 'Bob', friendemail: 'nope' }, 'text_friend_email_invalid', 'nope' ],
+	] )(
+		'names the offending %s in the message rather than appending it',
+		async ( _label, values, message, offender ) => {
+			// The message carries a %s the script substitutes, because the
+			// server-side copy of it does too -- a bare concatenation would
+			// leave a translator with a fragment ending in a colon and no way
+			// to put the value anywhere but the end.
+			fillForm( values );
+
+			await click( '#wp-email-submit' );
+
+			const alerted = window.alert.mock.calls[ 0 ][ 0 ];
+
+			expect( alerted ).toContain( l10n()[ message ].replace( '%s', offender ) );
+			expect( alerted ).not.toContain( '%s' );
+		},
+	);
+
 	it( 'refuses more recipients than the server allows', async () => {
 		fillForm( {
 			friendname: 'A, B, C, D, E, F',

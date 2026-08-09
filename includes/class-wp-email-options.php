@@ -258,7 +258,7 @@ class WP_Email_Options {
 				'%EMAIL_POST_TITLE%'
 			) . '</a></p>',
 			'sentfailed'  => '<p>' . __( 'An error has occurred when trying to send this email.', 'wp-email' ) . '</p>',
-			'error'       => '<p>' . __( 'An error has occurred: ', 'wp-email' ) . '<br /><strong>&raquo;</strong> %EMAIL_ERROR_MSG%</p>',
+			'error'       => '<p>' . __( 'An error has occurred:', 'wp-email' ) . ' <br /><strong>&raquo;</strong> %EMAIL_ERROR_MSG%</p>',
 		);
 	}
 

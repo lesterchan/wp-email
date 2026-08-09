@@ -166,14 +166,16 @@ class WP_Email {
 				'text_email_invalid'             => __( '- Your Email is empty/invalid', 'wp-email' ),
 				'text_remarks_invalid'           => __( '- Your Remarks is invalid', 'wp-email' ),
 				'text_friend_names_empty'        => __( '- Friend Name(s) is empty', 'wp-email' ),
-				'text_friend_name_invalid'       => __( '- Friend Name is empty/invalid: ', 'wp-email' ),
+				/* translators: %s: The invalid name. */
+				'text_friend_name_invalid'       => __( '- Friend Name is empty/invalid: %s', 'wp-email' ),
 				'text_max_friend_names_allowed'  => sprintf(
 					/* translators: %s: Maximum number of names. */
 					_n( '- Maximum %s Friend Name allowed', '- Maximum %s Friend Names allowed', $max, 'wp-email' ),
 					number_format_i18n( $max )
 				),
 				'text_friend_emails_empty'       => __( '- Friend Email(s) is empty', 'wp-email' ),
-				'text_friend_email_invalid'      => __( '- Friend Email is invalid: ', 'wp-email' ),
+				/* translators: %s: The invalid e-mail address. */
+				'text_friend_email_invalid'      => __( '- Friend Email is invalid: %s', 'wp-email' ),
 				'text_max_friend_emails_allowed' => sprintf(
 					/* translators: %s: Maximum number of e-mail addresses. */
 					_n( '- Maximum %s Friend Email allowed', '- Maximum %s Friend Emails allowed', $max, 'wp-email' ),

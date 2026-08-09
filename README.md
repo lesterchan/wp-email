@@ -246,6 +246,7 @@ Two option rows — `wp_email_options` for the settings and `wp_email_version` f
 * FIXED: The library the form used to load on every page of the site, whether or not anything on that page used it.
 * FIXED: The e-mail status was stored translated, so changing your site language orphaned old log rows from the totals. Existing rows are corrected on upgrade.
 * FIXED: The e-mail log's `Logs per page` setting under Screen Options was thrown away when applied, so the log always paged at twenty whatever you set it to.
+* NOTE: Four translated strings carried whitespace a translator cannot see in a msgid list, let alone reproduce: the Mail It button's label was padded with five spaces either side to widen it, and three messages ended in a trailing space so a value could be glued on. The padding moved to CSS and the values moved into `%s` placeholders. Those four msgids changed, so existing translations of them fall back to English until they are retranslated
 
 ## Upgrade Notice
 

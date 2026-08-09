@@ -114,7 +114,7 @@
 
 				names.forEach( function( name ) {
 					if ( isEmpty( name ) || ! isValidName( name ) ) {
-						errors.push( window.wpEmailL10n.text_friend_name_invalid + name );
+						errors.push( window.wpEmailL10n.text_friend_name_invalid.replace( '%s', name ) );
 					}
 				} );
 
@@ -134,7 +134,7 @@
 
 			emails.forEach( function( email ) {
 				if ( isEmpty( email ) || ! isValidEmail( email ) ) {
-					errors.push( window.wpEmailL10n.text_friend_email_invalid + email );
+					errors.push( window.wpEmailL10n.text_friend_email_invalid.replace( '%s', email ) );
 				}
 			} );
 

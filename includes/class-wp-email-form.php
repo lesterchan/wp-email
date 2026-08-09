@@ -534,7 +534,7 @@ class WP_Email_Form {
 		}
 
 		$output .= '<p id="wp-email-button" class="wp-email-button">';
-		$output .= '<input type="button" value="' . esc_attr__( '     Mail It!     ', 'wp-email' ) . '" id="wp-email-submit" class="Button" />';
+		$output .= '<input type="button" value="' . esc_attr__( 'Mail It!', 'wp-email' ) . '" id="wp-email-submit" class="Button" />';
 		$output .= '</p>' . "\n";
 		$output .= '</form>' . "\n";
 
