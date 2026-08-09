@@ -52,8 +52,8 @@ class WP_Email_Logs_Table extends WP_List_Table {
 	public function get_columns() {
 		$columns = array(
 			'email_id'        => __( 'ID', 'wp-email' ),
-			'from'            => __( 'From', 'wp-email' ),
-			'to'              => __( 'To', 'wp-email' ),
+			'from'            => _x( 'From', 'Log column: who sent the e-mail', 'wp-email' ),
+			'to'              => _x( 'To', 'Log column: who the e-mail was sent to', 'wp-email' ),
 			'email_timestamp' => __( 'Date / Time', 'wp-email' ),
 			'ip'              => __( 'IP / Host', 'wp-email' ),
 		);
