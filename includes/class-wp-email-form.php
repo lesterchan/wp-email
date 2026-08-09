@@ -241,6 +241,41 @@ class WP_Email_Form {
 	}
 
 	/**
+	 * Delete every flood record on this site.
+	 *
+	 * One transient per address that has sent recently, named
+	 * `wp_email_flood_{md5}` -- so nothing holds a list of them and
+	 * delete_transient() has nothing to be called with. They expire on their
+	 * own, which is why they are transients, but an uninstall should not leave
+	 * a site waiting out somebody's cooldown, and on a busy site there can be a
+	 * great many of them.
+	 *
+	 * Matched through the options table, because the name is a hash and there
+	 * is no API that matches by prefix. The object cache is not cleared to
+	 * match: the rows are what survive a request, and a cached entry outlives
+	 * its transient by at most the interval.
+	 *
+	 * @since 3.0.0
+	 *
+	 * @return void
+	 */
+	public static function delete_flood_records() {
+		global $wpdb;
+
+		$names = $wpdb->get_col(
+			$wpdb->prepare(
+				"SELECT option_name FROM $wpdb->options WHERE option_name LIKE %s OR option_name LIKE %s",
+				$wpdb->esc_like( '_transient_' . self::FLOOD_PREFIX ) . '%',
+				$wpdb->esc_like( '_transient_timeout_' . self::FLOOD_PREFIX ) . '%'
+			)
+		);
+
+		foreach ( (array) $names as $name ) {
+			delete_option( $name );
+		}
+	}
+
+	/**
 	 * Name check: no characters that have no business in a person's name.
 	 *
 	 * @param string $name Candidate.
