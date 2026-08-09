@@ -73,6 +73,14 @@ one filter.
   blanked.** A template still holding `%EMAIL_TEXT%` shows it on the page rather
   than silently losing its link text. `email_link()`'s first two parameters are
   accepted and ignored for the same reason.
+* **`%EMAIL_ICON_URL%` is the one exception, and it is converted rather than
+  shown.** It named a URL to a bundled GIF and lived inside `<img src="…">`,
+  where nothing sensible survives: the URL is gone, so leaving it draws a broken
+  image, and putting the glyph in the attribute would give
+  `<img src="<svg …>">`. So the migration replaces the whole `<img>` with
+  `%EMAIL_ICON%`, and renames a bare one. The split is deliberate — the icon has
+  exactly one replacement, while only the site knows what its wording should
+  say, so `%EMAIL_TEXT%` is left to be seen and edited.
 * **The link is one template.** The four-way style select, `post_text` and
   `page_text` are retired (`RETIRED_LINK_KEYS`); the migration synthesises the
   template from the old style *and* wording, collapsing to `%POST_TYPE%` only

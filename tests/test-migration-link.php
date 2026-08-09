@@ -170,6 +170,56 @@ class WP_Email_Migration_Link_Test extends WP_Email_TestCase {
 	}
 
 	/**
+	 * The one exception to leaving custom markup alone.
+	 *
+	 * %EMAIL_ICON_URL% named the URL of a bundled GIF and lived inside an
+	 * <img src="...">. There is no URL to give it now, so leaving it draws a
+	 * broken image and substituting the glyph into the attribute would produce
+	 * <img src="<svg ...>">. The whole element is replaced instead.
+	 */
+	public function test_a_custom_template_has_its_icon_image_replaced_by_the_glyph() {
+		$this->seed_stored_install(
+			array(
+				'style' => 4,
+				'html'  => '<a href="%EMAIL_URL%"><img src="%EMAIL_ICON_URL%" alt="Email" /> %EMAIL_TEXT%</a>',
+			)
+		);
+
+		WP_Email_Options::maybe_upgrade();
+
+		$html = $this->migrated_html();
+
+		$this->assertSame(
+			'<a href="%EMAIL_URL%">%EMAIL_ICON% %EMAIL_TEXT%</a>',
+			$html,
+			'An icon URL placeholder inside an image tag is replaced element and all by the glyph placeholder.'
+		);
+		$this->assertStringNotContainsString( '%EMAIL_ICON_URL%', $html, 'Leaving no retired icon placeholder behind.' );
+		$this->assertStringContainsString( '%EMAIL_TEXT%', $html, 'While the retired text placeholder is deliberately left to be seen and edited.' );
+	}
+
+	/**
+	 * A bare one outside an image tag is simply renamed: the glyph drops
+	 * straight into the same position the URL occupied.
+	 */
+	public function test_a_custom_template_has_a_bare_icon_placeholder_renamed() {
+		$this->seed_stored_install(
+			array(
+				'style' => 4,
+				'html'  => '<a href="%EMAIL_URL%">%EMAIL_ICON_URL%</a>',
+			)
+		);
+
+		WP_Email_Options::maybe_upgrade();
+
+		$this->assertSame(
+			'<a href="%EMAIL_URL%">%EMAIL_ICON%</a>',
+			$this->migrated_html(),
+			'And a bare icon URL placeholder is renamed rather than dropped.'
+		);
+	}
+
+	/**
 	 * Two arbitrary strings do not fit in one template. The post wording is the
 	 * one that is kept, because it is what the great majority of a site's links
 	 * are; the page wording is lost, and the Upgrade Notice says so.

@@ -221,7 +221,7 @@ Two option rows — `wp_email_options` for the settings and `wp_email_version` f
 * BREAKING: `EMAIL_SHOW_REMARKS` is renamed `WP_EMAIL_SHOW_REMARKS`.
 * BREAKING: The settings screen moves from `?page=wp-email-options` to `?page=wp-email-settings` and is gated on `manage_options`; the logs screen keeps `manage_email`.
 * BREAKING: `email_wpstats_instance()`, `email_page_admin_general_stats()`, `email_page_admin_most_stats()`, `email_page_general_stats()` and `email_page_most_stats()` are removed, along with the global `email_popup()` in JavaScript.
-* BREAKING: The `%EMAIL_ICON_URL%` template variable is replaced by `%EMAIL_ICON%`, and the E-Mail Icon setting is removed.
+* BREAKING: The E-Mail Icon setting and the two bundled GIFs are gone, replaced by one inline SVG. A custom link template using `%EMAIL_ICON_URL%` is rewritten to `%EMAIL_ICON%` automatically, the whole `<img>` at a time where it sat in one.
 * BREAKING: The E-Mail Text Link For Post, E-Mail Text Link For Page and E-Mail Text Link Style settings are removed, and `%EMAIL_TEXT%` with them. The link is one HTML template, migrated from whatever those three said. The first two parameters of `email_link()` are accepted and ignored.
 * BREAKING: `%EMAIL_POPUP%` is now the *value* of a `data-wp-email-popup` attribute rather than the whole attribute, because a bare variable in attribute position did not survive the sanitizer.
 * NEW: A `%POST_TYPE%` link variable, which becomes the post type's singular label — `Post`, `Page`, or a custom type's own.
@@ -269,7 +269,9 @@ Removed: `email_wpstats_instance()`, `email_page_admin_general_stats()`, `email_
 
 **No images, one stylesheet, and no theme stylesheet override.** The two envelope icons and the loading GIF are gone: the link draws an inline SVG envelope taking its colour from your theme, and the loading indicator is drawn in CSS and holds still under `prefers-reduced-motion`. The **E-Mail Icon** setting is removed, and `%EMAIL_ICON_URL%` is replaced by `%EMAIL_ICON%`, which inserts the glyph itself. `email-css.css` and `email-css-rtl.css` become one `css/wp-email.css` written with logical properties.
 
-A theme copy of `email-css.css` is no longer loaded. Move those rules into your theme's own stylesheet: everything the plugin styles sits under `.wp-email`, so they keep working, and they now add to the plugin's rules rather than replacing the whole file. Custom link HTML using `%EMAIL_ICON_URL%` needs editing — an unrecognised variable is left in the markup as written rather than blanked, so you will see it.
+A theme copy of `email-css.css` is no longer loaded. Move those rules into your theme's own stylesheet: everything the plugin styles sits under `.wp-email`, so they keep working, and they now add to the plugin's rules rather than replacing the whole file.
+
+Custom link HTML using `%EMAIL_ICON_URL%` is converted for you on upgrade, and it is the only variable that is: it named a URL to a bundled GIF and sat inside an `<img src="…">`, where nothing sensible is left to put — a URL that no longer exists draws a broken image, and dropping the glyph into the attribute would give you `<img src="<svg …>">`. So the whole `<img>` becomes `%EMAIL_ICON%`, which draws the glyph itself, and a bare `%EMAIL_ICON_URL%` outside an image is renamed. `%EMAIL_TEXT%` is deliberately not converted: only you know what the wording should say, so it is left in the markup for you to see and edit.
 
 **The link is one template now.** **E-Mail Text Link For Post**, **E-Mail Text Link For Page** and **E-Mail Text Link Style** are gone, and so is the `%EMAIL_TEXT%` variable they fed. What is left is **E-Mail Link Template**, the anchor's markup, with `%EMAIL_URL%`, `%EMAIL_POPUP%`, `%EMAIL_ICON%` and the new `%POST_TYPE%` in it. Your template is built on upgrade from the style and the wording you had, so an icon-only link stays icon-only.
 
