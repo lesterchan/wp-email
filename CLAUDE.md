@@ -154,7 +154,7 @@ class**, because the PHP floor is 8.2 *and* `phpunit.xml.dist` sets
 `convertDeprecationsToExceptions` (commit `2426531`). A dynamic property is a
 fatal-shaped failure here, not a notice.
 
-## Pending, not started
+## Pending
 
 Nothing outstanding. The link-settings collapse landed in commit `bb95952` and
 the proxy-header label and description were brought into line in `190f659` —
