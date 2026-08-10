@@ -353,12 +353,45 @@ class WP_Email_Options {
 	/**
 	 * Store the settings.
 	 *
+	 * `update_option()` declines to write a value equal to the one `get_option()`
+	 * would return, and `register_setting()` is passed a `default`, which installs
+	 * a `default_option_wp_email_options` filter answering with the shipped
+	 * defaults for a row that does not exist. Core's `add_option()` fallback sits
+	 * immediately below that comparison and is unreachable once the two compare
+	 * equal. So a migration whose result happens to equal the defaults -- the
+	 * commonest install there is -- writes nothing at all, and the markers are
+	 * stamped complete either way, so the upgrade can never run again.
+	 *
+	 * It does not stop at one lost write. migrate_legacy_rows() and
+	 * migrate_link_template() are two writes that have to compose, the second
+	 * re-reading the row the first stored: when the first vanishes the second
+	 * finds no row, returns without doing anything, and the eighteen legacy rows
+	 * have been deleted regardless.
+	 *
+	 * It was held off by nothing but the order two callbacks were added in:
+	 * maybe_upgrade() is hooked to `admin_init` before WP_Email_Settings hooks
+	 * register() to it at the same priority, so the upgrade went first.
+	 * Reordering those two, or any third-party `default_option_*` filter, reaches
+	 * it silently.
+	 *
+	 * Passing an explicit default to `get_option()` defeats the registered one --
+	 * `filter_default_option()` returns early when a default was passed -- which
+	 * is what lets an absent row be told apart from a defaulted one and added
+	 * outright. `add_option()` runs the sanitize callback exactly as
+	 * `update_option()` does, so nothing else about the stored value changes.
+	 *
 	 * @param array $options Settings to store.
 	 *
 	 * @return void
 	 */
 	public static function update( array $options ) {
 		self::$cache = null;
+
+		if ( false === get_option( self::OPTION, false ) ) {
+			add_option( self::OPTION, $options );
+
+			return;
+		}
 
 		update_option( self::OPTION, $options );
 	}

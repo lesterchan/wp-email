@@ -538,4 +538,60 @@ class WP_Email_Options_Test extends WP_Email_TestCase {
 
 		$this->assertSame( '<a href="%EMAIL_URL%">Send This</a>', WP_Email_Options::get( 'link', 'html' ), 'And a write drops the cache, so the new one is what is read next.' );
 	}
+
+	/**
+	 * The write path creates the row even when the value equals the default.
+	 *
+	 * Pinned at the door rather than through maybe_upgrade(), so the guarantee
+	 * belongs to update() rather than to whatever the migration happens to
+	 * compute. The migration tests can only see this while their fixtures keep
+	 * producing a value equal to the defaults; this one cannot stop seeing it.
+	 *
+	 * @return void
+	 */
+	public function test_update_creates_the_row_when_the_value_equals_the_registered_default() {
+		delete_option( WP_Email_Options::OPTION );
+		WP_Email_Options::flush();
+
+		$settings = new WP_Email_Settings();
+		$settings->register();
+
+		// The precondition the defect needs: a bare read of an absent row answers
+		// with the defaults, so update_option() alone compares equal and declines
+		// to write. Core's add_option() fallback sits below that comparison.
+		$this->assertSame(
+			WP_Email_Options::defaults(),
+			get_option( WP_Email_Options::OPTION ),
+			'The registered default is what an absent row reads back as.'
+		);
+
+		WP_Email_Options::update( WP_Email_Options::defaults() );
+
+		$this->assertIsArray( get_option( WP_Email_Options::OPTION, false ), 'The row is really there, read raw.' );
+	}
+
+	/**
+	 * The shipped defaults survive the sanitiser unchanged.
+	 *
+	 * The assertion whose absence would let a typo decide whether the test above
+	 * means anything. A sanitiser that alters one character of the defaults -- one
+	 * doubled space inside a template that kses collapses is enough -- makes the
+	 * written value differ from them, so update_option() finds a difference and
+	 * writes the row. The equal-value case then stops being exercised and the test
+	 * above passes for a reason unrelated to the code.
+	 *
+	 * @return void
+	 */
+	public function test_the_shipped_defaults_survive_sanitisation_unchanged() {
+		$settings = new WP_Email_Settings();
+		$settings->register();
+
+		$defaults = WP_Email_Options::defaults();
+
+		$this->assertSame(
+			$defaults,
+			sanitize_option( WP_Email_Options::OPTION, $defaults ),
+			'The registered sanitize callback leaves the defaults alone.'
+		);
+	}
 }
