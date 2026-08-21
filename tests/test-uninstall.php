@@ -91,9 +91,10 @@ class WP_Email_Uninstall_Test extends WP_Email_TestCase {
 		$source = $this->source();
 
 		// The old version called the drop inside the option loop, so it ran
-		// eighteen times per site. The statement itself lives on
-		// WP_Email_Logs::drop_table() now, so uninstall.php names it once.
-		$this->assertSame( 2, substr_count( $source, 'WP_Email_Logs::drop_table()' ), 'The table is dropped once per site, not once per option row.' );
+		// eighteen times per site. It is named exactly once now, inside
+		// wp_email_uninstall_site(), which both branches call once per site.
+		$this->assertSame( 1, substr_count( $source, 'WP_Email_Logs::drop_table()' ), 'The table is dropped once per site, not once per option row.' );
+		$this->assertSame( 2, substr_count( $source, 'wp_email_uninstall_site();' ), 'Both branches uninstall through the one per-site verb.' );
 	}
 
 	public function test_it_clears_the_consolidated_option_and_the_legacy_rows() {
