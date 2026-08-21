@@ -86,6 +86,20 @@ function wp_email_remove_capability() {
 	}
 }
 
+/**
+ * Delete this plugin's data from the current site.
+ *
+ * The one verb the loop below and the test suite call: the rows, the logs
+ * table and the capability go together or not at all.
+ *
+ * @return void
+ */
+function wp_email_uninstall_site() {
+	wp_email_delete_options();
+	WP_Email_Logs::drop_table();
+	wp_email_remove_capability();
+}
+
 if ( is_multisite() ) {
 	// 'number' => 0 lifts WP_Site_Query's default cap of 100, which would
 	// otherwise leave the options and the table behind on every site past the
@@ -100,16 +114,12 @@ if ( is_multisite() ) {
 	foreach ( $wp_email_site_ids as $wp_email_site_id ) {
 		switch_to_blog( (int) $wp_email_site_id );
 
-		wp_email_delete_options();
-		WP_Email_Logs::drop_table();
-		wp_email_remove_capability();
+		wp_email_uninstall_site();
 
 		// Inside the loop: switch_to_blog() pushes onto a stack, so restoring
 		// once after the loop leaves it unwound by exactly one.
 		restore_current_blog();
 	}
 } else {
-	wp_email_delete_options();
-	WP_Email_Logs::drop_table();
-	wp_email_remove_capability();
+	wp_email_uninstall_site();
 }

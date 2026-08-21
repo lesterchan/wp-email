@@ -70,11 +70,11 @@ abstract class WP_Email_TestCase extends WP_UnitTestCase {
 	 * The uninstaller does its work in the file body, and PHP will not run a file
 	 * body twice - so the first caller in a process would get the real thing
 	 * and every later one silently nothing at all. The require is therefore
-	 * only there to guarantee the two functions exist, and the work is driven
-	 * from here: the same three calls the file itself makes, for the current
-	 * site. That the file loops get_sites() with the cap lifted and restores
-	 * inside the loop is asserted against the source in test-uninstall.php,
-	 * which is where it belongs.
+	 * only there to guarantee the function exists, and the fan-out is
+	 * driven from here: the same loop the file itself runs, with the same
+	 * arguments, calling the same per-site verb. That the file's own
+	 * copy of the loop is correct is asserted against the source in
+	 * test-uninstall.php, which is where it belongs.
 	 *
 	 * The log table survives this under the harness, which rewrites DROP TABLE
 	 * into its TEMPORARY form; the test that actually means to prove the drop
@@ -89,9 +89,24 @@ abstract class WP_Email_TestCase extends WP_UnitTestCase {
 
 		require_once dirname( __DIR__ ) . '/uninstall.php';
 
-		wp_email_delete_options();
-		WP_Email_Logs::drop_table();
-		wp_email_remove_capability();
+		if ( is_multisite() ) {
+			$site_ids = get_sites(
+				array(
+					'fields' => 'ids',
+					'number' => 0,
+				)
+			);
+
+			foreach ( $site_ids as $site_id ) {
+				switch_to_blog( (int) $site_id );
+				wp_email_uninstall_site();
+				restore_current_blog();
+			}
+
+			return;
+		}
+
+		wp_email_uninstall_site();
 	}
 
 	/**
