@@ -46,7 +46,7 @@ class WP_Email_Multisite_Test extends WP_Email_TestCase {
 	 * @param int $count How many sites to create.
 	 * @return int[] Site IDs.
 	 */
-	protected function make_torn_down_sites( $count = 2 ) {
+	protected function seed_network( $count = 2 ) {
 		global $wpdb;
 
 		$site_ids = array();
@@ -84,7 +84,7 @@ class WP_Email_Multisite_Test extends WP_Email_TestCase {
 	public function test_network_activation_installs_on_every_site() {
 		global $wpdb;
 
-		$site_ids = $this->make_torn_down_sites( 2 );
+		$site_ids = $this->seed_network( 2 );
 
 		WP_Email::get_instance()->activate( true );
 
@@ -113,7 +113,7 @@ class WP_Email_Multisite_Test extends WP_Email_TestCase {
 	public function test_single_site_activation_leaves_other_sites_alone() {
 		global $wpdb;
 
-		$site_ids = $this->make_torn_down_sites( 1 );
+		$site_ids = $this->seed_network( 1 );
 		$other    = $site_ids[0];
 
 		WP_Email::get_instance()->activate( false );
@@ -141,7 +141,7 @@ class WP_Email_Multisite_Test extends WP_Email_TestCase {
 	 * @return void
 	 */
 	public function test_network_activation_queries_sites_without_a_cap() {
-		$this->make_torn_down_sites( 2 );
+		$this->seed_network( 2 );
 
 		$captured = array();
 		add_action(
@@ -169,7 +169,7 @@ class WP_Email_Multisite_Test extends WP_Email_TestCase {
 	 */
 	public function test_network_activation_unwinds_the_blog_stack() {
 		$original = get_current_blog_id();
-		$this->make_torn_down_sites( 2 );
+		$this->seed_network( 2 );
 
 		WP_Email::get_instance()->activate( true );
 
