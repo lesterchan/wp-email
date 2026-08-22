@@ -46,7 +46,7 @@ abstract class WP_Email_Ajax_TestCase extends WP_Ajax_UnitTestCase {
 	 * @param array $options Partial options, merged one group deep.
 	 * @return void
 	 */
-	protected function set_options( $options ) {
+	protected function set_options( array $options = array() ) {
 		$merged = WP_Email_Options::defaults();
 
 		foreach ( $options as $group => $values ) {
