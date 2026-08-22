@@ -21,7 +21,7 @@
  *
  * @covers WP_Email_Options
  */
-class WP_Email_Migration_Link_Test extends WP_Email_TestCase {
+class WP_Email_Upgrade_Link_Test extends WP_Email_TestCase {
 
 	/**
 	 * The link group exactly as the pre-collapse build stored it.
