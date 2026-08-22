@@ -33,7 +33,7 @@ I spent most of my free time creating, updating, maintaining and supporting thes
 1. Install and activate the plugin.
 1. Re-save your permalinks at `WP-Admin -> Settings -> Permalinks -> Save Changes`, so the e-mail endpoint is registered.
 1. Decide where the link appears: type `[email_link]` into a post, or call `email_link()` in your theme. Usage below covers both.
-1. Templates and options are at `WP-Admin -> E-Mail -> E-Mail Settings`, and every message sent is listed under `E-Mail Logs`.
+1. Templates and options are at `WP-Admin -> WP-EMail -> Settings`, and every message sent is listed under `WP-Admin -> WP-EMail -> Logs`.
 
 ## Usage
 The plugin works as soon as it is activated. All you have to decide is where the e-mail link appears.
@@ -62,7 +62,7 @@ Use one or the other, not both, or the link appears twice.
 
 If the link is there but clicking it gives a 404, re-save your permalinks under `WP-Admin -> Settings -> Permalinks`. The plugin registers its `/email/` endpoint on activation, but a site with unusual rewrite rules can need the nudge.
 
-Everything else is configured under `WP-Admin -> E-Mail -> Settings`, which has two tabs: **Settings** for the link, the form and delivery, and **Templates** for the eight message templates. The log of what has been sent is under `WP-Admin -> E-Mail -> Manage E-Mail`.
+Everything else is configured under `WP-Admin -> WP-EMail -> Settings`, which has two tabs: **Settings** for the link, the form and delivery, and **Templates** for the eight message templates. The log of what has been sent is under `WP-Admin -> WP-EMail -> Logs`.
 
 ### Filters
 Use `wp_email_capability` to hand a screen to a capability other than the default. The logs screen is gated on `manage_email` and the settings screen on `manage_options`:
@@ -200,7 +200,7 @@ Two option rows — `wp_email_options` for the settings and `wp_email_version` f
 
 1. E-Mail -> Settings, covering the link, the form, the checks and delivery
 2. The Templates tab, holding all eight templates: the page, the message itself, and what a visitor is told when a send succeeds or fails
-3. E-Mail -> Manage E-Mail, the log of what was sent, to whom, and whether it arrived
+3. WP-EMail -> Logs, the log of what was sent, to whom, and whether it arrived
 4. The e-mail link in a post, placed with the shortcode
 5. The form behind the link, with its image verification
 
