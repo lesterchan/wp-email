@@ -97,7 +97,7 @@ if ( ! function_exists( 'snippet_text' ) ) {
 /**
  * Handle a submitted e-mail form.
  *
- * The AJAX callback is registered as WP_Email_Form::process() now. This wrapper
+ * The AJAX callback is registered as WP_Email_Form::ajax_process() now. This wrapper
  * only helps code that called the function directly -- anything doing
  * remove_action( 'wp_ajax_email', 'process_email_form' ) needs the
  * wp_email_template_redirect filter or its own unhook of the new callback.
@@ -105,7 +105,7 @@ if ( ! function_exists( 'snippet_text' ) ) {
  * @return void
  */
 function process_email_form() {
-	WP_Email_Form::process();
+	WP_Email_Form::ajax_process();
 }
 
 /**

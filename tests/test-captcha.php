@@ -277,7 +277,7 @@ class WP_Email_Captcha_Test extends WP_Email_TestCase {
 
 		$this->expectException( 'WPDieException' );
 
-		WP_Email_Captcha::serve();
+		WP_Email_Captcha::ajax_serve();
 	}
 
 	public function test_the_endpoint_refuses_a_malformed_token() {
@@ -285,7 +285,7 @@ class WP_Email_Captcha_Test extends WP_Email_TestCase {
 
 		$this->expectException( 'WPDieException' );
 
-		WP_Email_Captcha::serve();
+		WP_Email_Captcha::ajax_serve();
 	}
 
 	public function test_the_endpoint_refuses_a_missing_token() {
@@ -293,7 +293,7 @@ class WP_Email_Captcha_Test extends WP_Email_TestCase {
 
 		$this->expectException( 'WPDieException' );
 
-		WP_Email_Captcha::serve();
+		WP_Email_Captcha::ajax_serve();
 	}
 
 	public function test_requesting_the_image_does_not_spend_the_answer() {

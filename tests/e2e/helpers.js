@@ -239,12 +239,20 @@ function defaultOptions() {
  * their place: the flat email_options row of 2.x and its fifteen companions,
  * plus the two WP-Stats rows this plugin shared with five siblings.
  *
+ * **It hands back what it can see, and that is not a convenience.**
+ * maybe_upgrade() is hooked to `init`, which a WP-CLI request reaches like any
+ * other. So the moment this call ends, the next `wp eval` boots WordPress with
+ * the markers behind and performs the upgrade itself, before running a line of
+ * the code it was given -- and a test that read the rows back through another
+ * helper would be asserting on WP-CLI's run rather than on the browser's, with
+ * nothing left for the browser to do.
+ *
  * @param {Object}      rows      Legacy option name => value, stored exactly as given.
  * @param {Object|null} [current] A row already under the current name, for the
  *                                install that has one and still holds the retired
  *                                link keys.
  * @param {Object|null} [markers] Version markers to stamp, for the same case.
- * @return {void}
+ * @return {{legacy: string[], options: *, version: *}} The state as just seeded.
  */
 function installLegacyRows( rows, current = null, markers = null ) {
 	const encoded = Buffer.from(
@@ -252,24 +260,36 @@ function installLegacyRows( rows, current = null, markers = null ) {
 		'utf8',
 	).toString( 'base64' );
 
-	wpEval(
-		`$data = json_decode( base64_decode( '${ encoded }' ), true );
-		delete_option( WP_Email_Options::OPTION );
-		delete_option( WP_Email_Options::VERSION );
-		foreach ( WP_Email_Options::LEGACY_ROWS as $row ) {
-			delete_option( $row );
-		}
-		foreach ( $data['rows'] as $name => $value ) {
-			update_option( $name, $value );
-		}
-		if ( null !== $data['current'] ) {
-			update_option( WP_Email_Options::OPTION, $data['current'] );
-		}
-		if ( null !== $data['markers'] ) {
-			update_option( WP_Email_Options::VERSION, $data['markers'] );
-		}
-		WP_Email_Options::flush();
-		echo '<<<done>>>';`,
+	return JSON.parse(
+		wpEval(
+			`$data = json_decode( base64_decode( '${ encoded }' ), true );
+			delete_option( WP_Email_Options::OPTION );
+			delete_option( WP_Email_Options::VERSION );
+			foreach ( WP_Email_Options::LEGACY_ROWS as $row ) {
+				delete_option( $row );
+			}
+			foreach ( $data['rows'] as $name => $value ) {
+				update_option( $name, $value );
+			}
+			if ( null !== $data['current'] ) {
+				update_option( WP_Email_Options::OPTION, $data['current'] );
+			}
+			if ( null !== $data['markers'] ) {
+				update_option( WP_Email_Options::VERSION, $data['markers'] );
+			}
+			WP_Email_Options::flush();
+			$alive = array();
+			foreach ( WP_Email_Options::LEGACY_ROWS as $row ) {
+				if ( false !== get_option( $row, false ) ) {
+					$alive[] = $row;
+				}
+			}
+			echo '<<<' . wp_json_encode( array(
+				'legacy'  => array_values( $alive ),
+				'options' => get_option( WP_Email_Options::OPTION ),
+				'version' => get_option( WP_Email_Options::VERSION ),
+			) ) . '>>>';`,
+		),
 	);
 }
 

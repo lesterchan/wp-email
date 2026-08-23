@@ -30,10 +30,12 @@ defined( 'ABSPATH' ) || exit;
 class WP_Email_WPStats {
 
 	/**
-	 * Hook into WP-Stats.
+	 * Hook registration.
+	 *
+	 * @return void
 	 */
-	public function __construct() {
-		add_filter( 'wp_stats_sections', array( $this, 'register_section' ) );
+	public static function init() {
+		add_filter( 'wp_stats_sections', array( __CLASS__, 'register_section' ) );
 	}
 
 	/**
@@ -47,7 +49,7 @@ class WP_Email_WPStats {
 	 *
 	 * @return array
 	 */
-	public function register_section( $sections ) {
+	public static function register_section( $sections ) {
 		if ( ! is_array( $sections ) ) {
 			$sections = array();
 		}
@@ -59,7 +61,7 @@ class WP_Email_WPStats {
 		$sections['wp_email'] = array(
 			'title'    => __( 'E-Mails', 'wp-email' ),
 			'priority' => 10,
-			'render'   => array( $this, 'render' ),
+			'render'   => array( __CLASS__, 'render' ),
 		);
 
 		return $sections;
@@ -74,12 +76,12 @@ class WP_Email_WPStats {
 	 *
 	 * @return void
 	 */
-	public function render() {
+	public static function render() {
 		$limit = WP_Email_Options::stats_most_limit();
 
-		$this->render_totals();
-		$this->render_most_emailed( 'post', $limit );
-		$this->render_most_emailed( 'page', $limit );
+		self::render_totals();
+		self::render_most_emailed( 'post', $limit );
+		self::render_most_emailed( 'page', $limit );
 	}
 
 	/**
@@ -87,7 +89,7 @@ class WP_Email_WPStats {
 	 *
 	 * @return void
 	 */
-	protected function render_totals() {
+	protected static function render_totals() {
 		$lines = array(
 			array(
 				WP_Email_Logs::count_all(),
@@ -132,7 +134,7 @@ class WP_Email_WPStats {
 	 *
 	 * @return void
 	 */
-	protected function render_most_emailed( $mode, $limit ) {
+	protected static function render_most_emailed( $mode, $limit ) {
 		$heading = 'page' === $mode
 			/* translators: %s: Number of pages. */
 			? _n( '%s Most Emailed Page', '%s Most Emailed Pages', $limit, 'wp-email' )

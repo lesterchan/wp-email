@@ -36,13 +36,13 @@ class WP_Email_Boot_Test extends WP_Email_TestCase {
 	}
 
 	public function test_the_ajax_endpoints_are_registered_for_both_audiences() {
-		$this->assertNotFalse( has_action( 'wp_ajax_email', array( 'WP_Email_Form', 'process' ) ), 'The send endpoint is registered for logged-in callers.' );
-		$this->assertNotFalse( has_action( 'wp_ajax_nopriv_email', array( 'WP_Email_Form', 'process' ) ), 'The send endpoint is registered for logged out callers too; the form is public.' );
+		$this->assertNotFalse( has_action( 'wp_ajax_email', array( 'WP_Email_Form', 'ajax_process' ) ), 'The send endpoint is registered for logged-in callers.' );
+		$this->assertNotFalse( has_action( 'wp_ajax_nopriv_email', array( 'WP_Email_Form', 'ajax_process' ) ), 'The send endpoint is registered for logged out callers too; the form is public.' );
 
 		// The form is used by visitors who are not logged in, so the captcha
 		// image has to be reachable by them too.
-		$this->assertNotFalse( has_action( 'wp_ajax_wp_email_captcha', array( 'WP_Email_Captcha', 'serve' ) ), 'The captcha endpoint is registered for logged-in callers.' );
-		$this->assertNotFalse( has_action( 'wp_ajax_nopriv_wp_email_captcha', array( 'WP_Email_Captcha', 'serve' ) ), 'The captcha endpoint is registered for logged out callers too.' );
+		$this->assertNotFalse( has_action( 'wp_ajax_wp_email_captcha', array( 'WP_Email_Captcha', 'ajax_serve' ) ), 'The captcha endpoint is registered for logged-in callers.' );
+		$this->assertNotFalse( has_action( 'wp_ajax_nopriv_wp_email_captcha', array( 'WP_Email_Captcha', 'ajax_serve' ) ), 'The captcha endpoint is registered for logged out callers too.' );
 	}
 
 	public function test_query_vars_are_declared() {
@@ -315,9 +315,9 @@ class WP_Email_Boot_Test extends WP_Email_TestCase {
 		$source = file_get_contents( dirname( __DIR__ ) . '/includes/class-wp-email.php' );
 
 		$this->assertMatchesRegularExpression(
-			"/add_action\(\s*'admin_init',\s*array\(\s*\\\$this,\s*'maybe_upgrade'\s*\)/",
+			"/add_action\(\s*'init',\s*array\(\s*\\\$this,\s*'maybe_upgrade'\s*\),\s*5\s*\)/",
 			$source,
-			'The upgrade runs on admin_init, which is where register_setting has already run.'
+			'The upgrade runs on init at priority 5, which every request an update goes through reaches.'
 		);
 	}
 

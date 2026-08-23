@@ -22,22 +22,19 @@ class WP_Email {
 	private static $instance;
 
 	/**
-	 * Constructor.
-	 *
-	 * The activation hook is registered here rather than on a later hook: this
-	 * runs while the main plugin file is loading, which is where WordPress
-	 * requires it to be registered.
+	 * Register the table, the activation hook and the plugins_loaded wiring.
 	 */
-	public function __construct() {
+	private function __construct() {
 		$this->register_table();
 
+		// Must be registered at file-load time, which is when this runs.
 		register_activation_hook( WP_EMAIL_MAIN_FILE, array( $this, 'activate' ) );
 
 		add_action( 'plugins_loaded', array( $this, 'add_hooks' ) );
 	}
 
 	/**
-	 * Initialize the plugin object and return its instance.
+	 * Get the instance, creating it on first call.
 	 *
 	 * @return WP_Email
 	 */
@@ -73,30 +70,35 @@ class WP_Email {
 		add_action( 'init', array( $this, 'register_endpoints' ) );
 		add_filter( 'query_vars', array( $this, 'register_query_vars' ) );
 
+		// Deliberately on init rather than admin_init. Activation does not fire
+		// on a plugin update, which is the single most common reason a
+		// migration never runs -- and an automatic background update runs on
+		// cron, which is not an admin request.
+		add_action( 'init', array( $this, 'maybe_upgrade' ), 5 );
+
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_scripts' ) );
 		add_action( 'template_redirect', array( $this, 'maybe_render_email_page' ), 5 );
 
 		add_shortcode( 'email_link', array( $this, 'link_shortcode' ) );
 		add_shortcode( 'donotemail', array( $this, 'donotemail_shortcode' ) );
 
-		add_action( 'wp_ajax_email', array( 'WP_Email_Form', 'process' ) );
-		add_action( 'wp_ajax_nopriv_email', array( 'WP_Email_Form', 'process' ) );
+		// Legacy action name: pages cached with the old script must keep posting somewhere.
+		add_action( 'wp_ajax_email', array( 'WP_Email_Form', 'ajax_process' ) );
+		add_action( 'wp_ajax_nopriv_email', array( 'WP_Email_Form', 'ajax_process' ) );
 
-		add_action( 'wp_ajax_wp_email_captcha', array( 'WP_Email_Captcha', 'serve' ) );
-		add_action( 'wp_ajax_nopriv_wp_email_captcha', array( 'WP_Email_Captcha', 'serve' ) );
+		add_action( 'wp_ajax_wp_email_captcha', array( 'WP_Email_Captcha', 'ajax_serve' ) );
+		add_action( 'wp_ajax_nopriv_wp_email_captcha', array( 'WP_Email_Captcha', 'ajax_serve' ) );
 
 		add_action( 'widgets_init', array( $this, 'register_widget' ) );
 
 		add_filter( 'wp_email_form_field_values', array( $this, 'prefill_for_logged_in_user' ) );
 
-		// Loaded unconditionally and inert without WP-Stats: the class hooks one
-		// filter WP-Stats fires and nothing else, so there is nothing to probe
-		// for. See STANDARDS.md 13.
-		new WP_Email_WPStats();
+		// Initialised unconditionally and inert without WP-Stats: the class
+		// hooks one filter WP-Stats fires and nothing else, so there is nothing
+		// to probe for. See STANDARDS.md 13.
+		WP_Email_WPStats::init();
 
 		if ( is_admin() ) {
-			add_action( 'admin_init', array( $this, 'maybe_upgrade' ) );
-
 			new WP_Email_Admin();
 			new WP_Email_Settings();
 		}
@@ -143,8 +145,7 @@ class WP_Email {
 	public function enqueue_scripts() {
 		wp_enqueue_style( 'wp-email', WP_EMAIL_URL . 'css/wp-email.css', array(), WP_EMAIL_VERSION );
 
-		// Shipped unminified and served as-is: with no build step in the repo a
-		// separate minified copy only drifts out of sync with this one.
+		// Shipped unminified: it is small, and the review guidelines prefer readable sources.
 		wp_enqueue_script(
 			'wp-email',
 			WP_EMAIL_URL . 'js/wp-email.js',
@@ -369,13 +370,13 @@ class WP_Email {
 	/**
 	 * Install on activation.
 	 *
-	 * @param bool $network_wide Whether the plugin is being activated network wide.
+	 * @param bool $network_wide Whether the plugin is being activated network-wide.
 	 *
 	 * @return void
 	 */
 	public function activate( $network_wide = false ) {
 		if ( is_multisite() && $network_wide ) {
-			// 'number' => 0 lifts WP_Site_Query's default cap of 100.
+			// 'number' => 0 lifts WP_Site_Query's default cap of 100, which would otherwise skip every site past the hundredth while reporting success.
 			$site_ids = get_sites(
 				array(
 					'fields' => 'ids',
@@ -386,6 +387,7 @@ class WP_Email {
 			foreach ( $site_ids as $site_id ) {
 				switch_to_blog( (int) $site_id );
 				$this->install();
+				// Inside the loop: switch_to_blog() pushes onto a stack, so restoring once after the loop unwinds it by exactly one.
 				restore_current_blog();
 			}
 

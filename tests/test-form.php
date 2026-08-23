@@ -101,9 +101,9 @@ class WP_Email_Form_Test extends WP_Email_Ajax_TestCase {
 	private function submit( array $post ) {
 		$_POST = array_merge(
 			array(
-				'action'                  => 'email',
-				'p'                       => $this->post_id,
-				WP_Email_Form::NONCE_NAME => wp_create_nonce( WP_Email_Form::NONCE_ACTION ),
+				'action'                   => 'email',
+				'p'                        => $this->post_id,
+				WP_Email_Form::NONCE_FIELD => wp_create_nonce( WP_Email_Form::NONCE_ACTION ),
 			),
 			$post
 		);
@@ -133,7 +133,7 @@ class WP_Email_Form_Test extends WP_Email_Ajax_TestCase {
 		$this->assertStringContainsString( 'name="yourname"', $form, 'The sender name field.' );
 		$this->assertStringContainsString( 'id="wp-email-submit"', $form, 'The submit button.' );
 		$this->assertStringContainsString( 'id="wp-email-loading"', $form, 'The loading indicator.' );
-		$this->assertStringContainsString( WP_Email_Form::NONCE_NAME, $form, 'And a nonce.' );
+		$this->assertStringContainsString( WP_Email_Form::NONCE_FIELD, $form, 'And a nonce.' );
 	}
 
 	public function test_form_submit_button_has_no_inline_handler() {
@@ -630,13 +630,13 @@ class WP_Email_Form_Test extends WP_Email_Ajax_TestCase {
 
 	public function test_a_bad_nonce_stops_the_handler() {
 		$_POST = array(
-			'action'                  => 'email',
-			'p'                       => $this->post_id,
-			'yourname'                => 'Sender Name',
-			'youremail'               => 'sender@example.com',
-			'friendname'              => 'Friend One',
-			'friendemail'             => 'one@example.com',
-			WP_Email_Form::NONCE_NAME => 'not-a-valid-nonce',
+			'action'                   => 'email',
+			'p'                        => $this->post_id,
+			'yourname'                 => 'Sender Name',
+			'youremail'                => 'sender@example.com',
+			'friendname'               => 'Friend One',
+			'friendemail'              => 'one@example.com',
+			WP_Email_Form::NONCE_FIELD => 'not-a-valid-nonce',
 		);
 
 		$_REQUEST = $_POST;

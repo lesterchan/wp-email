@@ -22,7 +22,7 @@ class WP_Email_Form {
 	/**
 	 * Nonce field name for the form.
 	 */
-	const NONCE_NAME = 'wp-email_nonce';
+	const NONCE_FIELD = 'wp-email_nonce';
 
 	/**
 	 * Separator prefixed to each validation error before they are joined.
@@ -403,7 +403,7 @@ class WP_Email_Form {
 		$output .= '<input type="hidden" id="' . esc_attr( $id_field ) . '" name="' . esc_attr( $id_field ) . '" value="' . esc_attr( $post_id ) . '" />';
 		$output .= '</p>' . "\n";
 		$output .= '<p hidden>';
-		$output .= '<input type="hidden" id="' . esc_attr( self::NONCE_NAME ) . '" name="' . esc_attr( self::NONCE_NAME ) . '" value="' . esc_attr( wp_create_nonce( self::NONCE_ACTION ) ) . '" />';
+		$output .= '<input type="hidden" id="' . esc_attr( self::NONCE_FIELD ) . '" name="' . esc_attr( self::NONCE_FIELD ) . '" value="' . esc_attr( wp_create_nonce( self::NONCE_ACTION ) ) . '" />';
 		$output .= '</p>' . "\n";
 
 		return $output;
@@ -583,8 +583,8 @@ class WP_Email_Form {
 	 *
 	 * @return void
 	 */
-	public static function process() {
-		if ( ! check_ajax_referer( self::NONCE_ACTION, self::NONCE_NAME, false ) ) {
+	public static function ajax_process() {
+		if ( ! check_ajax_referer( self::NONCE_ACTION, self::NONCE_FIELD, false ) ) {
 			esc_html_e( 'Failed To Verify Referrer', 'wp-email' );
 			wp_die( '', '', array( 'response' => 200 ) );
 		}

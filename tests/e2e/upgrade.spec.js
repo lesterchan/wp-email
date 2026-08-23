@@ -3,8 +3,9 @@
  *
  * Activation does not fire when a plugin is merely updated -- a site that
  * updates from the Plugins screen never calls activate() -- so maybe_upgrade()
- * also hangs off admin_init. That is the hook every real upgrade goes through,
- * and loading an admin page in a browser is the only way to reach it.
+ * also hangs off init, at priority 5. That hook fires on every request an
+ * upgraded site serves, and loading a page in a browser is how a real site
+ * reaches it.
  *
  * There are two migrations here and they are gated separately, which is the
  * thing this file exists to hold still:
@@ -90,14 +91,17 @@ test.describe( 'The pre-3.0.0 upgrade', () => {
 	test( 'the scattered rows fold into one, every old row goes, and the markers are stamped', async ( {
 		page,
 	} ) => {
-		installLegacyRows( legacyInstall() );
+		const seeded = installLegacyRows( legacyInstall() );
 
 		// The fixture really is a pre-3.0.0 install: old rows present, new ones
 		// absent. Without this the assertions below could be describing a site
 		// that was already migrated, and would pass with the fold-in deleted.
-		expect( survivingLegacyRows() ).toContain( 'email_options' );
-		expect( rawOptions() ).toBe( false );
-		expect( versionRow() ).toBe( false );
+		// Asserted from what the seeding itself handed back, because any later
+		// wp eval would boot WordPress and perform the upgrade before the
+		// browser gets its turn.
+		expect( seeded.legacy ).toContain( 'email_options' );
+		expect( seeded.options ).toBe( false );
+		expect( seeded.version ).toBe( false );
 
 		await page.goto( DASHBOARD_URL );
 
@@ -233,9 +237,9 @@ test.describe( 'The pre-3.0.0 upgrade', () => {
 			},
 		};
 
-		installLegacyRows( {}, current, { plugin: '3.0.0', db: '1' } );
+		const seeded = installLegacyRows( {}, current, { plugin: '3.0.0', db: '1' } );
 
-		expect( rawOptions().link.post_text ).toBe( 'Post it onwards' );
+		expect( seeded.options.link.post_text ).toBe( 'Post it onwards' );
 
 		await page.goto( DASHBOARD_URL );
 

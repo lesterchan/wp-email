@@ -13,13 +13,6 @@
 class WP_Email_WPStats_Test extends WP_Email_TestCase {
 
 	/**
-	 * The integration under test.
-	 *
-	 * @var WP_Email_WPStats
-	 */
-	private $stats;
-
-	/**
 	 * Post fixture.
 	 *
 	 * @var int
@@ -40,8 +33,6 @@ class WP_Email_WPStats_Test extends WP_Email_TestCase {
 	 */
 	public function set_up() {
 		parent::set_up();
-
-		$this->stats = new WP_Email_WPStats();
 
 		$past = gmdate( 'Y-m-d H:i:s', time() - HOUR_IN_SECONDS );
 
@@ -112,20 +103,20 @@ class WP_Email_WPStats_Test extends WP_Email_TestCase {
 	 */
 	private function rendered() {
 		ob_start();
-		$this->stats->render();
+		WP_Email_WPStats::render();
 
 		return (string) ob_get_clean();
 	}
 
 
 	public function test_the_section_is_keyed_by_the_plugin_slug_with_underscores() {
-		$sections = $this->stats->register_section( array() );
+		$sections = WP_Email_WPStats::register_section( array() );
 
 		$this->assertArrayHasKey( 'wp_email', $sections, 'This plugin adds its own section entry.' );
 	}
 
 	public function test_the_entry_carries_a_title_a_priority_and_a_callable_render() {
-		$section = $this->stats->register_section( array() )['wp_email'];
+		$section = WP_Email_WPStats::register_section( array() )['wp_email'];
 
 		$this->assertIsString( $section['title'], 'The section entry carries a title string.' );
 		$this->assertNotSame( '', $section['title'], 'The entry is titled.' );
@@ -134,7 +125,7 @@ class WP_Email_WPStats_Test extends WP_Email_TestCase {
 	}
 
 	public function test_other_contributors_survive() {
-		$sections = $this->stats->register_section( array( 'wp_polls' => array( 'title' => 'Polls' ) ) );
+		$sections = WP_Email_WPStats::register_section( array( 'wp_polls' => array( 'title' => 'Polls' ) ) );
 
 		$this->assertArrayHasKey( 'wp_polls', $sections, 'A sibling plugin entry survives this one being added.' );
 		$this->assertArrayHasKey( 'wp_email', $sections, 'This plugin entry is added alongside it.' );
@@ -143,20 +134,20 @@ class WP_Email_WPStats_Test extends WP_Email_TestCase {
 	public function test_an_opted_out_site_contributes_nothing() {
 		$this->set_stats_options( false, 5 );
 
-		$this->assertSame( array(), $this->stats->register_section( array() ), 'An opted out site contributes nothing to register.' );
+		$this->assertSame( array(), WP_Email_WPStats::register_section( array() ), 'An opted out site contributes nothing to register.' );
 	}
 
 	public function test_a_non_array_filter_value_is_tolerated() {
-		$this->assertArrayHasKey( 'wp_email', $this->stats->register_section( 'nonsense' ), 'A non-array from an earlier filter is replaced rather than fatal.' );
+		$this->assertArrayHasKey( 'wp_email', WP_Email_WPStats::register_section( 'nonsense' ), 'A non-array from an earlier filter is replaced rather than fatal.' );
 	}
 
-	public function test_the_constructor_registers_only_the_sections_filter() {
-		$stats = new WP_Email_WPStats();
+	public function test_init_registers_only_the_sections_filter() {
+		WP_Email_WPStats::init();
 
-		$this->assertNotFalse( has_filter( 'wp_stats_sections', array( $stats, 'register_section' ) ), 'The constructor registers the sections filter.' );
+		$this->assertNotFalse( has_filter( 'wp_stats_sections', array( 'WP_Email_WPStats', 'register_section' ) ), 'init() registers the sections filter.' );
 
 		foreach ( array( 'wp_stats_display_defaults', 'wp_stats_page_plugins', 'wp_stats_page_most', 'wp_stats_page_admin_plugins', 'wp_stats_page_admin_most' ) as $retired ) {
-			$this->assertFalse( has_filter( $retired, array( $stats, 'register_section' ) ), 'The constructor registers ' . $retired . ', which was retired.' );
+			$this->assertFalse( has_filter( $retired, array( 'WP_Email_WPStats', 'register_section' ) ), 'init() registers ' . $retired . ', which was retired.' );
 		}
 	}
 
@@ -169,7 +160,7 @@ class WP_Email_WPStats_Test extends WP_Email_TestCase {
 
 	public function test_render_echoes_rather_than_returns() {
 		ob_start();
-		$returned = $this->stats->render();
+		$returned = WP_Email_WPStats::render();
 		$echoed   = (string) ob_get_clean();
 
 		$this->assertNull( $returned, 'Rendering the section prints rather than returning, as WP-Stats expects.' );

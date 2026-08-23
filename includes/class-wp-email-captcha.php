@@ -256,7 +256,7 @@ class WP_Email_Captcha {
 	 *
 	 * @return void
 	 */
-	public static function serve() {
+	public static function ajax_serve() {
 		// No nonce: this is an <img src> fetched by the browser for a visitor who
 		// may be logged out, so a nonce would prove nothing and would break
 		// caching of the tag. The token is the only credential, and it is
