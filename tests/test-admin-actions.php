@@ -246,7 +246,7 @@ class WP_Email_Admin_Actions_Test extends WP_Email_TestCase {
 		$menu    = array();
 		$submenu = array();
 
-		( new WP_Email_Admin() )->add_menu();
+		( new WP_Email_Admin() )->add_page();
 
 		$slugs = wp_list_pluck( $submenu[ WP_Email_Settings::PAGE ], 2 );
 

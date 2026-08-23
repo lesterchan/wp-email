@@ -39,7 +39,7 @@ class WP_Email_Admin {
 	 * Hook the admin screens up.
 	 */
 	public function __construct() {
-		add_action( 'admin_menu', array( $this, 'add_menu' ) );
+		add_action( 'admin_menu', array( $this, 'add_page' ) );
 		add_filter( 'set-screen-option', array( __CLASS__, 'save_screen_option' ), 10, 3 );
 	}
 
@@ -55,11 +55,11 @@ class WP_Email_Admin {
 	 */
 	public static function capability( $context = 'logs' ) {
 		/**
-		 * Filters the capability a WP-EMail screen is gated on.
+		 * Filters the capability required to reach a WP-EMail screen.
 		 *
 		 * @since 3.0.0
 		 *
-		 * @param string $capability Capability required.
+		 * @param string $capability The required capability.
 		 * @param string $context    Screen being gated: 'logs' or 'settings'.
 		 */
 		return (string) apply_filters( 'wp_email_capability', self::CAPABILITY, $context );
@@ -88,7 +88,7 @@ class WP_Email_Admin {
 	 *
 	 * @return void
 	 */
-	public function add_menu() {
+	public function add_page() {
 		/*
 		 * Settings first, the log last.
 		 *
