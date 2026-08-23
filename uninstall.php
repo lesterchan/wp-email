@@ -102,8 +102,7 @@ function wp_email_uninstall_site() {
 
 if ( is_multisite() ) {
 	// 'number' => 0 lifts WP_Site_Query's default cap of 100, which would
-	// otherwise leave the options and the table behind on every site past the
-	// hundredth while still reporting a clean uninstall.
+	// otherwise skip every site past the hundredth while reporting success.
 	$wp_email_site_ids = get_sites(
 		array(
 			'fields' => 'ids',
