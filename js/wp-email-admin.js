@@ -1,10 +1,6 @@
 /**
- * WP-EMail options screen behaviour.
- *
- * Replaces the inline onclick handlers and the generated JavaScript that used
- * to carry every default template as a string literal. The defaults now travel
- * in data attributes, so they are escaped once as attribute text rather than
- * being interpolated into executable markup.
+ * WP-EMail options screen. The default templates travel in data attributes, so
+ * they are escaped as attribute text rather than interpolated into script.
  */
 ( function() {
 	'use strict';

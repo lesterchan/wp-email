@@ -1,14 +1,7 @@
 /**
- * WP-EMail front end.
- *
- * Everything is scoped under the .wp-email root class, and nothing here sets
- * font-family, font-size or colour: the form is the theme's typography with a
- * few layout rules on top. There is no second mirrored stylesheet -- the rules
- * below use logical properties, so one file serves both text directions.
- *
- * The plugin paints no surface of its own, so there is nothing for
- * prefers-color-scheme to answer; the one animation answers
- * prefers-reduced-motion at the bottom of the file.
+ * WP-EMail front end: layout only, scoped under .wp-email. No font or colour --
+ * the form is the theme's typography -- and logical properties throughout, so
+ * one sheet serves both directions.
  */
 
 .wp-email p {
@@ -26,11 +19,7 @@
 	text-align: center;
 }
 
-/*
- * The label used to be padded with five spaces either side, inside the
- * translated string -- so the button was only that wide in English, and a
- * translator had no way to see the padding, let alone reproduce it.
- */
+/* Padding here, not five spaces inside the translated label. */
 .wp-email #wp-email-submit {
 	padding-inline: 2em;
 }

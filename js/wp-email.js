@@ -1,12 +1,7 @@
 /**
- * WP-EMail front-end behaviour.
- *
- * Vanilla fetch and delegated listeners: the plugin dropped its last library
- * dependency in 3.0.0, and the inline onclick attributes went with it. Every
- * handler is bound once on document, so a form swapped in over AJAX keeps
- * working without rebinding, and nothing is declared on window.
- *
- * Server data arrives in wpEmailL10n, localised by WP_Email::enqueue_scripts().
+ * WP-EMail front end. Handlers are bound once on document, so a form swapped in
+ * over AJAX keeps working and nothing is declared on window. Server data
+ * arrives in wpEmailL10n.
  */
 ( function() {
 	'use strict';
@@ -252,9 +247,7 @@
 	/**
 	 * Open the e-mail page in a popup window.
 	 *
-	 * Closure-scoped: the plugin declared a global email_popup() until 3.0.0,
-	 * for the inline onclick it also emitted. Both are gone, and a link opts
-	 * into the popup with the %EMAIL_POPUP% data attribute instead.
+	 * Closure-scoped; a link opts in with the %EMAIL_POPUP% data attribute.
 	 *
 	 * @param {string} url Where to point the popup.
 	 */
