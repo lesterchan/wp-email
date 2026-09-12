@@ -133,8 +133,8 @@ class WP_Email_Logs_Table extends WP_List_Table {
 	/**
 	 * Default rendering for a column.
 	 *
-	 * @param object $item        Log row.
-	 * @param string $column_name Column being rendered.
+	 * @param stdClass $item        Log row.
+	 * @param string   $column_name Column being rendered.
 	 *
 	 * @return string
 	 */

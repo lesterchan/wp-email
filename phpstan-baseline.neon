@@ -1,0 +1,505 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Parameter \#1 \$image of function imagecolortransparent expects GdImage, GdImage\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: includes/class-wp-email-captcha.php
+
+		-
+			message: '#^Parameter \#1 \$image of function imagejpeg expects GdImage, GdImage\|resource given\.$#'
+			identifier: argument.type
+			count: 1
+			path: includes/class-wp-email-captcha.php
+
+		-
+			message: '#^Parameter \#1 \$image of function imagesx expects GdImage, GdImage\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: includes/class-wp-email-captcha.php
+
+		-
+			message: '#^Parameter \#1 \$image of function imagesy expects GdImage, GdImage\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: includes/class-wp-email-captcha.php
+
+		-
+			message: '#^Parameter \#2 \$color of function imagecolortransparent expects int\|null, int\<0, max\>\|false given\.$#'
+			identifier: argument.type
+			count: 2
+			path: includes/class-wp-email-captcha.php
+
+		-
+			message: '#^Parameter \#2 \$red of function imagecolorallocate expects int\<0, 255\>, int given\.$#'
+			identifier: argument.type
+			count: 3
+			path: includes/class-wp-email-captcha.php
+
+		-
+			message: '#^Parameter \#2 \$src_image of function imagecopy expects GdImage, GdImage\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: includes/class-wp-email-captcha.php
+
+		-
+			message: '#^Parameter \#3 \$background_color of function imagerotate expects int, int\<0, max\>\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: includes/class-wp-email-captcha.php
+
+		-
+			message: '#^Parameter \#3 \$green of function imagecolorallocate expects int\<0, 255\>, int given\.$#'
+			identifier: argument.type
+			count: 3
+			path: includes/class-wp-email-captcha.php
+
+		-
+			message: '#^Parameter \#4 \$blue of function imagecolorallocate expects int\<0, 255\>, int given\.$#'
+			identifier: argument.type
+			count: 3
+			path: includes/class-wp-email-captcha.php
+
+		-
+			message: '#^Parameter \#4 \$color of function imagesetpixel expects int, int\<0, max\>\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: includes/class-wp-email-captcha.php
+
+		-
+			message: '#^Parameter \#6 \$color of function imagefilledrectangle expects int, int\<0, max\>\|false given\.$#'
+			identifier: argument.type
+			count: 2
+			path: includes/class-wp-email-captcha.php
+
+		-
+			message: '#^Parameter \#6 \$color of function imageline expects int, int\<0, max\>\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: includes/class-wp-email-captcha.php
+
+		-
+			message: '#^Parameter \#6 \$color of function imagestring expects int, int\<0, max\>\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: includes/class-wp-email-captcha.php
+
+		-
+			message: '#^Method WP_Email_Form\:\:read_input\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-email-form.php
+
+		-
+			message: '#^Method WP_Email_Form\:\:render\(\) has parameter \$submitted with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-email-form.php
+
+		-
+			message: '#^Method WP_Email_Form\:\:render_errors\(\) has parameter \$errors with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-email-form.php
+
+		-
+			message: '#^Method WP_Email_Form\:\:render_errors\(\) has parameter \$input with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-email-form.php
+
+		-
+			message: '#^Method WP_Email_Form\:\:render_fields\(\) has parameter \$fields with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-email-form.php
+
+		-
+			message: '#^Method WP_Email_Form\:\:render_fields\(\) has parameter \$submitted with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-email-form.php
+
+		-
+			message: '#^Method WP_Email_Form\:\:send\(\) has parameter \$input with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-email-form.php
+
+		-
+			message: '#^Method WP_Email_Form\:\:send\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-email-form.php
+
+		-
+			message: '#^Method WP_Email_Form\:\:split_list\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-email-form.php
+
+		-
+			message: '#^Method WP_Email_Form\:\:submit\(\) has parameter \$input with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-email-form.php
+
+		-
+			message: '#^Method WP_Email_Form\:\:submit\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-email-form.php
+
+		-
+			message: '#^Method WP_Email_Form\:\:submitted_values\(\) has parameter \$input with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-email-form.php
+
+		-
+			message: '#^Method WP_Email_Form\:\:submitted_values\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-email-form.php
+
+		-
+			message: '#^Method WP_Email_Form\:\:validate\(\) has parameter \$input with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-email-form.php
+
+		-
+			message: '#^Method WP_Email_Form\:\:validate\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-email-form.php
+
+		-
+			message: '#^Parameter \#1 \$callback of function array_map expects \(callable\(string\|false\)\: mixed\)\|null, ''trim'' given\.$#'
+			identifier: argument.type
+			count: 1
+			path: includes/class-wp-email-form.php
+
+		-
+			message: '#^Parameter \#1 \$text of function esc_attr expects string, int given\.$#'
+			identifier: argument.type
+			count: 1
+			path: includes/class-wp-email-form.php
+
+		-
+			message: '#^Parameter \#1 \$value of function trailingslashit expects string, string\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: includes/class-wp-email-form.php
+
+		-
+			message: '#^Parameter \#2 \$callback of function array_filter expects \(callable\(string\)\: bool\)\|null, ''strlen'' given\.$#'
+			identifier: argument.type
+			count: 1
+			path: includes/class-wp-email-form.php
+
+		-
+			message: '#^Parameter \#1 \$post_type of function get_post_type_object expects string, string\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: includes/class-wp-email-link.php
+
+		-
+			message: '#^Parameter \#1 \$value of function trailingslashit expects string, string\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: includes/class-wp-email-link.php
+
+		-
+			message: '#^Method WP_Email_Logs_Table\:\:get_columns\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-email-logs-table.php
+
+		-
+			message: '#^Method WP_Email_Logs_Table\:\:get_sortable_columns\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-email-logs-table.php
+
+		-
+			message: '#^Parameter \#1 \$text of function esc_html expects string, int\|string\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: includes/class-wp-email-logs-table.php
+
+		-
+			message: '#^Right side of && is always true\.$#'
+			identifier: booleanAnd.rightAlwaysTrue
+			count: 1
+			path: includes/class-wp-email-logs-table.php
+
+		-
+			message: '#^Method WP_Email_Logs\:\:insert\(\) has parameter \$row with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-email-logs.php
+
+		-
+			message: '#^Method WP_Email_Logs\:\:most_emailed\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-email-logs.php
+
+		-
+			message: '#^Method WP_Email_Logs\:\:query\(\) has parameter \$args with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-email-logs.php
+
+		-
+			message: '#^Method WP_Email_Logs\:\:query\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-email-logs.php
+
+		-
+			message: '#^Method WP_Email_Logs\:\:sortable_columns\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-email-logs.php
+
+		-
+			message: '#^Method WP_Email_Options\:\:all\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-email-options.php
+
+		-
+			message: '#^Method WP_Email_Options\:\:defaults\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-email-options.php
+
+		-
+			message: '#^Method WP_Email_Options\:\:markers\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-email-options.php
+
+		-
+			message: '#^Method WP_Email_Options\:\:migrate_stats_rows\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-email-options.php
+
+		-
+			message: '#^Method WP_Email_Options\:\:sanitize\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-email-options.php
+
+		-
+			message: '#^Method WP_Email_Options\:\:synthesise_link_html\(\) has parameter \$link with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-email-options.php
+
+		-
+			message: '#^Method WP_Email_Options\:\:template_defaults\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-email-options.php
+
+		-
+			message: '#^Method WP_Email_Options\:\:update\(\) has parameter \$options with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-email-options.php
+
+		-
+			message: '#^Offset ''email_contenttype''\|''email_imageverify''\|''email_interval''\|''email_multiple''\|''email_snippet'' might not exist on array\{email_options\: mixed, email_db_version\?\: mixed, email_contenttype\?\: mixed, email_snippet\?\: mixed, email_interval\?\: mixed, email_multiple\?\: mixed, email_imageverify\?\: mixed, email_fields\: mixed, \.\.\.\}\.$#'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: includes/class-wp-email-options.php
+
+		-
+			message: '#^Offset ''email_fields'' might not exist on array\{email_options\: mixed, email_db_version\?\: mixed, email_contenttype\?\: mixed, email_snippet\?\: mixed, email_interval\?\: mixed, email_multiple\?\: mixed, email_imageverify\?\: mixed, email_fields\?\: mixed, \.\.\.\}\.$#'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: includes/class-wp-email-options.php
+
+		-
+			message: '#^Offset ''email_options'' might not exist on non\-empty\-array\{email_options\?\: mixed, email_db_version\?\: mixed, email_contenttype\?\: mixed, email_snippet\?\: mixed, email_interval\?\: mixed, email_multiple\?\: mixed, email_imageverify\?\: mixed, email_fields\?\: mixed, \.\.\.\}\.$#'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: includes/class-wp-email-options.php
+
+		-
+			message: '#^Property WP_Email_Options\:\:\$cache type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-email-options.php
+
+		-
+			message: '#^Method WP_Email_Settings\:\:select\(\) has parameter \$choices with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-email-settings.php
+
+		-
+			message: '#^Method WP_Email_Settings\:\:tabs\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-email-settings.php
+
+		-
+			message: '#^Method WP_Email_Settings\:\:template_meta\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-email-settings.php
+
+		-
+			message: '#^Parameter \#3 \$callback of function add_settings_field expects callable\(\)\: mixed, array\{\$this\(WP_Email_Settings\), non\-falsy\-string\} given\.$#'
+			identifier: argument.type
+			count: 1
+			path: includes/class-wp-email-settings.php
+
+		-
+			message: '#^Function get_the_time invoked with 4 parameters, 0\-2 required\.$#'
+			identifier: arguments.count
+			count: 1
+			path: includes/class-wp-email-template.php
+
+		-
+			message: '#^Method WP_Email_Template\:\:expand\(\) has parameter \$vars with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-email-template.php
+
+		-
+			message: '#^Method WP_Email_Template\:\:post_vars\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-email-template.php
+
+		-
+			message: '#^Parameter \#2 \$post of function get_the_time expects int\|WP_Post\|null, string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: includes/class-wp-email-template.php
+
+		-
+			message: '#^Method WP_Email_Widget\:\:defaults\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-email-widget.php
+
+		-
+			message: '#^Method WP_Email_Widget\:\:form\(\) has parameter \$instance with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-email-widget.php
+
+		-
+			message: '#^Method WP_Email_Widget\:\:update\(\) has parameter \$new_instance with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-email-widget.php
+
+		-
+			message: '#^Method WP_Email_Widget\:\:update\(\) has parameter \$old_instance with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-email-widget.php
+
+		-
+			message: '#^Method WP_Email_Widget\:\:update\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-email-widget.php
+
+		-
+			message: '#^Method WP_Email_Widget\:\:widget\(\) has parameter \$args with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-email-widget.php
+
+		-
+			message: '#^Method WP_Email_Widget\:\:widget\(\) has parameter \$instance with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-email-widget.php
+
+		-
+			message: '#^Return type \(void\) of method WP_Email_Widget\:\:form\(\) should be compatible with return type \(string\|null\) of method WP_Widget\<array\<string, mixed\>\>\:\:form\(\)$#'
+			identifier: method.childReturnType
+			count: 1
+			path: includes/class-wp-email-widget.php
+
+		-
+			message: '#^Method WP_Email_WPStats\:\:register_section\(\) has parameter \$sections with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-email-wpstats.php
+
+		-
+			message: '#^Method WP_Email_WPStats\:\:register_section\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-email-wpstats.php
+
+		-
+			message: '#^Method WP_Email\:\:donotemail_shortcode\(\) has parameter \$atts with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-email.php
+
+		-
+			message: '#^Method WP_Email\:\:filter_document_title_parts\(\) has parameter \$parts with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-email.php
+
+		-
+			message: '#^Method WP_Email\:\:filter_document_title_parts\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-email.php
+
+		-
+			message: '#^Method WP_Email\:\:prefill_for_logged_in_user\(\) has parameter \$values with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-email.php
+
+		-
+			message: '#^Method WP_Email\:\:prefill_for_logged_in_user\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-email.php
+
+		-
+			message: '#^Method WP_Email\:\:register_query_vars\(\) has parameter \$vars with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-email.php
+
+		-
+			message: '#^Method WP_Email\:\:register_query_vars\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/class-wp-email.php
+
+		-
+			message: '#^Function email_form\(\) has parameter \$error_field with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: includes/template-tags.php
+
+		-
+			message: '#^Parameter \#1 \$text of function esc_html expects string, int given\.$#'
+			identifier: argument.type
+			count: 1
+			path: includes/template-tags.php
+
+		-
+			message: '#^Parameter \#1 \$url of function esc_url expects string, string\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: includes/template-tags.php
